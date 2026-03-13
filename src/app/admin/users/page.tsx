@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -19,7 +18,6 @@ import {
   MoreHorizontal, 
   UserPlus, 
   ShieldCheck, 
-  ShieldAlert,
   UserX,
   UserCheck,
   Ban
@@ -104,7 +102,7 @@ export default function UsersManagementPage() {
             <TableHeader className="bg-slate-50/50">
               <TableRow className="border-none">
                 <TableHead className="w-[300px] pl-6 font-bold text-slate-700">PATRON IDENTITY</TableHead>
-                <TableHead className="font-bold text-slate-700">COLLEGE / OFFICE</TableHead>
+                <TableHead className="font-bold text-slate-700">COLLEGE DEPARTMENTS</TableHead>
                 <TableHead className="font-bold text-slate-700">RFID SCANNER ID</TableHead>
                 <TableHead className="font-bold text-slate-700">ACCESS STATUS</TableHead>
                 <TableHead className="text-right pr-6 font-bold text-slate-700">ACTIONS</TableHead>
@@ -126,9 +124,13 @@ export default function UsersManagementPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-medium text-slate-600 truncate max-w-[200px] block">
-                      {user.department}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {user.departments.map((dept, i) => (
+                        <Badge key={i} variant="secondary" className="text-[10px] whitespace-nowrap">
+                          {dept}
+                        </Badge>
+                      ))}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <code className="text-[11px] bg-slate-100 px-3 py-1 rounded-lg text-slate-600 font-mono shadow-sm">

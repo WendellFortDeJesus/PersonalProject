@@ -1,12 +1,12 @@
-
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2, Building2, User, ShieldAlert, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { MOCK_PATRONS } from '@/lib/data';
+import { cn } from '@/lib/utils';
 
 export default function SuccessPage() {
   const router = useRouter();
@@ -14,9 +14,26 @@ export default function SuccessPage() {
   const status = searchParams.get('status');
   const patronId = searchParams.get('patronId');
   const blockedName = searchParams.get('name');
+  
+  // Registration data
+  const regName = searchParams.get('name');
+  const regDepts = useMemo(() => {
+    const deptsRaw = searchParams.get('departments');
+    if (deptsRaw) {
+      try {
+        return JSON.parse(deptsRaw);
+      } catch {
+        return [];
+      }
+    }
+    return null;
+  }, [searchParams]);
 
   const patron = MOCK_PATRONS.find(p => p.id === patronId);
   const isBlocked = status === 'blocked';
+
+  const displayName = patron?.name || regName || blockedName || "Guest User";
+  const displayDepts = patron?.departments || regDepts || ["General Access"];
 
   // Auto-reset after 5 seconds
   useEffect(() => {
@@ -54,6 +71,7 @@ export default function SuccessPage() {
                       alt="Visitor Photo"
                       fill
                       className="object-cover"
+                      data-ai-hint="patron portrait"
                     />
                   ) : (
                     <div className="flex flex-col items-center gap-2">
@@ -73,7 +91,7 @@ export default function SuccessPage() {
                     {isBlocked ? "System Notification" : "Validated Visitor"}
                   </p>
                   <h1 className={cn("text-5xl font-headline font-bold", isBlocked ? "text-red-700" : "text-primary")}>
-                    {patron?.name || blockedName || "Guest User"}
+                    {displayName}
                   </h1>
                 </div>
                 
@@ -89,12 +107,16 @@ export default function SuccessPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="flex items-center gap-3 px-8 py-4 bg-primary/5 rounded-[2rem] text-primary border border-primary/10 shadow-sm">
-                      <Building2 className="h-7 w-7" />
-                      <span className="text-xl font-bold">{patron?.department || "General Access"}</span>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      {displayDepts.map((dept, idx) => (
+                        <div key={idx} className="flex items-center gap-2 px-6 py-3 bg-primary/5 rounded-full text-primary border border-primary/10 shadow-sm">
+                          <Building2 className="h-5 w-5" />
+                          <span className="text-base font-bold">{dept}</span>
+                        </div>
+                      ))}
                     </div>
                     <div className="px-6 py-2 bg-slate-100 rounded-full text-slate-500 text-xs font-bold border border-slate-200 uppercase tracking-widest">
-                      {patron?.role || "Visitor"}
+                      {patron?.role || "Patron"}
                     </div>
                   </div>
                 )}
@@ -122,9 +144,4 @@ export default function SuccessPage() {
       </div>
     </div>
   );
-}
-
-// Helper function needed for CN in success page
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

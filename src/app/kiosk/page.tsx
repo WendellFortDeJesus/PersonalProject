@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ContactRound, ArrowLeft, Loader2, Globe, ShieldAlert } from 'lucide-react';
+import { Mail, ContactRound, ArrowLeft, Loader2, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MOCK_PATRONS } from '@/lib/data';
 
@@ -37,26 +36,28 @@ export default function KioskAuthPage() {
     setTimeout(() => {
       setIsLoading(false);
       
-      // Lookup patron
       const patron = MOCK_PATRONS.find(p => 
         (activeTab === 'rfid' && p.rfid === rfid) || 
         (activeTab === 'email' && p.email === email)
       );
 
       if (!patron) {
-        // Validation for new users or restricted domains
+        if (activeTab === 'rfid' && rfid.length >= 3) {
+          router.push(`/kiosk/register?rfid=${encodeURIComponent(rfid)}`);
+          return;
+        }
+        
         const isEmailValid = activeTab === 'email' && email.toLowerCase().endsWith('@neu.edu.ph');
         if (isEmailValid) {
-          router.push('/kiosk/purpose?status=active');
+          router.push(`/kiosk/register?email=${encodeURIComponent(email)}`);
           return;
         }
 
         toast({
           variant: "destructive",
-          title: "Unrecognized ID",
-          description: "This ID is not in our system. Please see the library help desk.",
+          title: "Registration Required",
+          description: "This ID is not in our system. If you are an NEU student/staff, please register using the form.",
         });
-        setRfid('');
         return;
       }
 
@@ -71,8 +72,15 @@ export default function KioskAuthPage() {
   const handleSSO = () => {
     setIsLoading(true);
     setTimeout(() => {
-      setIsLoading(false);
-      router.push('/kiosk/purpose?status=active');
+      setIsLoading(true);
+      // Simulate OAuth redirect or discovery
+      const mockEmail = "new.user@neu.edu.ph";
+      const existing = MOCK_PATRONS.find(p => p.email === mockEmail);
+      if (existing) {
+        router.push(`/kiosk/purpose?patronId=${existing.id}`);
+      } else {
+        router.push(`/kiosk/register?email=${encodeURIComponent(mockEmail)}`);
+      }
     }, 1000);
   };
 
@@ -156,6 +164,7 @@ export default function KioskAuthPage() {
                           fill
                           alt="Google Logo" 
                           className="rounded-full"
+                          data-ai-hint="google logo"
                         />
                       </div>
                       Sign in with NEU Email

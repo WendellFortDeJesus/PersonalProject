@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, Suspense } from 'react';
@@ -5,43 +6,34 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2, Building2, User, ShieldAlert, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
-import { MOCK_PATRONS } from '@/lib/data';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const db = useFirestore();
   const status = searchParams.get('status');
   const patronId = searchParams.get('patronId');
   const blockedName = searchParams.get('name');
-  
-  // Registration data
   const regName = searchParams.get('name');
-  const regDepts = useMemo(() => {
-    const deptsRaw = searchParams.get('departments');
-    if (deptsRaw) {
-      try {
-        return JSON.parse(deptsRaw);
-      } catch {
-        return [];
-      }
-    }
-    return null;
-  }, [searchParams]);
 
-  const patron = MOCK_PATRONS.find(p => p.id === patronId);
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  const timeout = (settings?.timeoutSeconds || 3) * 1000;
   const isBlocked = status === 'blocked';
 
-  const displayName = patron?.name || regName || blockedName || "Guest User";
-  const displayDepts = patron?.departments || regDepts || ["General Access"];
-
-  // Auto-reset after 3 seconds for high traffic
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/');
-    }, 3000);
+    }, timeout);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, timeout]);
 
   return (
     <div className={cn("min-h-screen flex items-center justify-center p-4 transition-colors duration-500", isBlocked ? "bg-red-600" : "bg-primary")}>
@@ -49,7 +41,6 @@ function SuccessContent() {
         <Card className="shadow-2xl overflow-hidden border-none rounded-[3.5rem] bg-white">
           <div className={cn("h-4", isBlocked ? "bg-red-700" : "bg-accent")} />
           <CardContent className="p-0">
-            {/* Header Banner */}
             <div className={cn("py-8 px-12 flex items-center justify-center gap-4 border-b", isBlocked ? "bg-red-50 text-red-800" : "bg-green-50 text-green-800")}>
               {isBlocked ? (
                 <ShieldAlert className="h-10 w-10 text-red-600" />
@@ -62,27 +53,15 @@ function SuccessContent() {
             </div>
 
             <div className="p-14 text-center space-y-12">
-              {/* Visitor Photo Area */}
               <div className="flex justify-center">
                 <div className={cn("relative h-56 w-56 rounded-full border-8 shadow-2xl overflow-hidden flex items-center justify-center", isBlocked ? "border-red-50 bg-red-50" : "border-slate-50 bg-slate-100")}>
-                  {patron?.photoUrl && !isBlocked ? (
-                    <Image 
-                      src={patron.photoUrl} 
-                      alt="Visitor Photo"
-                      fill
-                      className="object-cover"
-                      priority
-                      data-ai-hint="patron portrait"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      {isBlocked ? (
-                        <User className="h-24 w-24 text-red-200" />
-                      ) : (
-                        <User className="h-24 w-24 text-slate-300" />
-                      )}
-                    </div>
-                  )}
+                  <div className="flex flex-col items-center gap-2">
+                    {isBlocked ? (
+                      <User className="h-24 w-24 text-red-200" />
+                    ) : (
+                      <User className="h-24 w-24 text-slate-300" />
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -92,7 +71,7 @@ function SuccessContent() {
                     {isBlocked ? "System Notification" : "Validated Visitor"}
                   </p>
                   <h1 className={cn("text-5xl font-headline font-bold", isBlocked ? "text-red-700" : "text-primary")}>
-                    {displayName}
+                    {regName || blockedName || "Guest User"}
                   </h1>
                 </div>
                 
@@ -108,16 +87,8 @@ function SuccessContent() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      {displayDepts.map((dept, idx) => (
-                        <div key={idx} className="flex items-center gap-2 px-6 py-3 bg-primary/5 rounded-full text-primary border border-primary/10 shadow-sm">
-                          <Building2 className="h-5 w-5" />
-                          <span className="text-base font-bold">{dept}</span>
-                        </div>
-                      ))}
-                    </div>
                     <div className="px-6 py-2 bg-slate-100 rounded-full text-slate-500 text-xs font-bold border border-slate-200 uppercase tracking-widest">
-                      {patron?.role || "Patron"}
+                      Patron Verified
                     </div>
                   </div>
                 )}

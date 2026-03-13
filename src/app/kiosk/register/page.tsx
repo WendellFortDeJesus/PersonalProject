@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, Suspense, useMemo } from 'react';
+import { useState, Suspense, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -20,13 +20,19 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
-const formSchema = z.object({
-  name: z.string().min(2, "Name is too short"),
-  department: z.string().min(1, "Select your college department"),
-  age: z.string().transform((v) => parseInt(v, 10)).pipe(z.number().min(1, "Valid age required")),
-  gender: z.string().min(1, "Select gender"),
-  purposeId: z.string().min(1, "Select purpose of visit"),
-});
+const createFormSchema = (requireAge: boolean, requireGender: boolean) => {
+  return z.object({
+    name: z.string().min(2, "Name is too short"),
+    department: z.string().min(1, "Select your college department"),
+    age: requireAge 
+      ? z.string().transform((v) => parseInt(v, 10)).pipe(z.number().min(1, "Valid age required"))
+      : z.string().optional(),
+    gender: requireGender 
+      ? z.string().min(1, "Select gender")
+      : z.string().optional(),
+    purposeId: z.string().min(1, "Select purpose of visit"),
+  });
+};
 
 function RegistrationContent() {
   const router = useRouter();
@@ -42,15 +48,12 @@ function RegistrationContent() {
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Filter for active departments
-  const activeDepartments = useMemo(() => {
-    if (!settings?.departments) return DEPARTMENTS;
-    return settings.departments
-      .filter((d: any) => typeof d === 'object' ? d.isActive : true)
-      .map((d: any) => typeof d === 'object' ? d.name : d);
-  }, [settings]);
+  const requireAge = settings?.requireAge ?? true;
+  const requireGender = settings?.requireGender ?? true;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const formSchema = useMemo(() => createFormSchema(requireAge, requireGender), [requireAge, requireGender]);
+
+  const form = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
@@ -61,7 +64,15 @@ function RegistrationContent() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // Filter for active departments
+  const activeDepartments = useMemo(() => {
+    if (!settings?.departments) return DEPARTMENTS;
+    return settings.departments
+      .filter((d: any) => d.isActive)
+      .map((d: any) => d.name);
+  }, [settings]);
+
+  const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
       const patronsRef = collection(db, 'patrons');
@@ -70,8 +81,8 @@ function RegistrationContent() {
         email,
         name: values.name,
         departments: [values.department],
-        age: values.age,
-        gender: values.gender,
+        age: values.age ? Number(values.age) : 0,
+        gender: values.gender || 'Not specified',
         role: "Visitor",
         isBlocked: false,
         createdAt: new Date().toISOString(),
@@ -86,8 +97,8 @@ function RegistrationContent() {
         schoolId,
         patronName: values.name,
         patronDepartments: [values.department],
-        patronAge: values.age,
-        patronGender: values.gender,
+        patronAge: values.age ? Number(values.age) : 0,
+        patronGender: values.gender || 'Not specified',
         purpose,
         timestamp: new Date().toISOString(),
         status: "granted"
@@ -111,7 +122,6 @@ function RegistrationContent() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Background Layer */}
       <div className="absolute inset-0 z-0">
         <Image 
           src={backgroundUrl} 
@@ -137,12 +147,9 @@ function RegistrationContent() {
           className="shadow-2xl border-none rounded-[2.5rem] border border-white/30 overflow-hidden"
           style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
         >
-          {/* NEU Logo Header */}
-          <div className="absolute top-6 left-8">
-            <div className="flex items-center gap-2">
-              <Library className="h-6 w-6 text-primary" />
-              <span className="font-headline font-bold text-primary text-xs tracking-widest">NEU LIBRARY</span>
-            </div>
+          <div className="absolute top-6 left-8 flex items-center gap-2">
+            <Library className="h-6 w-6 text-primary" />
+            <span className="font-headline font-bold text-primary text-xs tracking-widest">NEU LIBRARY</span>
           </div>
           
           <CardHeader className="text-center pt-16">
@@ -179,7 +186,7 @@ function RegistrationContent() {
                     name="age"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Age</FormLabel>
+                        <FormLabel className="text-primary font-bold">Age {!requireAge && "(Optional)"}</FormLabel>
                         <FormControl>
                           <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-12 rounded-xl bg-white/50 border-white/50 focus:bg-white" />
                         </FormControl>
@@ -193,7 +200,7 @@ function RegistrationContent() {
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Gender Identity</FormLabel>
+                        <FormLabel className="text-primary font-bold">GenderIdentity {!requireGender && "(Optional)"}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
@@ -249,9 +256,7 @@ function RegistrationContent() {
                         </FormControl>
                         <SelectContent>
                           {activeDepartments.map((dept: string) => (
-                            <SelectItem key={dept} value={dept}>
-                              {dept}
-                            </SelectItem>
+                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

@@ -8,19 +8,15 @@ import {
   Calendar as CalendarIcon, 
   FileText,
   Clock,
-  MapPin,
   Loader2,
   Filter,
   X,
   Printer,
   FileCheck,
-  TrendingUp,
-  Award,
   BarChart3,
   PieChart as PieIcon,
   Users,
-  Target,
-  ArrowRight
+  Target
 } from 'lucide-react';
 import { 
   Bar, 
@@ -75,7 +71,6 @@ export default function ReportsPage() {
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 100]);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { toast } = useToast();
   const db = useFirestore();
   const { user } = useUser();
 
@@ -114,7 +109,6 @@ export default function ReportsPage() {
       return isDateMatch && isDeptMatch && isGenderMatch && isAgeMatch && isPurposeMatch;
     });
 
-    // Metrics
     const uniquePatrons = new Set(filteredVisits.map(v => v.patronId)).size;
     const totalDays = Math.max(1, differenceInDays(dateRange.to || new Date(), dateRange.from || subDays(new Date(), 30)));
     const targetEngagement = (config.dailyEngagementTarget || 50) * totalDays;
@@ -173,12 +167,8 @@ export default function ReportsPage() {
     const trafficFlowData = Object.entries(hourlyMap).map(([time, count]) => ({ 
       time, 
       count,
-      target: config.dailyEngagementTarget / 11 || 5 // Hourly target
+      target: config.dailyEngagementTarget / 11 || 5
     }));
-
-    const busiestDay = filteredVisits.length > 0 ? 
-      format(new Date(filteredVisits[0].timestamp), 'EEEE') : 'N/A';
-    const topCollege = deptDistributionData[0]?.name || 'N/A';
 
     return { 
       genderData, 
@@ -192,15 +182,12 @@ export default function ReportsPage() {
       targetEngagement,
       filteredVisits,
       summary: {
-        busiestDay,
-        topCollege,
+        busiestDay: filteredVisits.length > 0 ? format(new Date(filteredVisits[0].timestamp), 'EEEE') : 'N/A',
+        topCollege: deptDistributionData[0]?.name || 'N/A',
         dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`
       }
     };
   }, [rawVisits, dateRange, selectedDepartments, selectedGenders, ageRange, selectedPurposes, config]);
-
-  const handleExport = () => setIsPreviewOpen(true);
-  const handlePrint = () => window.print();
 
   const handleQuickDate = (type: 'day' | 'week' | 'month') => {
     const now = new Date();
@@ -246,7 +233,7 @@ export default function ReportsPage() {
             {showFilters ? "Hide Filters" : "Analytics Control Panel"}
           </Button>
           
-          <Button onClick={handleExport} className="rounded-2xl gap-3 bg-primary h-14 px-8 shadow-xl shadow-primary/20">
+          <Button onClick={() => setIsPreviewOpen(true)} className="rounded-2xl gap-3 bg-primary h-14 px-8 shadow-xl shadow-primary/20">
             <Download className="h-5 w-5" />
             Export Formal Report
           </Button>
@@ -258,15 +245,10 @@ export default function ReportsPage() {
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-2xl">
-                  <Filter className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold">Segmentation Control</CardTitle>
-                  <CardDescription>Filter intelligence data by demographic or organizational dependencies</CardDescription>
-                </div>
+                <div className="p-3 bg-primary/10 rounded-2xl"><Filter className="h-5 w-5 text-primary" /></div>
+                <CardTitle className="text-xl font-bold">Segmentation Control</CardTitle>
               </div>
-              <Button variant="ghost" onClick={resetFilters} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
+              <Button variant="ghost" onClick={resetFilters} className="text-primary font-bold">
                 <X className="h-4 w-4 mr-2" /> Reset Analytics
               </Button>
             </div>
@@ -275,122 +257,25 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               <div className="space-y-4">
                 <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Time Interval</Label>
-                <div className="flex flex-col gap-3">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-bold rounded-2xl h-12 border-slate-200">
-                        <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
-                        {dateRange.from ? (
-                          dateRange.to ? (
-                            <span className="truncate">{format(dateRange.from, "LLL dd")} - {format(dateRange.to, "LLL dd, y")}</span>
-                          ) : (
-                            format(dateRange.from, "LLL dd, y")
-                          )
-                        ) : (
-                          <span>Select Dates</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        initialFocus
-                        mode="range"
-                        selected={{ from: dateRange.from, to: dateRange.to }}
-                        onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })}
-                        numberOfMonths={2}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => handleQuickDate('day')} className="text-[10px] font-black h-9 rounded-lg">TODAY</Button>
-                    <Button variant="secondary" size="sm" onClick={() => handleQuickDate('week')} className="text-[10px] font-black h-9 rounded-lg">WEEK</Button>
-                    <Button variant="secondary" size="sm" onClick={() => handleQuickDate('month')} className="text-[10px] font-black h-9 rounded-lg">MONTH</Button>
-                  </div>
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-bold rounded-2xl h-12">
+                      <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                      {dateRange.from ? format(dateRange.from, "LLL dd") : "Select Range"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="range" selected={{ from: dateRange.from, to: dateRange.to }} onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })} />
+                  </PopoverContent>
+                </Popover>
               </div>
-
               <div className="space-y-4">
                 <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Academic Units</Label>
-                <div className="max-h-[180px] overflow-y-auto space-y-2.5 pr-3 custom-scrollbar">
+                <div className="max-h-[180px] overflow-y-auto space-y-2 pr-2">
                   {config?.departments?.map((dept: any) => (
-                    <div key={dept.id} className="flex items-center space-x-3 group">
-                      <Checkbox 
-                        id={`dept-${dept.id}`} 
-                        checked={selectedDepartments.includes(dept.name)}
-                        onCheckedChange={(checked) => {
-                          setSelectedDepartments(checked 
-                            ? [...selectedDepartments, dept.name] 
-                            : selectedDepartments.filter(d => d !== dept.name)
-                          );
-                        }}
-                        className="rounded-md border-slate-300"
-                      />
-                      <label htmlFor={`dept-${dept.id}`} className="text-sm font-bold text-slate-700 cursor-pointer group-hover:text-primary transition-colors">
-                        {dept.name}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Demographic Filter</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {GENDERS.map((g) => (
-                      <Badge 
-                        key={g} 
-                        variant={selectedGenders.includes(g) ? "default" : "outline"}
-                        className={cn(
-                          "cursor-pointer font-black px-4 py-1.5 rounded-xl border-slate-200 transition-all",
-                          selectedGenders.includes(g) ? "bg-primary text-white scale-105" : "hover:border-primary/50"
-                        )}
-                        onClick={() => {
-                          setSelectedGenders(selectedGenders.includes(g)
-                            ? selectedGenders.filter(item => item !== g)
-                            : [...selectedGenders, g]
-                          );
-                        }}
-                      >
-                        {g}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Age Bracket</Label>
-                    <Badge variant="secondary" className="text-[11px] font-black">{ageRange[0]} - {ageRange[1]}</Badge>
-                  </div>
-                  <Slider 
-                    defaultValue={[0, 100]} 
-                    max={100} 
-                    step={1} 
-                    value={ageRange}
-                    onValueChange={(val: any) => setAgeRange(val)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Visit Intent</Label>
-                <div className="max-h-[180px] overflow-y-auto space-y-2.5 pr-3 custom-scrollbar">
-                  {(config?.purposes || PURPOSES).map((p: any) => (
-                    <div key={p.id} className="flex items-center space-x-3 group">
-                      <Checkbox 
-                        id={`purpose-${p.id}`} 
-                        checked={selectedPurposes.includes(p.label)}
-                        onCheckedChange={(checked) => {
-                          setSelectedPurposes(checked 
-                            ? [...selectedPurposes, p.label] 
-                            : selectedPurposes.filter(item => item !== p.label)
-                          );
-                        }}
-                        className="rounded-md border-slate-300"
-                      />
-                      <label htmlFor={`purpose-${p.id}`} className="text-sm font-bold text-slate-700 cursor-pointer group-hover:text-primary transition-colors">
-                        {p.label}
-                      </label>
+                    <div key={dept.id} className="flex items-center space-x-2">
+                      <Checkbox id={`dept-${dept.id}`} checked={selectedDepartments.includes(dept.name)} onCheckedChange={(checked) => setSelectedDepartments(checked ? [...selectedDepartments, dept.name] : selectedDepartments.filter(d => d !== dept.name))} />
+                      <Label htmlFor={`dept-${dept.id}`}>{dept.name}</Label>
                     </div>
                   ))}
                 </div>
@@ -400,68 +285,33 @@ export default function ReportsPage() {
         </Card>
       )}
 
-      {/* Goal Tracking Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden p-8 flex flex-col justify-center gap-6">
           <div className="flex justify-between items-end">
-            <div className="space-y-1">
-              <h3 className="text-2xl font-black text-primary flex items-center gap-3">
-                <Target className="h-6 w-6 text-accent-foreground" />
-                Engagement Goal Progress
-              </h3>
-              <p className="text-slate-500 font-medium">Tracking against university engagement KPIs</p>
-            </div>
-            <div className="text-right">
-              <span className="text-3xl font-black text-primary">{Math.round(analytics?.engagementProgress || 0)}%</span>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Achieved</p>
-            </div>
+            <h3 className="text-2xl font-black text-primary flex items-center gap-3"><Target className="h-6 w-6 text-accent-foreground" /> Engagement Goal Progress</h3>
+            <span className="text-3xl font-black text-primary">{Math.round(analytics?.engagementProgress || 0)}%</span>
           </div>
-          <Progress value={analytics?.engagementProgress} className="h-4 bg-slate-100" />
+          <Progress value={analytics?.engagementProgress} className="h-4" />
           <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
             <span>0 Visitors</span>
             <span>Target: {analytics?.targetEngagement} visitors</span>
           </div>
         </Card>
-
-        <Card className="border-none shadow-sm rounded-[2.5rem] bg-accent/10 border border-accent/20 p-8 flex flex-col justify-center items-center text-center space-y-2">
-          <Users className="h-10 w-10 text-accent-foreground" />
+        <Card className="border-none shadow-sm rounded-[2.5rem] bg-accent/10 p-8 flex flex-col justify-center items-center text-center">
+          <Users className="h-10 w-10 text-accent-foreground mb-2" />
           <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Unique Patrons</p>
           <h3 className="text-4xl font-black text-primary">{analytics?.uniquePatrons}</h3>
-          <p className="text-[10px] font-medium text-slate-500 italic">Distinct individuals served</p>
         </Card>
       </div>
 
-      {/* Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-primary/10 rounded-[1.5rem]">
-                <BarChart3 className="h-7 w-7 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-black text-primary">Departmental ROI</CardTitle>
-                <CardDescription className="text-base">Utilization volume by academic unit</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
+          <CardHeader className="p-8"><CardTitle className="text-2xl font-black text-primary">Departmental ROI</CardTitle></CardHeader>
           <CardContent className="p-8 pt-0 h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={analytics?.deptDistributionData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 12, fontWeight: '900', fill: '#334155'}} 
-                  width={150}
-                />
-                <Tooltip 
-                  cursor={{fill: '#f8fafc'}}
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
-                />
+                <YAxis dataKey="name" type="category" width={150} tick={{fontSize: 12, fontWeight: '900'}} />
+                <Tooltip />
                 <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={32}>
                   {analytics?.deptDistributionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -471,268 +321,73 @@ export default function ReportsPage() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-accent/20 rounded-[1.5rem]">
-                <PieIcon className="h-7 w-7 text-accent-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-black text-primary">Visitor Intent Breakdown</CardTitle>
-                <CardDescription className="text-base">Facility usage reasons analysis</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8 pt-0 h-[400px] flex flex-col items-center">
+          <CardHeader className="p-8"><CardTitle className="text-2xl font-black text-primary">Visitor Intent Breakdown</CardTitle></CardHeader>
+          <CardContent className="p-8 pt-0 h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={analytics?.purposeData}
-                  innerRadius={80}
-                  outerRadius={120}
-                  paddingAngle={8}
-                  dataKey="value"
-                >
+                <Pie data={analytics?.purposeData} innerRadius={80} outerRadius={120} paddingAngle={8} dataKey="value">
                   {analytics?.purposeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none' }} />
-                <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                <Tooltip />
+                <Legend />
               </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-primary/10 rounded-[1.5rem]">
-                <Clock className="h-7 w-7 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-black text-primary">Peak Traffic Flow vs Target</CardTitle>
-                <CardDescription className="text-base">Hourly utilization compared to university targets</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-10 pt-0 h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={analytics?.trafficFlowData}>
-                <defs>
-                  <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#355872" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#355872" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="time" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 12, fontWeight: 'bold', fill: '#64748b'}} 
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 12, fill: '#94a3b8'}} 
-                />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#355872" 
-                  strokeWidth={6} 
-                  fillOpacity={1} 
-                  fill="url(#colorTraffic)" 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="target" 
-                  stroke="#f97316" 
-                  strokeWidth={2} 
-                  strokeDasharray="5 5" 
-                  dot={false}
-                  name="Engagement Target"
-                />
-              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Official Report Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-[1100px] h-[95vh] flex flex-col p-0 overflow-hidden border-none rounded-[3rem] shadow-2xl">
-          <div className="p-8 bg-slate-900 text-white flex items-center justify-between shrink-0 print:hidden">
+          <div className="p-8 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div className="space-y-1">
-              <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                <FileCheck className="h-8 w-8 text-green-400" />
-                OFFICIAL SYSTEM GENERATED REPORT
-              </DialogTitle>
-              <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                Validated university record for facility ROI assessment
-              </DialogDescription>
+              <DialogTitle className="text-2xl font-black flex items-center gap-3"><FileCheck className="h-8 w-8 text-green-400" /> OFFICIAL SYSTEM REPORT</DialogTitle>
+              <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{config?.reportHeaderTitle || "UNIVERSITY FACILITY UTILIZATION RECORD"}</DialogDescription>
             </div>
-            <div className="flex gap-4">
-              <Button variant="outline" className="h-12 bg-white/10 border-white/20 hover:bg-white/20 rounded-xl px-6 font-bold" onClick={handlePrint}>
-                <Printer className="h-5 w-5 mr-3" />
-                Print Official PDF
-              </Button>
-              <Button variant="ghost" className="h-12 text-white hover:bg-white/10 rounded-xl px-4" onClick={() => setIsPreviewOpen(false)}>
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
+            <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white" onClick={() => window.print()}><Printer className="h-5 w-5 mr-3" /> Print Official PDF</Button>
           </div>
-
-          <div className="flex-1 overflow-y-auto bg-slate-200/50 p-16 print:p-0 print:bg-white custom-scrollbar">
-            <div id="print-area" className="bg-white shadow-2xl mx-auto max-w-[850px] min-h-[1100px] p-20 print:shadow-none print:max-w-none font-serif flex flex-col rounded-[2rem] print:rounded-none">
-              {config?.useLetterhead && (
-                <div className="flex items-center justify-between border-b-[6px] border-slate-900 pb-10 mb-16">
-                  <div className="flex items-center gap-10">
-                    <div className="h-28 w-28 bg-primary flex items-center justify-center text-white rounded-3xl shadow-2xl p-4">
-                      <FileCheck className="h-full w-full" />
-                    </div>
-                    <div className="space-y-1">
-                      <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">University Central Library</h1>
-                      <p className="text-sm font-black text-slate-500 uppercase tracking-[0.4em] pt-1">Office of the Chief Librarian</p>
-                      <p className="text-[10px] font-bold text-slate-400 tracking-widest">Formal Utilization Intelligence Record</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="bg-slate-100 p-3 rounded-xl border border-slate-200">
-                      <p className="text-[10px] font-black text-slate-800 tracking-tighter">REF: LIB-{format(new Date(), 'yyyy-MM-dd')}-XR</p>
-                      <p className="text-[10px] font-bold text-slate-400">TIMESTAMP: {format(new Date(), 'HH:mm:ss')}</p>
-                    </div>
+          <div className="flex-1 overflow-y-auto bg-slate-200/50 p-16 print:p-0 print:bg-white">
+            <div id="print-area" className="bg-white shadow-2xl mx-auto max-w-[850px] min-h-[1100px] p-20 print:shadow-none flex flex-col rounded-[2rem] print:rounded-none">
+              <div className="flex items-center justify-between border-b-[6px] border-slate-900 pb-10 mb-16">
+                <div className="flex items-center gap-6">
+                  {config?.universityLogoUrl && <img src={config.universityLogoUrl} className="h-20 w-auto" alt="University Logo" />}
+                  <div>
+                    <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">University Central Library</h1>
+                    <p className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] pt-1">{config?.reportHeaderTitle || "OFFICE OF THE CHIEF LIBRARIAN"}</p>
                   </div>
                 </div>
-              )}
-
+                <div className="text-right text-[10px] font-black text-slate-400">REF: LIB-{format(new Date(), 'yyyyMMdd')}<br/>TS: {format(new Date(), 'HH:mm:ss')}</div>
+              </div>
               <div className="text-center mb-16 space-y-4">
-                <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tight">Facility Utilization Report</h2>
-                <div className="inline-block px-8 py-2 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-[0.3em]">
-                  {analytics?.summary.dateRangeStr}
-                </div>
+                <h2 className="text-4xl font-black text-slate-900 uppercase">Facility Utilization Intelligence</h2>
+                <div className="inline-block px-8 py-2 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-[0.3em]">{analytics?.summary.dateRangeStr}</div>
               </div>
-
-              {/* Summary Highlights */}
               <div className="grid grid-cols-4 gap-6 mb-16">
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Visits</p>
-                  <p className="text-4xl font-black text-primary">{analytics?.total}</p>
-                </div>
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Unique Users</p>
-                  <p className="text-4xl font-black text-primary">{analytics?.uniquePatrons}</p>
-                </div>
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Peak Day</p>
-                  <p className="text-2xl font-black text-primary">{analytics?.summary.busiestDay}</p>
-                </div>
-                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Goal Reach</p>
-                  <p className="text-3xl font-black text-primary">{Math.round(analytics?.engagementProgress || 0)}%</p>
-                </div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Visits</p><p className="text-4xl font-black text-primary">{analytics?.total}</p></div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Unique Users</p><p className="text-4xl font-black text-primary">{analytics?.uniquePatrons}</p></div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Peak Day</p><p className="text-2xl font-black text-primary">{analytics?.summary.busiestDay}</p></div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100"><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Goal Reach</p><p className="text-3xl font-black text-primary">{Math.round(analytics?.engagementProgress || 0)}%</p></div>
               </div>
-
-              {/* Visual Analytics Sections in Report */}
-              <div className="space-y-12 mb-16">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">I. Temporal Utilization Flow</h3>
-                  <div className="h-[200px] w-full border border-slate-100 rounded-3xl p-4 bg-slate-50/30">
-                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={analytics?.trafficFlowData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="time" hide />
-                        <YAxis hide />
-                        <Area type="monotone" dataKey="count" stroke="#355872" strokeWidth={4} fill="#355872" fillOpacity={0.1} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">II. Demographic Ratio</h3>
-                    <div className="h-[180px] w-full border border-slate-100 rounded-3xl p-4 bg-slate-50/30 flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={analytics?.genderData} innerRadius={40} outerRadius={60} dataKey="value">
-                            {analytics?.genderData.map((e, i) => <Cell key={i} fill={CHART_COLORS[i % 5]} />)}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">III. Intent Analytics</h3>
-                    <div className="h-[180px] w-full border border-slate-100 rounded-3xl p-4 bg-slate-50/30 flex items-center justify-center">
-                       <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={analytics?.purposeData} innerRadius={40} outerRadius={60} dataKey="value">
-                            {analytics?.purposeData.map((e, i) => <Cell key={i} fill={CHART_COLORS[i % 5]} />)}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-20">
-                <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4 mb-8">IV. Formal Activity Ledger</h3>
-                <div className="overflow-hidden rounded-2xl border-2 border-slate-900">
-                  <table className="w-full text-left text-[11px] border-collapse">
-                    <thead>
-                      <tr className="bg-slate-900 text-white font-black uppercase tracking-widest">
-                        <th className="p-4 border-r border-white/20">Identity</th>
-                        <th className="p-4 border-r border-white/20">Unit</th>
-                        <th className="p-4 border-r border-white/20">Purpose</th>
-                        <th className="p-4 text-right">Timestamp</th>
+              <div className="overflow-hidden rounded-2xl border-2 border-slate-900 mb-16">
+                <table className="w-full text-left text-[11px] border-collapse">
+                  <thead className="bg-slate-900 text-white"><tr><th className="p-4">Identity</th><th className="p-4">Unit</th><th className="p-4">Purpose</th><th className="p-4 text-right">Timestamp</th></tr></thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {analytics?.filteredVisits.slice(0, 20).map((v) => (
+                      <tr key={v.id}>
+                        <td className="p-4 font-black text-slate-900">{v.patronName}<br/><span className="text-[9px] font-bold text-slate-400 uppercase">{v.schoolId}</span></td>
+                        <td className="p-4 font-bold text-slate-600">{v.patronDepartments?.join(', ')}</td>
+                        <td className="p-4 font-black text-primary uppercase text-[9px]">{v.purpose}</td>
+                        <td className="p-4 text-right font-mono text-slate-400">{format(new Date(v.timestamp), 'MM/dd HH:mm')}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {analytics?.filteredVisits.slice(0, 30).map((visit) => (
-                        <tr key={visit.id}>
-                          <td className="p-4 font-black text-slate-900 border-r border-slate-100">
-                            {visit.patronName}
-                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{visit.schoolId}</p>
-                          </td>
-                          <td className="p-4 font-bold text-slate-600 italic border-r border-slate-100">
-                            {visit.patronDepartments?.join(', ')}
-                          </td>
-                          <td className="p-4 border-r border-slate-100 font-black text-primary uppercase text-[9px]">
-                            {visit.purpose}
-                          </td>
-                          <td className="p-4 text-right font-mono font-black text-slate-400">
-                            {format(new Date(visit.timestamp), 'MM/dd HH:mm')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
-              <div className="mt-auto">
-                <div className="grid grid-cols-2 gap-20 pt-20 border-t-2 border-slate-100">
-                  <div className="text-center space-y-4">
-                    <div className="h-[1px] w-full bg-slate-900" />
-                    <p className="text-[10px] font-black uppercase text-slate-900 tracking-widest">System Record Officer</p>
-                  </div>
-                  <div className="text-center space-y-4">
-                    <div className="h-[1px] w-full bg-slate-900" />
-                    <p className="text-[10px] font-black uppercase text-slate-900 tracking-widest">Chief Librarian / Registrar</p>
-                  </div>
-                </div>
-
-                <div className="mt-16 pt-8 border-t border-slate-100 flex items-center justify-between text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">
-                  <p>PATRONPOINT SECURE ANALYTICS ENGINE</p>
-                  <p>&copy; 2026 UNIVERSITY RECORDS</p>
-                </div>
+              <div className="mt-auto pt-8 border-t border-slate-100 flex items-center justify-between text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">
+                <p>{config?.reportFooterText || "PATRONPOINT SECURE ANALYTICS ENGINE"}</p>
+                <p>&copy; 2026 UNIVERSITY RECORDS</p>
               </div>
             </div>
           </div>

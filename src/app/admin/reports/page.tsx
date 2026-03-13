@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -33,6 +34,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
+import { Download, FileText, FileSpreadsheet } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -136,30 +138,17 @@ export default function ReportsPage() {
     };
   }, [rawVisits, dateRange]);
 
-  const handlePrint = () => {
-    // If the modal isn't open, we open it first to ensure the printable content is in the DOM
-    if (!isPreviewOpen) {
-      setIsPreviewOpen(true);
-      // Wait for the modal to render before printing
-      setTimeout(() => {
-        window.print();
-      }, 500);
-    } else {
-      window.print();
-    }
-  };
-
   const handleExportCSV = () => {
     if (!analytics?.filteredVisits) return;
     
     const headers = ["Time", "Name", "ID/Email", "Access Method", "Department", "Purpose", "Age", "Gender"];
     const rows = analytics.filteredVisits.map(v => [
       format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss'),
-      v.patronName,
-      v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId,
-      v.authMethod,
-      v.patronDepartments?.[0] || 'N/A',
-      v.purpose,
+      `"${v.patronName}"`,
+      `"${v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId}"`,
+      `"${v.authMethod}"`,
+      `"${v.patronDepartments?.[0] || 'N/A'}"`,
+      `"${v.purpose}"`,
       v.patronAge,
       v.patronGender
     ]);
@@ -169,11 +158,22 @@ export default function ReportsPage() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `library_report_${format(new Date(), 'yyyyMMdd')}.csv`);
+    link.setAttribute("download", `library_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handlePrint = () => {
+    if (!isPreviewOpen) {
+      setIsPreviewOpen(true);
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    } else {
+      window.print();
+    }
   };
 
   if (isLoading || !mounted) return (
@@ -323,10 +323,10 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* WYSIWYG Export Configuration */}
+      {/* Report Generation Suite */}
       <Card className="p-10 bg-slate-900 border-none rounded-[2rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Report Generation</h2>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Institutional Generation Center</h2>
           <div className="flex flex-wrap gap-8">
             <div className="flex items-center space-x-3">
               <Checkbox id="logs" checked={includeLogs} onCheckedChange={(v) => setIncludeLogs(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
@@ -340,12 +340,15 @@ export default function ReportsPage() {
         </div>
         <div className="flex flex-wrap gap-4">
           <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02]">
-            Preview Library Report
+            <FileText className="mr-3 h-5 w-5" />
+            Preview Registry
           </Button>
-          <Button onClick={handlePrint} className="h-16 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">
+          <Button onClick={handlePrint} className="h-16 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg gap-3">
+            <Download className="h-5 w-5" />
             Download PDF
           </Button>
-          <Button onClick={handleExportCSV} variant="outline" className="h-16 px-8 border-slate-700 text-slate-300 hover:bg-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest">
+          <Button onClick={handleExportCSV} variant="outline" className="h-16 px-10 border-accent text-accent hover:bg-accent/10 rounded-2xl font-black uppercase text-[10px] tracking-widest gap-3">
+            <FileSpreadsheet className="h-5 w-5" />
             Export CSV
           </Button>
         </div>
@@ -360,9 +363,14 @@ export default function ReportsPage() {
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter">Library Report Preview</DialogTitle>
                 <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">NEU Central Library Registry Records</DialogDescription>
               </div>
-              <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
-                Generate PDF
-              </Button>
+              <div className="flex gap-3">
+                <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
+                  Save as PDF
+                </Button>
+                <Button onClick={handleExportCSV} variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
+                  Export CSV
+                </Button>
+              </div>
             </div>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto bg-slate-100 p-12 report-print-container">
@@ -425,7 +433,7 @@ export default function ReportsPage() {
                         <th className="p-3 uppercase font-black tracking-widest">Time</th>
                         <th className="p-3 uppercase font-black tracking-widest">Name</th>
                         <th className="p-3 uppercase font-black tracking-widest">ID/Email</th>
-                        <th className="p-3 uppercase font-black tracking-widest">Dept</th>
+                        <th className="p-3 uppercase font-black tracking-widest">Department</th>
                         <th className="p-3 uppercase font-black tracking-widest">Purpose</th>
                       </tr>
                     </thead>
@@ -436,7 +444,7 @@ export default function ReportsPage() {
                           <td className="p-3 font-bold uppercase">{v.patronName}</td>
                           <td className="p-3 font-mono">{v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId}</td>
                           <td className="p-3 uppercase">{v.patronDepartments?.[0]?.split(':')[0]}</td>
-                          <td className="p-3 uppercase">{v.purpose}</td>
+                          <td className="p-3 uppercase text-center">{v.purpose}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -450,9 +458,14 @@ export default function ReportsPage() {
             <Button onClick={() => setIsPreviewOpen(false)} variant="ghost" className="rounded-xl font-black uppercase text-[10px] tracking-widest">
               Close Preview
             </Button>
-            <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">
-              Save as PDF
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={handleExportCSV} variant="outline" className="border-accent text-accent hover:bg-accent/10 rounded-xl px-8 font-black uppercase text-[10px] tracking-widest">
+                Export to CSV
+              </Button>
+              <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">
+                Download PDF
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

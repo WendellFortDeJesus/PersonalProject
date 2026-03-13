@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
@@ -16,7 +17,6 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { cn } from '@/lib/utils';
-import { Activity, Users, Clock, ShieldAlert, Zap, AlertTriangle, MessageSquare, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -78,7 +78,6 @@ export default function DashboardPage() {
           <div className="flex items-baseline gap-4">
             <h3 className="text-6xl font-mono font-medium tracking-tighter">{stats.total}</h3>
             <div className="flex items-center gap-1 text-accent">
-              <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-black">+5%</span>
             </div>
           </div>
@@ -138,7 +137,6 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-right flex items-center gap-6">
                   <span className="text-[11px] font-mono font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-4 py-1.5 rounded-full">{format(new Date(visit.timestamp), 'HH:mm:ss')}</span>
-                  {visit.status === 'blocked' && <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />}
                 </div>
               </div>
             ))}
@@ -151,19 +149,16 @@ export default function DashboardPage() {
             <div className="space-y-8">
               <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Command Panel</h2>
               <div className="space-y-4">
-                <Button className="w-full h-16 rounded-[1.5rem] bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[11px] justify-start px-8 gap-5 shadow-xl shadow-primary/20">
-                  <Zap className="h-5 w-5 text-accent" />
+                <Button className="w-full h-16 rounded-[1.5rem] bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-[11px] justify-start px-8 shadow-xl shadow-primary/20">
                   Manual System Override
                 </Button>
-                <Button variant="outline" className="w-full h-16 rounded-[1.5rem] border-white/10 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[11px] justify-start px-8 gap-5">
-                  <MessageSquare className="h-5 w-5" />
+                <Button variant="outline" className="w-full h-16 rounded-[1.5rem] border-white/10 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[11px] justify-start px-8">
                   Broadcast Alert
                 </Button>
               </div>
             </div>
             <div className="pt-10 border-t border-white/10 mt-10">
-              <Button variant="ghost" className="w-full h-16 rounded-[1.5rem] text-red-400 hover:text-red-300 hover:bg-red-950/40 font-black uppercase tracking-widest text-[11px] justify-start px-8 gap-5 transition-all">
-                <ShieldAlert className="h-5 w-5" />
+              <Button variant="ghost" className="w-full h-16 rounded-[1.5rem] text-red-400 hover:text-red-300 hover:bg-red-950/40 font-black uppercase tracking-widest text-[11px] justify-start px-8 transition-all">
                 Emergency Lockdown
               </Button>
             </div>

@@ -32,7 +32,6 @@ import {
   DialogTitle, 
   DialogDescription
 } from '@/components/ui/dialog';
-import { Download, Calendar as CalendarIcon, TrendingUp, Filter, CheckCircle2 } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -132,7 +131,6 @@ export default function ReportsPage() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-14 rounded-2xl font-black gap-3 px-6 border-slate-200 justify-start w-full">
-                <CalendarIcon className="h-4 w-4 text-primary" />
                 {analytics?.summary.dateRangeStr}
               </Button>
             </PopoverTrigger>
@@ -147,7 +145,6 @@ export default function ReportsPage() {
             <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Total Attendance</p>
             <h3 className="text-3xl font-mono font-medium mt-2">{analytics?.total}</h3>
             <div className="flex items-center gap-1 mt-2">
-              <TrendingUp className="h-3 w-3 text-accent" />
               <span className="text-[9px] font-bold text-accent">Real-time</span>
             </div>
           </Card>
@@ -165,8 +162,7 @@ export default function ReportsPage() {
           </Card>
 
           <Card className="bento-tile p-6 flex flex-col justify-between h-full bg-slate-900 border-none">
-            <Button onClick={() => setIsPreviewOpen(true)} className="w-full h-full bg-primary hover:bg-primary/90 rounded-2xl flex flex-col items-center justify-center gap-2 p-0">
-              <Download className="h-4 w-4 text-accent" />
+            <Button onClick={() => setIsPreviewOpen(true)} className="w-full h-full bg-primary hover:bg-primary/90 rounded-2xl flex flex-col items-center justify-center p-0">
               <span className="text-[10px] font-black uppercase tracking-widest text-white">Generate BI Report</span>
             </Button>
           </Card>
@@ -181,7 +177,6 @@ export default function ReportsPage() {
               <h2 className="text-xl font-black text-primary uppercase tracking-tighter leading-none">Utilization Intelligence</h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Departmental traffic flow ranking</p>
             </div>
-            <Filter className="h-4 w-4 text-slate-300" />
           </div>
           <div className="flex-1 p-8">
             <ResponsiveContainer width="100%" height="100%">
@@ -343,7 +338,6 @@ export default function ReportsPage() {
               <div className="mt-auto pt-16 border-t border-slate-100 flex items-center justify-between text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
                 <p>PATRONPOINT SECURE BI ENGINE</p>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
                   <p>OFFICIAL UNIVERSITY RECORD</p>
                 </div>
               </div>

@@ -14,17 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { 
-  Search, 
-  Save, 
-  Settings2, 
-  Globe, 
-  Database, 
-  Layout, 
-  ShieldCheck, 
-  ArrowRight,
-  Plus
-} from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function SystemSettingsPage() {
@@ -53,7 +42,7 @@ export default function SystemSettingsPage() {
   const handleSaveSettings = async (updates: any) => {
     if (!settingsRef) return;
     const finalData = { ...settings, ...updates };
-    setDoc(settingsRef, finalData, { merge: true }).catch(async (error) => {
+    setDoc(settingsRef, finalData, { merge: true }).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: settingsRef.path,
         operation: 'update',
@@ -90,24 +79,22 @@ export default function SystemSettingsPage() {
           <div className="p-10 bg-slate-50 border-b space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Academic Registry</h2>
-              <Database className="h-5 w-5 text-slate-300" />
             </div>
             
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <Input placeholder="College Identity Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold uppercase text-xs" />
                 <div className="flex gap-4">
-                  <Input placeholder="Short Code (e.g. CICS)" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-mono font-bold" />
-                  <Button onClick={() => {}} className="h-14 px-8 rounded-2xl bg-primary shadow-lg"><Plus className="h-5 w-5" /></Button>
+                  <Input placeholder="Short Code" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-mono font-bold" />
+                  <Button onClick={() => {}} className="h-14 px-8 rounded-2xl bg-primary shadow-lg">Add</Button>
                 </div>
               </div>
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                 <Input 
                   placeholder="Filter Registry..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-12 pl-12 rounded-2xl bg-white border-slate-100 text-[11px] font-bold uppercase"
+                  className="h-12 rounded-2xl bg-white border-slate-100 text-[11px] font-bold uppercase"
                 />
               </div>
             </div>
@@ -146,7 +133,6 @@ export default function SystemSettingsPage() {
         <div className="lg:col-span-5 bento-tile flex flex-col h-[800px] shadow-2xl">
           <div className="flex items-center justify-between mb-10">
             <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Terminal Customization</h2>
-            <Layout className="h-5 w-5 text-slate-300" />
           </div>
           
           <div className="space-y-10">
@@ -155,7 +141,7 @@ export default function SystemSettingsPage() {
               <div className="flex gap-3">
                 <Input value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold" />
                 <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="bg-primary h-14 px-10 rounded-2xl shadow-xl transition-all active:scale-95">
-                  <Save className="h-5 w-5" />
+                  Save
                 </Button>
               </div>
             </div>
@@ -196,7 +182,6 @@ export default function SystemSettingsPage() {
         <div className="lg:col-span-3 bento-tile flex flex-col h-[800px] bg-slate-50 border-none shadow-inner p-10">
           <div className="flex items-center justify-between mb-10">
             <h2 className="text-xl font-black text-primary uppercase tracking-tighter">System Variables</h2>
-            <ShieldCheck className="h-5 w-5 text-slate-400" />
           </div>
 
           <div className="space-y-12">
@@ -229,9 +214,8 @@ export default function SystemSettingsPage() {
             </div>
 
             <div className="mt-auto pt-10 border-t border-slate-200">
-               <Button variant="ghost" className="w-full h-16 rounded-2xl bg-white border border-slate-200 font-black uppercase text-[10px] tracking-widest text-primary gap-3 shadow-sm hover:bg-slate-50 transition-all">
+               <Button variant="ghost" className="w-full h-16 rounded-2xl bg-white border border-slate-200 font-black uppercase text-[10px] tracking-widest text-primary shadow-sm hover:bg-slate-50 transition-all">
                 Access Audit Logs
-                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

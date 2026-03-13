@@ -31,7 +31,6 @@ import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
-import { Search, UserCog, ShieldOff, Filter, Download } from 'lucide-react';
 
 export default function VisitorManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,10 +80,9 @@ export default function VisitorManagementPage() {
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-primary/60">Search Identity</Label>
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <Input 
                   placeholder="Name or ID..." 
-                  className="h-11 rounded-xl bg-slate-50 border-slate-100 pl-11 text-xs"
+                  className="h-11 rounded-xl bg-slate-50 border-slate-100 text-xs"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -99,7 +97,6 @@ export default function VisitorManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
-                  {/* Dynamic depts from settings would go here */}
                 </SelectContent>
               </Select>
             </div>
@@ -120,8 +117,7 @@ export default function VisitorManagementPage() {
         </div>
 
         <div className="pt-8 border-t">
-          <Button className="w-full h-12 rounded-xl bg-primary font-black uppercase text-[10px] tracking-widest gap-2">
-            <Download className="h-3 w-3" />
+          <Button className="w-full h-12 rounded-xl bg-primary font-black uppercase text-[10px] tracking-widest">
             Export CSV
           </Button>
         </div>
@@ -181,16 +177,16 @@ export default function VisitorManagementPage() {
                   <TableCell className="text-right pr-10">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button 
-                        variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-primary rounded-xl"
+                        variant="ghost" size="sm" className="h-9 px-4 text-primary font-black uppercase text-[10px] rounded-xl"
                         onClick={() => { setEditingPatron(patron); setIsEditDialogOpen(true); }}
                       >
-                        <UserCog className="h-4 w-4" />
+                        Edit
                       </Button>
                       <Button 
-                        variant="ghost" size="icon" className={cn("h-9 w-9 rounded-xl", patron.isBlocked ? "text-green-600 hover:bg-green-50" : "text-red-400 hover:bg-red-50")}
+                        variant="ghost" size="sm" className={cn("h-9 px-4 font-black uppercase text-[10px] rounded-xl", patron.isBlocked ? "text-green-600 hover:bg-green-50" : "text-red-400 hover:bg-red-50")}
                         onClick={() => handleToggleBlock(patron)}
                       >
-                        <ShieldOff className="h-4 w-4" />
+                        {patron.isBlocked ? 'Unlock' : 'Block'}
                       </Button>
                     </div>
                   </TableCell>

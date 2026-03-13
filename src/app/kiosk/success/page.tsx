@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Library, Wifi, Coffee, BookOpen } from 'lucide-react';
+import { CheckCircle2, Wifi, Coffee, BookOpen, GraduationCap, Building2 } from 'lucide-react';
 
 export default function SuccessPage() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function SuccessPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/');
-    }, 5000);
+    }, 6000);
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -28,33 +28,46 @@ export default function SuccessPage() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <h1 className="text-4xl font-headline font-bold text-primary">Check-in Successful!</h1>
-              <p className="text-xl text-muted-foreground">Welcome back, Alice Johnson</p>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h1 className="text-4xl font-headline font-bold text-primary">Check-in Successful!</h1>
+                <p className="text-xl text-slate-700 font-bold">Welcome, Alice Johnson</p>
+              </div>
+              
+              <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-medium">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-slate-600 border border-slate-200">
+                  <GraduationCap className="h-4 w-4" />
+                  Student
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-slate-600 border border-slate-200">
+                  <Building2 className="h-4 w-4" />
+                  College of Engineering
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 py-6">
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50">
+            <div className="grid grid-cols-3 gap-4 py-4">
+              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <Wifi className="h-6 w-6 text-primary" />
-                <span className="text-xs font-bold text-slate-500">Free WiFi</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Free WiFi</span>
               </div>
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50">
+              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <Coffee className="h-6 w-6 text-primary" />
-                <span className="text-xs font-bold text-slate-500">Study Cafe</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Study Cafe</span>
               </div>
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50">
+              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <BookOpen className="h-6 w-6 text-primary" />
-                <span className="text-xs font-bold text-slate-500">Quiet Zone</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Quiet Zone</span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
               <p className="text-sm text-primary/80 leading-relaxed italic">
                 "Knowledge is power. Information is liberating. Education is the premise of progress."
               </p>
             </div>
 
-            <p className="text-sm text-muted-foreground">This screen will automatically return to home in 5 seconds.</p>
+            <p className="text-xs text-muted-foreground pt-4">Returning to home screen in a few seconds...</p>
           </CardContent>
         </Card>
       </div>

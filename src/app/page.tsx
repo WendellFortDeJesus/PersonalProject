@@ -32,17 +32,7 @@ export default function HomePage() {
             Welcome to the University Central Library. Please check-in to access our facilities and resources.
           </p>
           <div className="hidden md:block pt-4">
-            <div className="flex -space-x-3 overflow-hidden">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="inline-block h-10 w-10 rounded-full ring-2 ring-white overflow-hidden">
-                  <Image src={`https://picsum.photos/seed/patron${i}/40/40`} width={40} height={40} alt="Patron" />
-                </div>
-              ))}
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent ring-2 ring-white text-xs font-bold text-primary">
-                +2k
-              </div>
-            </div>
-            <p className="mt-4 text-sm text-white/80">Join over 2,000 daily active patrons.</p>
+            <p className="text-lg font-medium text-white/80">Smart Visitor Management for NEU Library.</p>
           </div>
         </div>
 
@@ -86,7 +76,7 @@ export default function HomePage() {
       </div>
       
       <footer className="absolute bottom-4 text-white/60 text-sm font-medium">
-        &copy; 2024 PatronPoint Systems. All rights reserved.
+        &copy; 2026 PatronPoint Systems. All rights reserved.
       </footer>
     </div>
   );

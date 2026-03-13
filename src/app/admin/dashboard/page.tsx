@@ -31,10 +31,11 @@ export default function DashboardPage() {
 
   const { data: visits, isLoading } = useCollection(visitsQuery);
 
-  const safeFormat = (date: string | undefined, formatStr: string, fallback = "...") => {
+  const safeFormat = (date: string | Date | undefined, formatStr: string, fallback = "...") => {
     if (!mounted || !date) return fallback;
     try {
-      return format(new Date(date), formatStr);
+      const dateObj = date instanceof Date ? date : new Date(date);
+      return format(dateObj, formatStr);
     } catch {
       return fallback;
     }
@@ -52,10 +53,10 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs font-bold text-white/60 uppercase tracking-widest">Live Activity Logins</p>
                 <h3 className="text-6xl font-bold mt-2">{totalLoginsToday}</h3>
-                <p className="text-sm font-medium mt-4 text-white/80 flex items-center gap-2">
+                <div className="text-sm font-medium mt-4 text-white/80 flex items-center gap-2">
                   <UserCheck className="h-4 w-4" />
                   Real-time entries detected
-                </p>
+                </div>
               </div>
               <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-md">
                 <Users className="h-8 w-8 text-white" />
@@ -73,10 +74,10 @@ export default function DashboardPage() {
                   <Activity className="h-8 w-8 text-green-500" />
                   ONLINE
                 </h3>
-                <p className="text-sm font-medium mt-4 text-slate-500 flex items-center gap-2">
+                <div className="text-sm font-medium mt-4 text-slate-500 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   Firebase Sync Active
-                </p>
+                </div>
               </div>
               <div className="p-4 bg-primary/5 rounded-3xl">
                 <Activity className="h-8 w-8 text-primary" />
@@ -91,12 +92,12 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Reporting Date</p>
                 <h3 className="text-2xl font-bold mt-2 text-primary">
-                  {safeFormat(new Date().toISOString(), 'MMMM d, yyyy')}
+                  {safeFormat(new Date(), 'MMMM d, yyyy')}
                 </h3>
-                <p className="text-sm font-medium mt-4 text-slate-500 flex items-center gap-2">
+                <div className="text-sm font-medium mt-4 text-slate-500 flex items-center gap-2">
                   <CalendarDays className="h-4 w-4" />
                   Live System Clock
-                </p>
+                </div>
               </div>
               <div className="p-4 bg-accent/20 rounded-3xl">
                 <Clock className="h-8 w-8 text-accent-foreground" />

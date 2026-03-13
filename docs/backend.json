@@ -67,10 +67,11 @@
             }
           } 
         },
-        "capacityLimit": { "type": "number" },
+        "capacityLimit": { "type": "number", "default": 200 },
         "dailyEngagementTarget": { "type": "number" },
         "reportFormat": { "type": "string", "enum": ["pdf", "excel"] },
-        "useLetterhead": { "type": "boolean" },
+        "autoClearLogs": { "type": "boolean", "default": true },
+        "privacyMode": { "type": "boolean", "default": false },
         "themeImageUrl": { "type": "string" },
         "universityLogoUrl": { "type": "string" },
         "overlayOpacity": { "type": "number" },

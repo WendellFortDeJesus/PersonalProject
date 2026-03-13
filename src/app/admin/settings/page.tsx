@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -14,6 +13,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Trash2, Plus, Palette, Settings2, Info } from 'lucide-react';
 
 export default function SystemSettingsPage() {
   const db = useFirestore();
@@ -27,6 +27,7 @@ export default function SystemSettingsPage() {
 
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptCode, setNewDeptCode] = useState('');
+  const [newDeptColor, setNewDeptColor] = useState('#006837');
   const [themeUrl, setThemeUrl] = useState('');
   const [opacity, setOpacity] = useState(70);
 
@@ -54,20 +55,21 @@ export default function SystemSettingsPage() {
     
     const newDept = {
       id: Math.random().toString(36).substr(2, 9),
-      name: newDeptName,
+      name: newDeptName.toUpperCase(),
       code: newDeptCode.toUpperCase(),
       isActive: true,
-      color: '#006837'
+      color: newDeptColor
     };
 
     const updatedDepts = [...(settings?.departments || []), newDept];
     handleSaveSettings({ departments: updatedDepts });
     setNewDeptName('');
     setNewDeptCode('');
+    setNewDeptColor('#006837');
     
     toast({
-      title: "Settings Updated",
-      description: `${newDept.code} added to registry.`,
+      title: "Academic Registry Updated",
+      description: `${newDept.code} added to institutional source of truth.`,
     });
   };
 
@@ -79,135 +81,176 @@ export default function SystemSettingsPage() {
 
   if (isLoading) return (
     <div className="p-32 text-center">
-      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Initializing System Engine...</p>
+      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Synchronizing Control Room...</p>
     </div>
   );
 
   return (
-    <div className="space-y-8 pb-16 animate-fade-in fluid-container bg-white min-h-full">
-      <header className="flex items-center justify-between p-10 border-b">
+    <div className="animate-fade-in bg-[#F8FAFC] min-h-full font-body">
+      <header className="flex items-center justify-between p-8 bg-white border-b">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">System Settings</h1>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configuration & operational rules</p>
+          <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">System Configuration</h1>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Accreditation & Operational Logic</p>
         </div>
+        <Settings2 className="h-5 w-5 text-slate-300" />
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 border-t">
-        {/* Academic Infrastructure (Left) */}
-        <div className="lg:col-span-4 border-r p-10 space-y-10">
-          <div className="space-y-1">
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">Academic Registry</h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase">Institutional Source of Truth</p>
-          </div>
-
-          <div className="space-y-4">
-            <Input placeholder="Department Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-12 rounded-xl text-xs font-bold uppercase border-slate-200" />
-            <div className="flex gap-2">
-              <Input placeholder="Code" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-12 rounded-xl font-mono font-bold border-slate-200" />
-              <Button onClick={handleAddDept} disabled={!newDeptName || !newDeptCode} className="h-12 px-6 rounded-xl bg-primary font-black uppercase text-[10px] tracking-widest">Add</Button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-8">
+        {/* Category Management (Left) */}
+        <div className="lg:col-span-5 space-y-6">
+          <Card className="border-none shadow-sm overflow-hidden rounded-xl">
+            <div className="p-6 border-b bg-white">
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <Palette className="h-4 w-4 text-primary" />
+                Academic Infrastructure
+              </h2>
+              <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Manage Colleges & Color Branding</p>
             </div>
-          </div>
-
-          <div className="max-h-[400px] overflow-y-auto border rounded-xl">
-            <Table>
-              <TableBody>
-                {settings?.departments?.map((dept: any) => (
-                  <TableRow key={dept.id} className="group transition-colors border-b last:border-0">
-                    <TableCell className="pl-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-7 w-7 rounded-lg flex items-center justify-center text-[8px] font-black text-white font-mono" style={{ backgroundColor: dept.color || '#006837' }}>{dept.code}</div>
-                        <span className="text-[10px] font-black text-slate-700 uppercase truncate max-w-[150px]">{dept.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <Button variant="ghost" size="sm" onClick={() => handleRemoveDept(dept.id)} className="opacity-0 group-hover:opacity-100 text-red-500 font-black uppercase text-[8px] tracking-widest">Remove</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        {/* Branding & Terminal (Center) */}
-        <div className="lg:col-span-5 border-r p-10 space-y-10">
-          <div className="space-y-1">
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">Terminal Branding</h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase">Visitor Experience Control</p>
-          </div>
-
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Background Identity URL</Label>
-              <Input 
-                value={themeUrl} 
-                onChange={(e) => setThemeUrl(e.target.value)} 
-                onBlur={() => handleSaveSettings({ themeImageUrl: themeUrl })} 
-                className="h-12 rounded-xl font-bold border-slate-200" 
-              />
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Overlay Opacity</Label>
-                <span className="text-[10px] font-mono font-bold text-primary">{opacity}%</span>
-              </div>
-              <Slider 
-                value={[opacity]} 
-                max={100} 
-                min={10} 
-                step={1} 
-                onValueChange={(v) => { setOpacity(v[0]); handleSaveSettings({ overlayOpacity: v[0]/100 }); }} 
-              />
-            </div>
-
-            <div className="pt-8 border-t space-y-4">
-              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight">Identity Enforcement</span>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase">Require Age Index on Registration</p>
+            <CardContent className="p-6 space-y-6 bg-white">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Full Institutional Name</Label>
+                  <Input placeholder="COLLEGE OF INFORMATICS..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-10 rounded-lg text-xs font-bold uppercase" />
                 </div>
-                <Switch checked={settings?.requireAge} onCheckedChange={(v) => handleSaveSettings({ requireAge: v })} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Code</Label>
+                    <Input placeholder="CICS" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-10 rounded-lg font-mono font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Visual Anchor</Label>
+                    <div className="flex gap-2">
+                      <Input type="color" value={newDeptColor} onChange={(e) => setNewDeptColor(e.target.value)} className="h-10 w-full p-1 rounded-lg cursor-pointer" />
+                      <Button onClick={handleAddDept} disabled={!newDeptName || !newDeptCode} className="h-10 px-6 rounded-lg bg-primary font-black uppercase text-[10px] tracking-widest">
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+
+              <div className="max-h-[500px] overflow-y-auto border rounded-xl overflow-hidden">
+                <Table className="high-density-table">
+                  <TableBody>
+                    {settings?.departments?.map((dept: any) => (
+                      <TableRow key={dept.id} className="group hover:bg-slate-50 transition-colors border-b last:border-0">
+                        <TableCell className="pl-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-6 w-6 rounded flex items-center justify-center text-[7px] font-black text-white font-mono shadow-inner" style={{ backgroundColor: dept.color || '#006837' }}>{dept.code}</div>
+                            <span className="text-[10px] font-black text-slate-700 uppercase truncate max-w-[200px]">{dept.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right pr-4">
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveDept(dept.id)} className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-50 p-0 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Operational Rules (Right) */}
-        <div className="lg:col-span-3 p-10 space-y-10 bg-slate-50/50">
-          <div className="space-y-1">
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">Operational Rules</h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase">Capacity & Maintenance</p>
+        {/* Operational Logic (Right) */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
+              <div className="p-6 border-b">
+                <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Terminal Branding</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Visitor Experience Context</p>
+              </div>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Environmental Backdrop URL</Label>
+                  <Input 
+                    value={themeUrl} 
+                    onChange={(e) => setThemeUrl(e.target.value)} 
+                    onBlur={() => handleSaveSettings({ themeImageUrl: themeUrl })} 
+                    className="h-10 rounded-lg text-[10px] font-bold border-slate-200" 
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Visual Overlay Intensity</Label>
+                    <span className="text-[10px] font-mono font-bold text-primary">{opacity}%</span>
+                  </div>
+                  <Slider 
+                    value={[opacity]} 
+                    max={100} 
+                    min={0} 
+                    step={1} 
+                    onValueChange={(v) => { setOpacity(v[0]); handleSaveSettings({ overlayOpacity: v[0]/100 }); }} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
+              <div className="p-6 border-b">
+                <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Operational Rules</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Density & Privacy Management</p>
+              </div>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Maximum Safe Capacity</Label>
+                  <Input 
+                    type="number" 
+                    value={settings?.capacityLimit || 200} 
+                    onChange={(e) => handleSaveSettings({ capacityLimit: parseInt(e.target.value) })} 
+                    className="h-10 rounded-lg font-bold border-slate-200" 
+                  />
+                </div>
+
+                <div className="pt-4 border-t space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-black text-slate-700 uppercase">Identity Verification</span>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase">Require Age Index</p>
+                    </div>
+                    <Switch checked={settings?.requireAge} onCheckedChange={(v) => handleSaveSettings({ requireAge: v })} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-black text-slate-700 uppercase">Auto-Clear Registry</span>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase">Reset daily presence</p>
+                    </div>
+                    <Switch checked={settings?.autoClearLogs} onCheckedChange={(v) => handleSaveSettings({ autoClearLogs: v })} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Maximum Seating Capacity</Label>
-              <Input 
-                type="number" 
-                value={settings?.capacityLimit || 200} 
-                onChange={(e) => handleSaveSettings({ capacityLimit: parseInt(e.target.value) })} 
-                className="h-12 rounded-xl font-bold border-slate-200" 
-              />
-              <p className="text-[8px] font-bold text-slate-400 uppercase">Alerts staff when reached</p>
-            </div>
-
-            <div className="space-y-4 pt-6 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-700 uppercase">Auto-Clear Logs</span>
-                <Switch checked={settings?.autoClearLogs} onCheckedChange={(v) => handleSaveSettings({ autoClearLogs: v })} />
+          <Card className="border-none shadow-sm rounded-xl overflow-hidden bg-white">
+            <div className="p-6 border-b flex justify-between items-center">
+              <div>
+                <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Institutional Purpose List</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Defines allowed reasons for facility entry</p>
               </div>
-              <p className="text-[8px] font-bold text-slate-400 uppercase">Reset occupancy at end of day</p>
+              <Info className="h-4 w-4 text-slate-300" />
             </div>
-
-            <div className="space-y-4 pt-6 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-700 uppercase">Privacy Retention</span>
-                <Switch checked={settings?.privacyMode} onCheckedChange={(v) => handleSaveSettings({ privacyMode: v })} />
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {settings?.purposes?.map((purpose: any) => (
+                  <div key={purpose.id} className="p-4 bg-slate-50 border rounded-xl flex items-center justify-between group">
+                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight">{purpose.label}</span>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-slate-300 group-hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+                <Button variant="outline" className="h-full border-dashed border-2 rounded-xl text-slate-400 hover:text-primary hover:border-primary py-4 flex flex-col gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span className="text-[8px] font-black uppercase tracking-widest">Define New Purpose</span>
+                </Button>
               </div>
-              <p className="text-[8px] font-bold text-slate-400 uppercase">Anonymize logs after semester</p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -545,7 +545,7 @@ export default function SystemSettingsPage() {
                   <div className="pt-4 border-t">
                     <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl">
                       <div className="flex items-center gap-3">
-                        <Target className="h-5 w-5 text-primary" />
+                        <Bell className="h-5 w-5 text-primary" />
                         <span className="font-bold text-slate-700">Auto-Email Weekly Reports</span>
                       </div>
                       <Switch />

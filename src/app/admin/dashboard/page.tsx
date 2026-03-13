@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const db = useFirestore();
+  const router = useRouter();
   const { user, isUserLoading } = useUser();
 
   const settingsRef = useMemoFirebase(() => {
@@ -231,9 +233,8 @@ export default function DashboardPage() {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generate current operational audit</p>
             </div>
             <div className="flex gap-3">
-              <Input type="date" className="h-11 bg-white/10 border-white/20 text-white text-[10px] font-bold w-40" />
-              <Button className="h-11 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
-                Export Daily PDF
+              <Button onClick={() => router.push('/admin/reports')} className="h-11 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
+                Go to Report Center
               </Button>
             </div>
           </div>

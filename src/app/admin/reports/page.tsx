@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -21,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, eachDayOfInterval } from 'date-fns';
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, eachDayOfInterval, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
@@ -31,7 +30,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription
+  DialogDescription,
+  DialogFooter
 } from '@/components/ui/dialog';
 
 export default function ReportsPage() {
@@ -136,6 +136,10 @@ export default function ReportsPage() {
     };
   }, [rawVisits, dateRange]);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (isLoading || !mounted) return (
     <div className="p-32 text-center">
       <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Compiling Institutional Intelligence...</p>
@@ -145,7 +149,7 @@ export default function ReportsPage() {
   const CHART_COLORS = ['#006837', '#22c55e', '#f59e0b', '#3b82f6', '#a855f7'];
 
   return (
-    <div className="space-y-8 animate-fade-in pb-16 fluid-container">
+    <div className="space-y-8 animate-fade-in pb-16 fluid-container no-print">
       {/* KPI Matrix */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-4 bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-center space-y-6">
@@ -204,7 +208,9 @@ export default function ReportsPage() {
         <div className="lg:col-span-8 bg-white border rounded-2xl h-[450px] flex flex-col p-0 overflow-hidden shadow-sm">
           <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
             <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Engagement Trend</h2>
-            <Badge variant="outline" className="h-7 px-4 text-[9px] font-black uppercase tracking-widest">Last {differenceInDays(dateRange.to || new Date(), dateRange.from || new Date())} Days</Badge>
+            <Badge variant="outline" className="h-7 px-4 text-[9px] font-black uppercase tracking-widest">
+              Last {differenceInDays(dateRange.to || new Date(), dateRange.from || new Date())} Days
+            </Badge>
           </div>
           <div className="flex-1 p-8">
             <ResponsiveContainer width="100%" height="100%">
@@ -300,7 +306,7 @@ export default function ReportsPage() {
           <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02]">
             Preview Library Report
           </Button>
-          <Button onClick={() => window.print()} variant="outline" className="h-16 px-8 border-white/20 text-white hover:bg-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest">
+          <Button onClick={handlePrint} variant="outline" className="h-16 px-8 border-white/20 text-white hover:bg-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest">
             Download PDF
           </Button>
         </div>
@@ -309,11 +315,18 @@ export default function ReportsPage() {
       {/* Report Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-[900px] h-[90vh] p-0 border-none rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
-          <DialogHeader className="p-8 bg-slate-900 text-white shrink-0">
-            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Library Report Preview</DialogTitle>
-            <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">NEU Central Library Registry Records</DialogDescription>
+          <DialogHeader className="p-8 bg-slate-900 text-white shrink-0 no-print">
+            <div className="flex justify-between items-center">
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tighter">Library Report Preview</DialogTitle>
+                <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">NEU Central Library Registry Records</DialogDescription>
+              </div>
+              <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl font-black uppercase text-[10px] tracking-widest">
+                Download PDF
+              </Button>
+            </div>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto bg-slate-100 p-12">
+          <div className="flex-1 overflow-y-auto bg-slate-100 p-12 report-print-container">
             <div className="bg-white shadow-xl mx-auto max-w-[800px] min-h-[1000px] p-16 rounded-[2rem] border border-slate-200">
               <div className="flex justify-between items-end border-b-4 border-slate-900 pb-8 mb-12">
                 <div>
@@ -372,7 +385,7 @@ export default function ReportsPage() {
                       <tr>
                         <th className="p-3 uppercase font-black tracking-widest">Time</th>
                         <th className="p-3 uppercase font-black tracking-widest">Name</th>
-                        <th className="p-3 uppercase font-black tracking-widest">ID</th>
+                        <th className="p-3 uppercase font-black tracking-widest">ID/Email</th>
                         <th className="p-3 uppercase font-black tracking-widest">Dept</th>
                         <th className="p-3 uppercase font-black tracking-widest">Purpose</th>
                       </tr>
@@ -382,7 +395,7 @@ export default function ReportsPage() {
                         <tr key={v.id}>
                           <td className="p-3 font-mono">{format(new Date(v.timestamp), 'HH:mm')}</td>
                           <td className="p-3 font-bold uppercase">{v.patronName}</td>
-                          <td className="p-3 font-mono">{v.schoolId}</td>
+                          <td className="p-3 font-mono">{v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId}</td>
                           <td className="p-3 uppercase">{v.patronDepartments?.[0]?.split(':')[0]}</td>
                           <td className="p-3 uppercase">{v.purpose}</td>
                         </tr>
@@ -394,12 +407,16 @@ export default function ReportsPage() {
               )}
             </div>
           </div>
+          <DialogFooter className="p-6 bg-slate-50 border-t no-print">
+            <Button onClick={() => setIsPreviewOpen(false)} variant="ghost" className="rounded-xl font-black uppercase text-[10px] tracking-widest">
+              Close Preview
+            </Button>
+            <Button onClick={handlePrint} className="bg-primary hover:bg-primary/90 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">
+              Download PDF Report
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
-
-function differenceInDays(d1: Date, d2: Date) {
-  return Math.floor(Math.abs(d1.getTime() - d2.getTime()) / (1000 * 60 * 60 * 24));
 }

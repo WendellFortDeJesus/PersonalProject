@@ -71,7 +71,6 @@ export default function DashboardPage() {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Authenticating Session...</p>
         </div>
       </div>
@@ -130,8 +129,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-start">
               <div className="space-y-4">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">System Status</p>
-                <div className="text-3xl font-black text-green-600 flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                <div className="text-3xl font-black text-green-600">
                   LIVE
                 </div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Push connection active</p>
@@ -197,7 +195,6 @@ export default function DashboardPage() {
                         {visit.patronName?.[0] || 'G'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-white shadow-md ${visit.status === 'blocked' ? 'bg-red-500' : 'bg-green-500'}`} />
                   </div>
                   
                   <div className="space-y-2">
@@ -263,29 +260,9 @@ export default function DashboardPage() {
 
       {isDataLoading && (
         <div className="py-40 text-center">
-          <Loader2 className="h-16 w-16 text-primary animate-spin mx-auto mb-6" />
           <p className="text-slate-400 font-black text-xs uppercase tracking-[0.5em] animate-pulse">Establishing Secure Uplink...</p>
         </div>
       )}
     </div>
-  );
-}
-
-function Loader2(props: any) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
   );
 }

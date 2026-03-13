@@ -37,7 +37,8 @@ service cloud.firestore {
     }
 
     match /visits/{visitId} {
-      allow read: if isStaff();
+      // Allow public read (list) so the kiosk can count live occupancy
+      allow read: if true; 
       allow create: if true; // Allow kiosk log entries
       allow update, delete: if isStaff();
     }

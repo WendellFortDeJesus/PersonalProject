@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -18,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, eachDayOfInterval, differenceInDays } from 'date-fns';
+import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -30,15 +31,12 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { FileText, Calendar as CalendarIcon, TrendingUp, Download } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, Download } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: subDays(new Date(), 30),
-    to: new Date()
-  });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
   const db = useFirestore();
   const { user } = useUser();
@@ -61,37 +59,26 @@ export default function ReportsPage() {
   const { data: rawVisits, isLoading } = useCollection(visitsQuery);
 
   const analytics = useMemo(() => {
-    if (!rawVisits) return null;
+    if (!rawVisits || !selectedDate) return null;
 
     const filteredVisits = rawVisits.filter(v => {
       const visitDate = new Date(v.timestamp);
-      return !dateRange.from || !dateRange.to || isWithinInterval(visitDate, { 
-        start: startOfDay(dateRange.from), 
-        end: endOfDay(dateRange.to) 
-      });
+      return isSameDay(visitDate, selectedDate);
     });
 
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
-    const dayMap: Record<string, number> = {};
-
-    const uniquePatrons = new Set();
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    let totalToday = 0;
+    const hourMap: Record<number, number> = {};
 
     filteredVisits.forEach(v => {
-      uniquePatrons.add(v.patronId);
       const vDate = new Date(v.timestamp);
-      const dateKey = format(vDate, 'yyyy-MM-dd');
-      
-      if (dateKey === todayStr) totalToday++;
+      const hourKey = vDate.getHours();
+      hourMap[hourKey] = (hourMap[hourKey] || 0) + 1;
 
       v.patronDepartments?.forEach((name: string) => {
         deptMap[name] = (deptMap[name] || 0) + 1;
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
-      
-      dayMap[dateKey] = (dayMap[dateKey] || 0) + 1;
     });
 
     const deptDistributionData = Object.entries(deptMap)
@@ -100,12 +87,11 @@ export default function ReportsPage() {
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
     
-    const trendData = dateRange.from && dateRange.to 
-      ? eachDayOfInterval({ start: dateRange.from, end: dateRange.to }).map(day => {
-          const key = format(day, 'yyyy-MM-dd');
-          return { date: format(day, 'MMM dd'), count: dayMap[key] || 0 };
-        })
-      : [];
+    // Generate hourly trend for the selected day (e.g., business hours 8am to 8pm)
+    const trendData = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(h => ({
+      hour: `${h}:00`,
+      count: hourMap[h] || 0
+    }));
 
     const activeDept = deptDistributionData[0];
     const totalCount = filteredVisits.length;
@@ -115,19 +101,13 @@ export default function ReportsPage() {
       purposeData, 
       trendData,
       total: totalCount,
-      totalToday,
-      uniqueCount: uniquePatrons.size,
       mostActiveDept: activeDept ? activeDept.name : 'N/A',
       mostActiveDeptCount: activeDept ? activeDept.count : 0,
       mostActiveDeptPercent: activeDept && totalCount > 0 ? Math.round((activeDept.count / totalCount) * 100) : 0,
       filteredVisits,
-      summary: {
-        dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`,
-        fromStr: format(dateRange.from || new Date(), 'MMM dd, yyyy'),
-        toStr: format(dateRange.to || new Date(), 'MMM dd, yyyy')
-      }
+      dateStr: format(selectedDate, 'PPP')
     };
-  }, [rawVisits, dateRange]);
+  }, [rawVisits, selectedDate]);
 
   const handlePrint = () => {
     window.print();
@@ -147,7 +127,7 @@ export default function ReportsPage() {
         <div className="lg:col-span-4 bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-center space-y-6">
           <div className="space-y-1">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Temporal Context</p>
-            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Reporting Range</h2>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Report Date</h2>
           </div>
           
           <Popover>
@@ -158,59 +138,52 @@ export default function ReportsPage() {
                     <CalendarIcon className="h-5 w-5" />
                   </div>
                   <div className="flex-1 flex flex-col items-start justify-center px-6 gap-1">
-                    <div className="grid grid-cols-2 w-full text-[9px] font-black uppercase tracking-tight text-slate-400 text-left">
-                      <div className="space-y-0.5">
-                        <span>From</span>
-                        <div className="text-primary text-[10px]">{analytics?.summary.fromStr}</div>
-                      </div>
-                      <div className="space-y-0.5 border-l border-slate-100 pl-4">
-                        <span>To</span>
-                        <div className="text-primary text-[10px]">{analytics?.summary.toStr}</div>
-                      </div>
+                    <span className="text-[9px] font-black uppercase tracking-tight text-slate-400">Selected Date</span>
+                    <div className="text-primary text-sm font-black uppercase tracking-tighter">
+                      {analytics?.dateStr}
                     </div>
                   </div>
                 </div>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden shadow-2xl" align="start">
-              <Calendar mode="range" selected={{ from: dateRange.from, to: dateRange.to }} onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })} />
+              <Calendar 
+                mode="single" 
+                selected={selectedDate} 
+                onSelect={setSelectedDate} 
+                initialFocus
+              />
             </PopoverContent>
           </Popover>
         </div>
 
         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Today</p>
-            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.totalToday}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">{format(new Date(), 'MMM dd, yyyy')}</span>
+          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm md:col-span-1">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Visitors</p>
+            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.total}</h3>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">For {analytics?.dateStr}</span>
           </Card>
 
-          <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm md:col-span-2">
+          <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm md:col-span-3">
             <div className="flex justify-between items-start">
               <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Most Active Department</p>
-              <Badge variant="secondary" className="bg-primary/10 text-primary text-[8px] font-black uppercase">{analytics?.mostActiveDeptPercent}% Share</Badge>
+              <Badge variant="secondary" className="bg-primary/10 text-primary text-[8px] font-black uppercase">{analytics?.mostActiveDeptPercent}% Total Share</Badge>
             </div>
             <div className="mt-4">
-              <h3 className="text-xl font-black text-primary uppercase leading-tight tracking-tight">
+              <h3 className="text-2xl font-black text-primary uppercase leading-tight tracking-tight">
                 {analytics?.mostActiveDept}
               </h3>
-              <div className="flex gap-8 mt-4 pt-4 border-t border-slate-100">
+              <div className="flex gap-12 mt-4 pt-4 border-t border-slate-100">
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
-                  <p className="text-xl font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</p>
+                  <p className="text-2xl font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase">Volume Status</p>
-                  <p className="text-xl font-mono font-bold text-primary">HIGH</p>
+                  <p className="text-2xl font-mono font-bold text-primary">HIGH</p>
                 </div>
               </div>
             </div>
-          </Card>
-
-          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Unique Patrons</p>
-            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.uniqueCount}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Master Records</span>
           </Card>
         </div>
       </div>
@@ -218,16 +191,16 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 bg-white border rounded-2xl h-[450px] flex flex-col p-0 overflow-hidden shadow-sm">
           <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
-            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Engagement Trend</h2>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Hourly Engagement</h2>
             <Badge variant="outline" className="h-7 px-4 text-[9px] font-black uppercase tracking-widest">
-              Range Activity
+              Daily Distribution
             </Badge>
           </div>
           <div className="flex-1 p-8">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={analytics?.trendData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} />
+                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} />
                 <YAxis hide />
                 <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: '800'}} />
                 <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={4} dot={{fill: '#006837', r: 4}} activeDot={{r: 6, strokeWidth: 0}} />
@@ -295,15 +268,15 @@ export default function ReportsPage() {
                   <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] pt-1">Administrative Audit Section</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-900 uppercase">Registry Hits Today: {analytics?.totalToday}</p>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Date: {format(new Date(), 'PP')}</p>
+                  <p className="text-[10px] font-black text-slate-900 uppercase">Total Visitors: {analytics?.total}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Registry Date: {analytics?.dateStr}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-12 mb-12">
                 <div className="space-y-6">
                   <div className="h-48 border rounded-xl p-6 bg-slate-50/50">
-                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Engagement Trend</p>
+                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Hourly Engagement</p>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={analytics?.trendData}>
                         <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
@@ -331,7 +304,7 @@ export default function ReportsPage() {
                   </h3>
                   <div className="space-y-4">
                     <div className="flex justify-between border-b pb-2">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Total Hits</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">Total Registry Hits</span>
                       <span className="text-sm font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</span>
                     </div>
                     <div className="flex justify-between border-b pb-2">
@@ -343,7 +316,7 @@ export default function ReportsPage() {
               </div>
 
               <div className="border-t-2 border-slate-100 pt-8">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6">Patron Registry Details</p>
+                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6">Student/Visitor Registry</p>
                 <table className="w-full text-left text-[9px] border-collapse">
                   <thead className="bg-slate-50">
                     <tr>
@@ -352,7 +325,7 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {analytics?.filteredVisits.slice(0, 50).map((v) => (
+                    {analytics?.filteredVisits.map((v) => (
                       <tr key={v.id}>
                         <td className="p-4 font-black text-slate-900 uppercase">{v.patronName}</td>
                         <td className="p-4 uppercase font-bold text-slate-500">{v.patronDepartments?.join(', ')}</td>

@@ -16,7 +16,8 @@ import {
   Legend,
   LineChart,
   Line,
-  CartesianGrid
+  CartesianGrid,
+  Label
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -24,7 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, getHours } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { Calendar as CalendarIcon, Download, Users, TrendingUp, UserCheck, ShieldCheck } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Users, TrendingUp, UserCheck, ShieldCheck, Activity } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -121,10 +122,7 @@ export default function ReportsPage() {
   const handleDownloadCSV = () => {
     if (!analytics?.filteredVisits || analytics.filteredVisits.length === 0) return;
 
-    // CSV Headers
     const headers = ["Timestamp", "Patron Name", "School ID", "Department", "Purpose", "Status"];
-    
-    // Map data to CSV rows
     const rows = analytics.filteredVisits.map(v => [
       format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss'),
       `"${v.patronName?.replace(/"/g, '""') || ''}"`,
@@ -134,18 +132,12 @@ export default function ReportsPage() {
       v.status || ''
     ]);
 
-    // Construct CSV content
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    // Create a blob and download link
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `NEU_Library_Audit_${format(selectedDate!, 'yyyy-MM-dd')}.csv`);
+    link.setAttribute("download", `Library_Audit_${format(selectedDate!, 'yyyy-MM-dd')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -248,28 +240,44 @@ export default function ReportsPage() {
         <div className="lg:col-span-4 bg-white border rounded-xl flex flex-col shadow-sm">
           <div className="p-6 border-b">
             <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Visit Intent</h2>
-            <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Resource Demand</p>
+            <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Resource Demand Analytics</p>
           </div>
-          <div className="flex-1 min-h-[300px] p-4">
+          <div className="flex-1 min-h-[300px] p-4 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={analytics?.purposeData} innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
+                <Pie 
+                  data={analytics?.purposeData} 
+                  innerRadius={60} 
+                  outerRadius={90} 
+                  paddingAngle={5} 
+                  dataKey="value"
+                >
                   {analytics?.purposeData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
+                  <Label 
+                    value="INTENT" 
+                    position="center" 
+                    style={{ fontSize: '10px', fontWeight: '900', fill: '#0F172A', textTransform: 'uppercase' }} 
+                  />
                 </Pie>
                 <Tooltip />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '9px', fontWeight: 800}} />
+                <Legend iconType="circle" wrapperStyle={{fontSize: '9px', fontWeight: 800, paddingTop: '20px'}} />
               </PieChart>
             </ResponsiveContainer>
+            <div className="px-6 pb-6 text-center">
+              <p className="text-[9px] font-bold text-slate-400 uppercase leading-relaxed">
+                Distribution of student activities categorized by institutional resource requirements.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       <Card className="p-8 bg-primary rounded-xl border-none shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Report Generation</h2>
-          <p className="text-[9px] font-black text-primary-foreground/60 uppercase tracking-widest">Generate high-fidelity institutional audits</p>
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Strategic Generation Center</h2>
+          <p className="text-[9px] font-black text-primary-foreground/60 uppercase tracking-widest">Generate high-fidelity institutional audits for accreditation</p>
         </div>
         <Button 
           onClick={handleDownloadCSV} 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,12 +13,15 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  Legend
+  Legend,
+  LineChart,
+  Line,
+  CartesianGrid
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay, startOfWeek, addDays, getHours } from 'date-fns';
+import { format, isSameDay, getHours, startOfDay, endOfDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -29,7 +33,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Calendar as CalendarIcon, Download, Info, ShieldCheck, Users, TrendingUp, UserCheck } from 'lucide-react';
+import { Calendar as CalendarIcon, Download, Info, ShieldCheck, Users, TrendingUp, UserCheck, PieChart as PieIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function ReportsPage() {
@@ -75,14 +79,16 @@ export default function ReportsPage() {
     
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
-    const heatMapData: number[][] = Array(7).fill(0).map(() => Array(12).fill(0));
+    const hourlyData: Record<number, number> = {};
+    
+    // Initialize hours 8am to 8pm
+    for (let i = 8; i <= 20; i++) hourlyData[i] = 0;
 
-    rawVisits.forEach(v => {
+    filteredVisits.forEach(v => {
       const vDate = new Date(v.timestamp);
-      const day = vDate.getDay();
       const hour = getHours(vDate);
-      if (hour >= 8 && hour < 20) {
-        heatMapData[day][hour - 8]++;
+      if (hour >= 8 && hour <= 20) {
+        hourlyData[hour]++;
       }
 
       v.patronDepartments?.forEach((name: string) => {
@@ -90,6 +96,11 @@ export default function ReportsPage() {
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
     });
+
+    const trendData = Object.entries(hourlyData).map(([hour, count]) => ({
+      time: `${hour}:00`,
+      count
+    }));
 
     const deptRankingData = Object.entries(deptMap)
       .map(([name, count]) => ({ 
@@ -100,23 +111,19 @@ export default function ReportsPage() {
       .sort((a, b) => b.count - a.count);
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
-    const totalVisitsCount = rawVisits.length;
-    const peakOccupancy = Math.min(Math.round((activePresence / (config?.capacityLimit || 200)) * 100), 100);
-
     const mostEngagedDept = deptRankingData[0];
-    const totalRegistryHits = deptRankingData.reduce((acc, d) => acc + d.count, 0);
-    const trafficShare = mostEngagedDept ? Math.round((mostEngagedDept.count / totalRegistryHits) * 100) : 0;
+    const totalTodayHits = filteredVisits.length;
+    const trafficShare = mostEngagedDept ? Math.round((mostEngagedDept.count / totalTodayHits) * 100) : 0;
 
     return { 
       deptRankingData, 
       purposeData, 
-      heatMapData,
+      trendData,
       activePresence,
       mostEngagedDept,
       trafficShare,
-      peakOccupancy,
       registrySize: rawPatrons.length,
-      totalToday: filteredVisits.length,
+      totalToday: totalTodayHits,
       filteredVisits,
       dateStr: format(selectedDate, 'PPP')
     };
@@ -202,32 +209,21 @@ export default function ReportsPage() {
         <div className="lg:col-span-8 bg-white border rounded-xl flex flex-col shadow-sm">
           <div className="p-6 border-b flex justify-between items-center">
             <div className="space-y-1">
-              <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Weekly Intensity Heatmap</h2>
-              <p className="text-[8px] font-bold text-slate-400 uppercase">Hourly Utilization Density</p>
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Hourly Engagement Trend</h2>
+              <p className="text-[8px] font-bold text-slate-400 uppercase">Selected Day Utilization</p>
             </div>
-            <Info className="h-4 w-4 text-slate-300" />
+            <TrendingUp className="h-4 w-4 text-slate-300" />
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              <div className="grid grid-rows-7 gap-1">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                  <span key={d} className="text-[8px] font-black text-slate-400 uppercase flex items-center h-5">{d}</span>
-                ))}
-              </div>
-              <div className="grid grid-rows-7 gap-1">
-                {analytics?.heatMapData.map((row, dayIdx) => (
-                  <div key={dayIdx} className="grid grid-cols-12 gap-1 h-5">
-                    {row.map((val, hrIdx) => (
-                      <div 
-                        key={hrIdx} 
-                        className="rounded-[2px] border border-slate-50"
-                        style={{ backgroundColor: val === 0 ? '#F1F5F9' : `rgba(0, 104, 55, ${Math.min(val / 10, 1)})` }}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="p-6 h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analytics?.trendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis dataKey="time" fontSize={9} fontWeight={700} axisLine={false} tickLine={false} />
+                <YAxis fontSize={9} fontWeight={700} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={{ r: 4, fill: '#006837' }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -285,29 +281,38 @@ export default function ReportsPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-black text-slate-900">{analytics?.totalToday}</p>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Visitors Logged: {analytics?.dateStr}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total Visitors: {analytics?.dateStr}</p>
                 </div>
               </div>
 
-              <div className="mb-8 p-6 bg-slate-50 rounded-lg border">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 border-b pb-1">Executive Summary</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  On <strong>{analytics?.dateStr}</strong>, the library facility recorded a total of <strong>{analytics?.totalToday}</strong> unique visitor hits. 
-                  The <strong>{analytics?.mostEngagedDept?.name}</strong> emerged as the primary institutional lead, 
-                  contributing to <strong>{analytics?.trafficShare}%</strong> of the total registered traffic.
-                </p>
-              </div>
-
-              {/* Section: Visit Intent Analytics */}
-              <div className="mb-10">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 border-b pb-1">Strategic Resource Demand (Visit Intent)</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {analytics?.purposeData.map((p, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 bg-slate-50 border rounded-lg">
-                      <span className="text-[9px] font-black text-slate-700 uppercase">{p.name}</span>
-                      <span className="text-[10px] font-mono font-bold text-primary">{p.value} Hits</span>
-                    </div>
-                  ))}
+              <div className="mb-10 grid grid-cols-2 gap-8">
+                <div className="space-y-4">
+                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1 border-b pb-1">Facility Utilization (Trend)</h3>
+                   <div className="h-[200px] w-full border rounded-lg p-4 bg-slate-50/50">
+                     <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analytics?.trendData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                          <XAxis dataKey="time" fontSize={8} fontWeight={700} axisLine={false} tickLine={false} />
+                          <YAxis fontSize={8} fontWeight={700} axisLine={false} tickLine={false} />
+                          <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={2} dot={{ r: 3, fill: '#006837' }} />
+                        </LineChart>
+                     </ResponsiveContainer>
+                   </div>
+                </div>
+                <div className="space-y-4">
+                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1 border-b pb-1">Resource Demand (Visit Intent)</h3>
+                   <div className="h-[200px] w-full border rounded-lg p-4 bg-slate-50/50">
+                     <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={analytics?.purposeData} innerRadius={35} outerRadius={60} paddingAngle={5} dataKey="value">
+                            {analytics?.purposeData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                     </ResponsiveContainer>
+                   </div>
                 </div>
               </div>
 
@@ -340,14 +345,14 @@ export default function ReportsPage() {
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="p-3 border uppercase font-black tracking-widest text-slate-400">Visitor Identity</th>
-                      <th className="p-3 border uppercase font-black tracking-widest text-slate-400">Department</th>
+                      <th className="p-3 border uppercase font-black tracking-widest text-slate-400 text-center">Department</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {analytics?.filteredVisits.map((v) => (
                       <tr key={v.id}>
                         <td className="p-3 border font-black text-slate-900 uppercase">{v.patronName}</td>
-                        <td className="p-3 border uppercase font-bold text-slate-500">{v.patronDepartments?.join(', ')}</td>
+                        <td className="p-3 border uppercase font-bold text-slate-500 text-center">{v.patronDepartments?.join(', ')}</td>
                       </tr>
                     ))}
                   </tbody>

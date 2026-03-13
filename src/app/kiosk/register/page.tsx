@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
-import { UserPlus, ArrowLeft, Loader2, Library } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -142,7 +142,7 @@ function RegistrationContent() {
       <div className="min-h-screen flex items-center justify-center bg-primary">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-white mx-auto" />
-          <p className="text-white font-bold uppercase tracking-widest text-xs">Synchronizing Terminal...</p>
+          <p className="text-white font-bold uppercase tracking-widest text-[10px]">Synchronizing Terminal...</p>
         </div>
       </div>
     );
@@ -176,18 +176,12 @@ function RegistrationContent() {
           style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
         >
           <div className="absolute top-6 left-8 flex items-center gap-2">
-            <Library className="h-6 w-6 text-primary" />
-            <span className="font-headline font-bold text-primary text-xs tracking-widest">NEU LIBRARY</span>
+            <span className="font-headline font-bold text-primary text-xs tracking-widest uppercase">NEU University Library</span>
           </div>
           
           <CardHeader className="text-center pt-16">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-primary/10 rounded-2xl">
-                <UserPlus className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-3xl font-headline font-bold text-primary">First-Time Registration</CardTitle>
-            <CardDescription className="text-base font-medium text-slate-700">
+            <CardTitle className="text-3xl font-headline font-bold text-primary uppercase tracking-tight">Identity Registration</CardTitle>
+            <CardDescription className="text-base font-bold text-slate-700 uppercase tracking-tight mt-2">
               Create your library profile to continue. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
             </CardDescription>
           </CardHeader>
@@ -200,9 +194,9 @@ function RegistrationContent() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Full Legal Name</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Full Legal Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Juan Dela Cruz" {...field} className="h-12 rounded-xl bg-white/50 border-white/50 focus:bg-white" />
+                          <Input placeholder="JUAN DELA CRUZ" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold uppercase" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -214,9 +208,9 @@ function RegistrationContent() {
                     name="age"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Age {!requireAge && "(Optional)"}</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Age {!requireAge && "(Optional)"}</FormLabel>
                         <FormControl>
-                          <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-12 rounded-xl bg-white/50 border-white/50 focus:bg-white" />
+                          <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -228,16 +222,16 @@ function RegistrationContent() {
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Gender {!requireGender && "(Optional)"}</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Gender {!requireGender && "(Optional)"}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
+                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold">
                               <SelectValue placeholder="Select Gender" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {GENDERS.map((g) => (
-                              <SelectItem key={g} value={g}>{g}</SelectItem>
+                              <SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -251,16 +245,16 @@ function RegistrationContent() {
                     name="purposeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">Purpose of Visit</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Purpose of Visit</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
+                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold">
                               <SelectValue placeholder="Select Purpose" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {(settings?.purposes || PURPOSES).map((p: any) => (
-                              <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                              <SelectItem key={p.id} value={p.id} className="font-bold">{p.label}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -275,16 +269,16 @@ function RegistrationContent() {
                   name="department"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-primary font-bold">College / Department</FormLabel>
+                      <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">College / Department</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
-                            <SelectValue placeholder="Select academic unit" />
+                          <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left overflow-hidden">
+                            <SelectValue placeholder="Select your specific academic unit" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="max-h-[300px]">
                           {activeDepartments.map((dept: string) => (
-                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                            <SelectItem key={dept} value={dept} className="font-bold text-xs">{dept}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -293,8 +287,8 @@ function RegistrationContent() {
                   )}
                 />
 
-                <Button disabled={isLoading} className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90">
-                  {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Complete Registration & Check-in"}
+                <Button disabled={isLoading} className="w-full h-18 text-xl font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 py-6">
+                  {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Verify and Check-in"}
                 </Button>
               </form>
             </Form>
@@ -307,7 +301,7 @@ function RegistrationContent() {
 
 export default function RegistrationPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading terminal...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-primary font-bold text-white uppercase tracking-widest">Initialising Terminal...</div>}>
       <RegistrationContent />
     </Suspense>
   );

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -153,6 +154,7 @@ function RegistrationContent() {
           fill 
           className="object-cover"
           priority
+          data-ai-hint="modern library"
         />
         <div className="absolute inset-0 bg-primary/20 backdrop-blur-md" />
       </div>

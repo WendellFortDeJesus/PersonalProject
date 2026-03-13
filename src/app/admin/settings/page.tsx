@@ -101,7 +101,7 @@ export default function SystemSettingsPage() {
           </div>
 
           <div className="space-y-4">
-            <Input placeholder="College Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-12 rounded-xl text-xs font-bold uppercase border-slate-200" />
+            <Input placeholder="Department Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-12 rounded-xl text-xs font-bold uppercase border-slate-200" />
             <div className="flex gap-2">
               <Input placeholder="Code" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-12 rounded-xl font-mono font-bold border-slate-200" />
               <Button onClick={handleAddDept} disabled={!newDeptName || !newDeptCode} className="h-12 px-6 rounded-xl bg-primary font-black uppercase text-[10px] tracking-widest">Add</Button>

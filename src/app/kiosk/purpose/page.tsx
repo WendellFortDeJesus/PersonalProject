@@ -71,7 +71,7 @@ function PurposeSelectionContent() {
         throw error;
       });
 
-      router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}`);
+      router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}&name=${encodeURIComponent(patronData.name)}`);
     } catch (err) {
       console.error(err);
       toast({
@@ -95,6 +95,7 @@ function PurposeSelectionContent() {
           fill 
           className="object-cover"
           priority
+          data-ai-hint="modern library"
         />
         <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
       </div>
@@ -115,7 +116,8 @@ function PurposeSelectionContent() {
           <p className="text-xl text-slate-700 font-medium">Select your primary purpose of visit</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        {/* Centered Flex Layout for Purpose Buttons */}
+        <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
           {(settings?.purposes || PURPOSES).map((purpose: any) => {
             const IconComponent = (Icons as any)[purpose.icon] || Icons.HelpCircle;
             return (
@@ -123,7 +125,7 @@ function PurposeSelectionContent() {
                 key={purpose.id}
                 onClick={() => handleSelect(purpose.id)}
                 variant="outline"
-                className={`h-40 rounded-3xl flex flex-col items-center justify-center gap-4 transition-all duration-300 border-2 bg-white/60 group ${
+                className={`w-full md:w-[calc(50%-12px)] lg:w-[calc(33.33%-16px)] h-44 rounded-3xl flex flex-col items-center justify-center gap-4 transition-all duration-300 border-2 bg-white/60 group ${
                   selected === purpose.id 
                     ? 'border-primary bg-white shadow-2xl ring-8 ring-primary/10' 
                     : 'border-white/50 hover:border-primary/30 hover:bg-white/90 hover:shadow-xl'
@@ -132,7 +134,7 @@ function PurposeSelectionContent() {
                 <div className={`p-4 rounded-full transition-colors ${selected === purpose.id ? 'bg-primary text-white' : 'bg-primary/5 text-primary group-hover:bg-primary/10'}`}>
                   <IconComponent className="h-8 w-8" />
                 </div>
-                <span className={`text-xl font-bold ${selected === purpose.id ? 'text-primary' : 'text-slate-700'}`}>
+                <span className={`text-lg font-bold uppercase tracking-tight ${selected === purpose.id ? 'text-primary' : 'text-slate-700'}`}>
                   {purpose.label}
                 </span>
               </Button>
@@ -143,7 +145,7 @@ function PurposeSelectionContent() {
         <div className="flex justify-center pt-4">
           <Button 
             variant="ghost" 
-            className="text-slate-600 font-bold hover:bg-white/20 px-8 py-6 rounded-2xl"
+            className="text-slate-600 font-bold hover:bg-white/20 px-8 py-6 rounded-2xl uppercase tracking-widest text-[10px]"
             onClick={() => router.push('/kiosk')}
           >
             Not you? Tap again

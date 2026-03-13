@@ -37,20 +37,25 @@ export const PURPOSES = [
 ];
 
 export const DEPARTMENTS = [
-  'College of Informatics and Computing Sciences',
-  'College of Engineering',
-  'College of Arts and Sciences',
-  'College of Business Administration',
-  'College of Education',
-  'College of Nursing',
-  'College of Law',
-  'College of Music',
-  'College of Communication',
-  'College of Criminology',
-  'School of Graduate Studies',
-  'Senior High School',
-  'Administrative Staff',
-  'External Guest'
+  'College of Informatics and Computing Sciences (CICS)',
+  'College of Engineering and Technology (CET)',
+  'College of Arts and Sciences (CAS)',
+  'College of Business Administration (CBA)',
+  'College of Education (CED)',
+  'College of Nursing (CON)',
+  'College of Law (COL)',
+  'College of Music (COM)',
+  'College of Communication (COC)',
+  'College of Criminology (CC)',
+  'College of Agriculture',
+  'College of Medicine',
+  'School of Graduate Studies (SGS)',
+  'Senior High School (SHS)',
+  'Junior High School (JHS)',
+  'Elementary Department',
+  'Administrative Staff / Faculty',
+  'Maintenance and Security',
+  'External Guest / Visitor'
 ];
 
 export const GENDERS = [

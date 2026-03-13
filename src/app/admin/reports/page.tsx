@@ -1,21 +1,21 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { 
-  Bar, 
-  BarChart, 
-  ResponsiveContainer, 
+  LineChart,
+  Line,
   XAxis, 
   YAxis, 
   Tooltip, 
-  Cell, 
+  CartesianGrid,
+  ResponsiveContainer,
   PieChart, 
   Pie, 
-  Legend, 
-  CartesianGrid,
-  LineChart,
-  Line
+  Cell,
+  Legend,
+  BarChart,
+  Bar
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -33,7 +33,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Download, FileText, FileSpreadsheet, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
+import { Download, FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -120,16 +120,18 @@ export default function ReportsPage() {
 
     const peakHour = Object.entries(hourlyMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
     const activeDept = deptDistributionData[0];
+    const totalCount = filteredVisits.length;
 
     return { 
       deptDistributionData, 
       purposeData, 
       trendData,
-      total: filteredVisits.length,
+      total: totalCount,
       totalToday,
       uniqueCount: uniquePatrons.size,
       mostActiveDept: activeDept ? activeDept.name : 'N/A',
       mostActiveDeptCount: activeDept ? activeDept.count : 0,
+      mostActiveDeptPercent: activeDept && totalCount > 0 ? Math.round((activeDept.count / totalCount) * 100) : 0,
       peakHour,
       filteredVisits,
       summary: {
@@ -139,33 +141,6 @@ export default function ReportsPage() {
       }
     };
   }, [rawVisits, dateRange]);
-
-  const handleExportCSV = () => {
-    if (!analytics?.filteredVisits) return;
-    
-    const headers = ["Time", "Name", "ID/Email", "Access Method", "Department", "Purpose", "Age", "Gender"];
-    const rows = analytics.filteredVisits.map(v => [
-      format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss'),
-      `"${v.patronName}"`,
-      `"${v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId}"`,
-      `"${v.authMethod}"`,
-      `"${v.patronDepartments?.[0] || 'N/A'}"`,
-      `"${v.purpose}"`,
-      v.patronAge,
-      v.patronGender
-    ]);
-
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `library_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   const handlePrint = () => {
     if (!isPreviewOpen) {
@@ -233,13 +208,16 @@ export default function ReportsPage() {
             <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Live Count</span>
           </Card>
 
-          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Active Department</p>
+          <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm">
+            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Most Active Department</p>
             <div className="mt-4 overflow-hidden">
               <h3 className="text-lg font-black text-primary uppercase truncate leading-tight">{analytics?.mostActiveDept}</h3>
-              <p className="text-[10px] font-mono font-bold text-slate-600 mt-1">{analytics?.mostActiveDeptCount} Visitors Recorded</p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-[11px] font-mono font-black text-slate-600 uppercase">{analytics?.mostActiveDeptCount} Visits</p>
+                <p className="text-[11px] font-mono font-black text-primary uppercase">{analytics?.mostActiveDeptPercent}% Share</p>
+              </div>
             </div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Unit Utilization</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Unit Utilization Index</span>
           </Card>
 
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
@@ -380,9 +358,6 @@ export default function ReportsPage() {
                 <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
                   Save as PDF
                 </Button>
-                <Button onClick={handleExportCSV} variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
-                  Export CSV
-                </Button>
               </div>
             </div>
           </DialogHeader>
@@ -402,22 +377,27 @@ export default function ReportsPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-6 mb-12">
-                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Total Visitors Today</p>
+                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center flex flex-col items-center justify-center gap-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Visitors (Today)</p>
                   <p className="text-4xl font-mono font-bold text-slate-900">{analytics?.totalToday}</p>
-                  <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">{format(new Date(), 'PP')}</p>
                 </div>
-                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                  <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Most Active Department</p>
-                  <p className="text-lg font-black text-slate-900 uppercase truncate leading-tight">{analytics?.mostActiveDept}</p>
-                  <p className="text-[9px] font-mono font-bold text-primary mt-1">{analytics?.mostActiveDeptCount} Visitors Recorded</p>
+                <div className="p-6 bg-primary/5 rounded-xl border border-primary/20 text-center flex flex-col items-center justify-center gap-1">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Most Active Department</p>
+                  <p className="text-lg font-black text-primary uppercase leading-tight truncate w-full">{analytics?.mostActiveDept}</p>
+                  <div className="flex gap-4 mt-1">
+                    <p className="text-[10px] font-mono font-black text-slate-600 uppercase">{analytics?.mostActiveDeptCount} Visits</p>
+                    <p className="text-[10px] font-mono font-black text-primary uppercase">{analytics?.mostActiveDeptPercent}% Participation</p>
+                  </div>
                 </div>
               </div>
 
               {includeCharts && (
                 <div className="space-y-12 mb-12">
                   <div className="h-56 border-t pt-8">
-                    <p className="text-[10px] font-black text-slate-400 uppercase mb-6 tracking-widest">Engagement Trend</p>
+                    <div className="flex items-center gap-2 mb-6">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Engagement Trend Summary</p>
+                    </div>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={analytics?.trendData}>
                         <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
@@ -427,7 +407,7 @@ export default function ReportsPage() {
                     </ResponsiveContainer>
                   </div>
                   <div className="h-64 border-t pt-8">
-                    <p className="text-[10px] font-black text-slate-400 uppercase mb-6 tracking-widest">Visit Intent (Purpose Distribution)</p>
+                    <p className="text-[10px] font-black text-slate-900 uppercase mb-6 tracking-widest text-center">Visit Intent (Purpose Distribution)</p>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={analytics?.purposeData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
@@ -444,30 +424,31 @@ export default function ReportsPage() {
 
               {includeLogs && (
                 <div className="border-t pt-8">
-                  <p className="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">Student / Visitor Registry</p>
+                  <div className="flex justify-between items-center mb-6">
+                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Student / Visitor Identity Registry</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase">{analytics?.filteredVisits.length} Records Documented</p>
+                  </div>
                   <table className="w-full text-left text-[8px] border-collapse">
                     <thead className="bg-slate-900 text-white">
                       <tr>
                         <th className="p-3 uppercase font-black tracking-widest">Time</th>
                         <th className="p-3 uppercase font-black tracking-widest">Name</th>
-                        <th className="p-3 uppercase font-black tracking-widest">ID / Email</th>
                         <th className="p-3 uppercase font-black tracking-widest">Department</th>
-                        <th className="p-3 uppercase font-black tracking-widest text-center">Purpose</th>
+                        <th className="p-3 uppercase font-black tracking-widest">Purpose</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {analytics?.filteredVisits.slice(0, 50).map((v) => (
+                      {analytics?.filteredVisits.slice(0, 100).map((v) => (
                         <tr key={v.id}>
-                          <td className="p-3 font-mono">{format(new Date(v.timestamp), 'HH:mm')}</td>
-                          <td className="p-3 font-bold uppercase">{v.patronName}</td>
-                          <td className="p-3 font-mono">{v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId}</td>
-                          <td className="p-3 uppercase">{v.patronDepartments?.[0]?.split(':')[0]}</td>
-                          <td className="p-3 uppercase text-center">{v.purpose}</td>
+                          <td className="p-3 font-mono text-slate-500">{format(new Date(v.timestamp), 'HH:mm')}</td>
+                          <td className="p-3 font-black text-slate-900 uppercase">{v.patronName}</td>
+                          <td className="p-3 uppercase font-bold text-slate-600">{v.patronDepartments?.[0]?.split(':')[0]}</td>
+                          <td className="p-3 uppercase font-bold text-primary">{v.purpose}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-[7px] text-slate-400 italic mt-4">* Showing current active registry records</p>
+                  <p className="text-[7px] text-slate-400 italic mt-6">* Institutional audit record - Page 1 of 1</p>
                 </div>
               )}
             </div>
@@ -478,7 +459,7 @@ export default function ReportsPage() {
             </Button>
             <div className="flex gap-3">
               <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">
-                Download PDF
+                Save as PDF
               </Button>
             </div>
           </DialogFooter>

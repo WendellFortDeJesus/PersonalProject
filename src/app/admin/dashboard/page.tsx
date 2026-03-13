@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -33,7 +32,7 @@ export default function DashboardPage() {
   const { data: visits, isLoading: isDataLoading } = useCollection(visitsQuery);
 
   const stats = useMemo(() => {
-    if (!visits) return { inside: 0, newest: null, totalToday: 0, accuracyFlags: 0, distribution: [] };
+    if (!visits) return { inside: 0, newest: null, totalToday: 0, totalLogged: 0, distribution: [] };
     
     const today = new Date().setHours(0, 0, 0, 0);
     const todayVisits = visits.filter(v => new Date(v.timestamp).getTime() >= today);
@@ -41,7 +40,7 @@ export default function DashboardPage() {
     const inside = todayVisits.filter(v => v.status === 'granted').length; 
     const newest = visits[0] || null;
     const totalToday = todayVisits.length;
-    const accuracyFlags = todayVisits.filter(v => !v.patronDepartments || v.patronDepartments.length === 0).length;
+    const totalLogged = visits.length;
 
     const deptCounts: Record<string, number> = {};
     todayVisits.forEach(v => {
@@ -56,7 +55,7 @@ export default function DashboardPage() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    return { inside, newest, totalToday, accuracyFlags, distribution };
+    return { inside, newest, totalToday, totalLogged, distribution };
   }, [visits]);
 
   const filteredVisits = useMemo(() => {
@@ -124,11 +123,11 @@ export default function DashboardPage() {
           <h3 className="text-4xl font-mono font-bold text-primary">{stats.totalToday}</h3>
         </div>
 
-        <div className={cn("p-6 border rounded-2xl flex flex-col justify-between h-32 transition-all shadow-sm", stats.accuracyFlags > 0 ? "bg-red-50 border-red-100" : "bg-white")}>
-          <p className={cn("text-[10px] font-black uppercase tracking-widest", stats.accuracyFlags > 0 ? "text-red-500" : "text-slate-400")}>Accuracy Flags</p>
+        <div className="p-6 bg-white border rounded-2xl flex flex-col justify-between h-32 transition-all hover:border-primary/20 shadow-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Visitors Logged</p>
           <div className="flex items-baseline gap-2">
-            <h3 className={cn("text-4xl font-mono font-bold", stats.accuracyFlags > 0 ? "text-red-600" : "text-primary")}>{stats.accuracyFlags}</h3>
-            {stats.accuracyFlags > 0 && <span className="text-[10px] font-bold text-red-400 uppercase animate-pulse">Review Required</span>}
+            <h3 className="text-4xl font-mono font-bold text-primary">{stats.totalLogged}</h3>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Records</span>
           </div>
         </div>
       </div>
@@ -225,7 +224,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-6">
-            <h2 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-4">Audit Generation</h2>
+            <h2 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-4">Report Generation</h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Temporal Window</label>
@@ -234,7 +233,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <Button asChild className="w-full h-12 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/10">
-                <Link href="/admin/reports">Review BI Audit</Link>
+                <Link href="/admin/reports">Review Library Report</Link>
               </Button>
             </div>
           </div>

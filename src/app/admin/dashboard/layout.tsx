@@ -43,7 +43,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           <SidebarHeader className="p-6 border-b border-slate-100">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="font-headline font-black text-primary text-xl tracking-tighter">PatronPoint</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1 leading-none">Institutional BI</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1 leading-none">Library</span>
             </div>
           </SidebarHeader>
           <SidebarContent className="px-3 py-6">
@@ -88,7 +88,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
               <SidebarTrigger className="h-9 w-9 hover:bg-slate-100 rounded-lg" />
               <div className="h-6 w-px bg-slate-200" />
               <h2 className="text-[11px] font-black text-slate-900 tracking-[0.3em] uppercase">
-                {menuItems.find(item => pathname === item.href)?.label || 'Administration'}
+                {menuItems.find(item => pathname === item.href)?.label || 'Library'}
               </h2>
             </div>
             

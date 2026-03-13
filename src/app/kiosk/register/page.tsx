@@ -22,8 +22,8 @@ import { cn } from '@/lib/utils';
 
 const createFormSchema = (requireAge: boolean) => {
   return z.object({
-    name: z.string().min(2, "Name is too short"),
-    department: z.string().min(1, "Select your college department"),
+    name: z.string().min(1, "Name is required"),
+    department: z.string().min(1, "Select your department"),
     age: requireAge 
       ? z.string().min(1, "Age is required").refine((val) => !isNaN(parseInt(val)), "Age must be a number")
       : z.string().optional(),
@@ -239,11 +239,11 @@ function RegistrationContent() {
                   name="department"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">College / Department</FormLabel>
+                      <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Department</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left overflow-hidden">
-                            <SelectValue placeholder="Select your specific academic unit" />
+                            <SelectValue placeholder="Select your department" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="max-h-[300px]">

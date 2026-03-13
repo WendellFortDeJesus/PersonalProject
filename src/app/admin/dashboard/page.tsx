@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Users, 
@@ -66,12 +66,17 @@ const genderData = [
 ];
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: new Date(new Date().setDate(new Date().getDate() - 7)),
     to: new Date()
   });
   const [filterPreset, setFilterPreset] = useState('This Week');
   const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleDownloadReport = () => {
     toast({
@@ -93,6 +98,12 @@ export default function DashboardPage() {
 
   const newVisitors = MOCK_PATRONS.filter(p => isNewVisitor(p.createdAt))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Helper for safe client-side date formatting
+  const safeFormat = (date: Date | string | undefined, formatStr: string, fallback = "...") => {
+    if (!mounted || !date) return fallback;
+    return format(new Date(date), formatStr);
+  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -122,7 +133,7 @@ export default function DashboardPage() {
               <Button variant="outline" size="sm" className="rounded-xl gap-2 border-slate-200">
                 <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs font-medium">
-                  {dateRange.from ? format(dateRange.from, "PPP") : "Start"} - {dateRange.to ? format(dateRange.to, "PPP") : "End"}
+                  {safeFormat(dateRange.from, "PPP", "Start")} - {safeFormat(dateRange.to, "PPP", "End")}
                 </span>
               </Button>
             </PopoverTrigger>
@@ -286,7 +297,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* New Visitor Login Users (Replaces Departmental Usage & Purpose Summary) */}
+        {/* New Visitor Login Users */}
         <Card className="border-none shadow-sm lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
@@ -318,7 +329,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-1 mt-1">
                         <Clock className="h-3 w-3 text-slate-300" />
                         <span className="text-[10px] text-slate-500">
-                          Registered {format(new Date(visitor.createdAt), 'h:mm a')}
+                          Registered {safeFormat(visitor.createdAt, 'h:mm a')}
                         </span>
                       </div>
                     </div>

@@ -13,9 +13,7 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  Legend,
-  BarChart,
-  Bar
+  Legend
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -33,7 +31,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Download, FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp, Users } from 'lucide-react';
+import { Download, FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -136,14 +134,7 @@ export default function ReportsPage() {
   }, [rawVisits, dateRange]);
 
   const handlePrint = () => {
-    if (!isPreviewOpen) {
-      setIsPreviewOpen(true);
-      setTimeout(() => {
-        window.print();
-      }, 500);
-    } else {
-      window.print();
-    }
+    window.print();
   };
 
   if (isLoading || !mounted) return (
@@ -184,21 +175,13 @@ export default function ReportsPage() {
               <Calendar mode="range" selected={{ from: dateRange.from, to: dateRange.to }} onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })} />
             </PopoverContent>
           </Popover>
-
-          <div className="pt-4 border-t flex items-center justify-between">
-            <span className="text-[10px] font-black text-slate-400 uppercase">System Status</span>
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              Intelligence Active
-            </span>
-          </div>
         </div>
 
         <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Visitors (Today)</p>
             <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.totalToday}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Live Count</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">{format(new Date(), 'PP')}</span>
           </Card>
 
           <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm md:col-span-2">
@@ -208,14 +191,14 @@ export default function ReportsPage() {
             </div>
             <div className="mt-4">
               <h3 className="text-2xl font-black text-primary uppercase leading-tight tracking-tight">{analytics?.mostActiveDept}</h3>
-              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+              <div className="flex gap-8 mt-4 pt-4 border-t border-slate-100">
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
                   <p className="text-xl font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase">Unit Ranking</p>
-                  <p className="text-xl font-mono font-bold text-primary">#1 PRIORITY</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase">Traffic Status</p>
+                  <p className="text-xl font-mono font-bold text-primary">HIGH VOLUME</p>
                 </div>
               </div>
             </div>
@@ -224,12 +207,12 @@ export default function ReportsPage() {
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Unique Registered</p>
             <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.uniqueCount}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Active Database</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Master Records</span>
           </Card>
         </div>
       </div>
 
-      {/* Grid: Trend & Purpose (70/30) */}
+      {/* Grid: Trend & Purpose */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 bg-white border rounded-2xl h-[450px] flex flex-col p-0 overflow-hidden shadow-sm">
           <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
@@ -242,24 +225,10 @@ export default function ReportsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={analytics?.trendData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} 
-                />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} />
                 <YAxis hide />
-                <Tooltip 
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: '800'}} 
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#006837" 
-                  strokeWidth={4} 
-                  dot={{fill: '#006837', r: 4}} 
-                  activeDot={{r: 6, strokeWidth: 0}} 
-                />
+                <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: '800'}} />
+                <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={4} dot={{fill: '#006837', r: 4}} activeDot={{r: 6, strokeWidth: 0}} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -282,34 +251,6 @@ export default function ReportsPage() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
-      </div>
-
-      {/* Dept Ranking */}
-      <div className="bg-white border rounded-2xl h-[400px] flex flex-col p-0 overflow-hidden shadow-sm">
-        <div className="p-8 border-b bg-slate-50/50">
-          <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Departmental Utilization Ranking</h2>
-        </div>
-        <div className="flex-1 p-8">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={analytics?.deptDistributionData} layout="vertical">
-              <XAxis type="number" hide />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                width={200} 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} 
-              />
-              <Tooltip cursor={{fill: 'transparent'}} />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
-                {analytics?.deptDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
 
@@ -347,7 +288,7 @@ export default function ReportsPage() {
             <div className="flex justify-between items-center">
               <div>
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter">Library Report Preview</DialogTitle>
-                <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">NEU Central Library Registry Records</DialogDescription>
+                <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">Institutional Registry Records</DialogDescription>
               </div>
               <div className="flex gap-3">
                 <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
@@ -363,26 +304,14 @@ export default function ReportsPage() {
                   <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">NEU Central Library</h1>
                   <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] pt-1">Administrative Registry Section</p>
                 </div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Date: {format(new Date(), 'PP')}</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Generated: {format(new Date(), 'PP')}</p>
               </div>
 
-              <div className="text-center mb-12 space-y-2">
-                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Attendance Report</h2>
-                <Badge variant="secondary" className="font-black uppercase tracking-widest text-[9px]">{analytics?.summary.dateRangeStr}</Badge>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 mb-12">
-                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center flex flex-col items-center justify-center gap-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Visitors Today</p>
-                  <p className="text-4xl font-mono font-bold text-slate-900">{analytics?.totalToday}</p>
-                </div>
-                <div className="p-6 bg-primary/5 rounded-xl border border-primary/20 text-center flex flex-col items-center justify-center gap-1">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Most Active Department</p>
-                  <p className="text-lg font-black text-primary uppercase leading-tight truncate w-full">{analytics?.mostActiveDept}</p>
-                  <div className="flex gap-4 mt-1">
-                    <p className="text-[10px] font-mono font-black text-slate-600 uppercase">{analytics?.mostActiveDeptCount} Visits</p>
-                    <p className="text-[10px] font-mono font-black text-primary uppercase">{analytics?.mostActiveDeptPercent}% Share</p>
-                  </div>
+              <div className="text-center mb-12 space-y-4">
+                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Operational Attendance Report</h2>
+                <div className="flex items-center justify-center gap-4">
+                  <Badge variant="secondary" className="font-black uppercase tracking-widest text-[9px]">{analytics?.summary.dateRangeStr}</Badge>
+                  <Badge className="bg-primary text-white font-black uppercase tracking-widest text-[9px]">Total Today: {analytics?.totalToday}</Badge>
                 </div>
               </div>
 
@@ -402,7 +331,7 @@ export default function ReportsPage() {
                     </ResponsiveContainer>
                   </div>
                   <div className="h-64 border-t pt-8">
-                    <p className="text-[10px] font-black text-slate-900 uppercase mb-6 tracking-widest text-center">Visit Intent (Purpose Distribution)</p>
+                    <p className="text-[10px] font-black text-slate-900 uppercase mb-6 tracking-widest text-center">Visit Intent Distribution</p>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={analytics?.purposeData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
@@ -417,17 +346,32 @@ export default function ReportsPage() {
                 </div>
               )}
 
+              <div className="p-10 bg-slate-50 rounded-2xl border border-slate-100 mb-12">
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Most Active Department (Detailed)</p>
+                <div className="flex justify-between items-end">
+                  <h3 className="text-3xl font-black text-slate-900 uppercase leading-none">{analytics?.mostActiveDept}</h3>
+                  <div className="text-right">
+                    <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
+                    <p className="text-2xl font-mono font-bold text-primary">{analytics?.mostActiveDeptCount}</p>
+                  </div>
+                </div>
+                <div className="mt-6 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${analytics?.mostActiveDeptPercent}%` }} />
+                </div>
+                <p className="mt-2 text-[9px] font-bold text-slate-500 uppercase text-right">{analytics?.mostActiveDeptPercent}% Share of Total Traffic</p>
+              </div>
+
               {includeLogs && (
                 <div className="border-t pt-8">
                   <div className="flex justify-between items-center mb-6">
-                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Student / Visitor Identity Registry</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">{analytics?.filteredVisits.length} Records Documented</p>
+                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Patron Identity Registry</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase">{analytics?.filteredVisits.length} Records Verified</p>
                   </div>
                   <table className="w-full text-left text-[8px] border-collapse">
                     <thead className="bg-slate-900 text-white">
                       <tr>
                         <th className="p-3 uppercase font-black tracking-widest">Time</th>
-                        <th className="p-3 uppercase font-black tracking-widest">Name</th>
+                        <th className="p-3 uppercase font-black tracking-widest">Patron Name</th>
                         <th className="p-3 uppercase font-black tracking-widest">Department</th>
                         <th className="p-3 uppercase font-black tracking-widest text-center">Purpose</th>
                       </tr>
@@ -443,7 +387,7 @@ export default function ReportsPage() {
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-[7px] text-slate-400 italic mt-6">* Institutional audit record - Page 1 of 1</p>
+                  <p className="text-[7px] text-slate-400 italic mt-6">* Official Library Record - Page 1 of 1</p>
                 </div>
               )}
             </div>

@@ -11,7 +11,9 @@ import {
   Calendar as CalendarIcon,
   Filter,
   BarChart3,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  UserCheck,
+  Building2
 } from 'lucide-react';
 import { 
   Bar, 
@@ -25,7 +27,10 @@ import {
   Pie,
   Line,
   LineChart,
-  CartesianGrid
+  CartesianGrid,
+  Legend,
+  Area,
+  AreaChart
 } from 'recharts';
 import { MOCK_VISITS, PURPOSES, DEPARTMENTS } from '@/lib/data';
 import { Button } from '@/components/ui/button';
@@ -36,29 +41,47 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-const chartData = [
-  { name: 'Mon', visits: 120 },
-  { name: 'Tue', visits: 185 },
-  { name: 'Wed', visits: 230 },
-  { name: 'Thu', visits: 210 },
-  { name: 'Fri', visits: 160 },
-  { name: 'Sat', visits: 85 },
-  { name: 'Sun', visits: 45 },
+// Peak Hours Data (Visits vs Time of Day)
+const peakHoursData = [
+  { time: '08:00', visits: 12 },
+  { time: '10:00', visits: 45 },
+  { time: '12:00', visits: 78 },
+  { time: '14:00', visits: 82 },
+  { time: '16:00', visits: 55 },
+  { time: '18:00', visits: 30 },
+  { time: '20:00', visits: 15 },
 ];
 
+// Demographic Data (Age Groups)
+const ageDemographics = [
+  { group: '18-20', count: 145 },
+  { group: '21-23', count: 210 },
+  { group: '24-26', count: 85 },
+  { group: '27+', count: 40 },
+];
+
+// Gender Distribution
+const genderData = [
+  { name: 'Female', value: 280, color: '#355872' },
+  { name: 'Male', value: 190, color: '#7AAACE' },
+  { name: 'Other', value: 10, color: '#E2E8F0' },
+];
+
+// Purpose Distribution
 const purposeStats = [
   { name: 'Reading Books', value: 450, color: '#355872' },
   { name: 'Research / Thesis', value: 300, color: '#7AAACE' },
   { name: 'Use of Computer', value: 150, color: '#9CD5FF' },
-  { name: 'Doing Assignments', value: 100, color: '#E2E8F0' },
+  { name: 'Doing Assignments', value: 100, color: '#BBDDFF' },
 ];
 
-const collegeStats = [
-  { name: 'Engineering', visits: 340 },
+// Department Rankings
+const departmentalUsage = [
   { name: 'Informatics', visits: 420 },
+  { name: 'Engineering', visits: 340 },
   { name: 'Business', visits: 210 },
   { name: 'Arts/Sci', visits: 180 },
-  { name: 'Others', visits: 90 },
+  { name: 'Nursing', visits: 120 },
 ];
 
 export default function DashboardPage() {
@@ -71,25 +94,25 @@ export default function DashboardPage() {
 
   const handleDownloadReport = () => {
     toast({
-      title: "Generating Report",
-      description: "Your PDF report is being prepared for download.",
+      title: "Generating Comprehensive Report",
+      description: "Preparing Demographic Heatmap, Peak Hours Analysis, and Departmental Usage rankings...",
     });
-    // In a real app, this would trigger jsPDF or a backend PDF service
+    
     setTimeout(() => {
       toast({
-        title: "Report Ready",
-        description: `Library_Report_${format(new Date(), 'yyyyMMdd')}.pdf has been downloaded.`,
+        title: "PDF Ready",
+        description: `Library_Analytics_Report_${format(new Date(), 'yyyyMMdd')}.pdf downloaded.`,
       });
-    }, 2000);
+    }, 2500);
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-10">
       {/* Filters Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-primary" />
-          <span className="text-sm font-bold text-slate-700">Analytics Filter:</span>
+          <span className="text-sm font-bold text-slate-700">Analytics Filters:</span>
           <div className="flex gap-1 ml-2">
             {['Today', 'This Week', 'This Month'].map((preset) => (
               <Button 
@@ -127,21 +150,21 @@ export default function DashboardPage() {
           </Popover>
           <Button onClick={handleDownloadReport} size="sm" className="rounded-xl gap-2 bg-primary hover:bg-primary/90">
             <Download className="h-4 w-4" />
-            Download PDF
+            Download PDF Report
           </Button>
         </div>
       </div>
 
-      {/* Live Stats Summary */}
+      {/* Main Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-sm hover:shadow-md transition-all">
+        <Card className="border-none shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Live Traffic</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Live Traffic</p>
                 <h3 className="text-4xl font-bold mt-1 text-primary">82</h3>
                 <p className="text-[10px] font-bold text-green-600 mt-2 bg-green-50 px-2 py-0.5 rounded-full w-fit">
-                  PATRONS INSIDE NOW
+                  CURRENTLY INSIDE
                 </p>
               </div>
               <div className="p-3 bg-primary/10 rounded-2xl">
@@ -151,12 +174,12 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm hover:shadow-md transition-all">
+        <Card className="border-none shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Today's Total</p>
-                <h3 className="text-4xl font-bold mt-1 text-primary">248</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Daily Average</p>
+                <h3 className="text-4xl font-bold mt-1 text-primary">312</h3>
                 <div className="flex items-center mt-2 text-primary/60 text-[10px] font-bold">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   +12% vs last week
@@ -169,88 +192,148 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm hover:shadow-md transition-all">
+        <Card className="border-none shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Avg. Session</p>
-                <h3 className="text-4xl font-bold mt-1 text-primary">2.4h</h3>
-                <p className="text-[10px] font-bold text-slate-400 mt-2">
-                  PEAK: 10AM - 2PM
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Top College</p>
+                <h3 className="text-2xl font-bold mt-1 text-primary truncate">Informatics</h3>
+                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">
+                  42% of total traffic
                 </p>
               </div>
               <div className="p-3 bg-secondary/20 rounded-2xl">
-                <Clock className="h-6 w-6 text-secondary-foreground" />
+                <Building2 className="h-6 w-6 text-secondary-foreground" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm hover:shadow-md transition-all">
+        <Card className="border-none shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Satisfaction</p>
-                <h3 className="text-4xl font-bold mt-1 text-primary">98%</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Main Purpose</p>
+                <h3 className="text-2xl font-bold mt-1 text-primary">Reading</h3>
                 <p className="text-[10px] font-bold text-green-600 mt-2">
-                  KIOSK UPTIME: 100%
+                  MOST ACTIVE: 10AM-2PM
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-2xl">
-                <TrendingUp className="h-6 w-6 text-green-700" />
+                <UserCheck className="h-6 w-6 text-green-700" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Trend Analysis */}
-        <Card className="lg:col-span-2 border-none shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Peak Hours Report */}
+        <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Visitor Traffic Trends</CardTitle>
-            <CardDescription>Frequency of visits over the selected period</CardDescription>
+            <CardTitle className="text-lg font-bold">Peak Hours Report</CardTitle>
+            <CardDescription>Visits plotted against time of day (Staff Scheduling Aid)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
+                <AreaChart data={peakHoursData}>
+                  <defs>
+                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#355872" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#355872" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} dy={10} />
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
                   <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#64748b'}} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="visits" 
-                    stroke="#355872" 
-                    strokeWidth={4} 
-                    dot={{ r: 4, fill: '#355872', strokeWidth: 2, stroke: '#fff' }}
-                    activeDot={{ r: 8, strokeWidth: 0 }}
-                  />
-                </LineChart>
+                  <Area type="monotone" dataKey="visits" stroke="#355872" strokeWidth={3} fillOpacity={1} fill="url(#colorVisits)" />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Purpose Breakdown */}
+        {/* Demographic Heatmap (Age & Gender) */}
         <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Purpose Breakdown</CardTitle>
-            <CardDescription>Primary reasons for visits</CardDescription>
+            <CardTitle className="text-lg font-bold">Demographic Heatmap</CardTitle>
+            <CardDescription>Usage breakdown by Age Group and Gender</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="h-[200px]">
+                <p className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-widest text-center">Age Groups</p>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ageDemographics}>
+                    <XAxis dataKey="group" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                    <Tooltip cursor={{fill: 'transparent'}} />
+                    <Bar dataKey="count" fill="#355872" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="h-[200px]">
+                <p className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-widest text-center">Gender Distribution</p>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={genderData}
+                      innerRadius={40}
+                      outerRadius={60}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {genderData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Departmental Usage Ranking */}
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">Departmental Usage Ranking</CardTitle>
+            <CardDescription>Most active colleges and offices</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[220px] w-full">
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={departmentalUsage} layout="vertical">
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 'bold'}} width={100} />
+                  <Tooltip cursor={{fill: 'transparent'}} />
+                  <Bar dataKey="visits" fill="#7AAACE" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Purpose Summary */}
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">Purpose Summary</CardTitle>
+            <CardDescription>Justifying facility allocation by visit reasons</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={purposeStats}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={70}
+                    outerRadius={90}
                     paddingAngle={8}
                     dataKey="value"
                   >
@@ -259,38 +342,8 @@ export default function DashboardPage() {
                     ))}
                   </Pie>
                   <Tooltip />
+                  <Legend verticalAlign="bottom" height={36}/>
                 </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              {purposeStats.map((item) => (
-                <div key={item.name} className="flex flex-col gap-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter truncate">{item.name}</span>
-                  </div>
-                  <span className="text-sm font-bold text-primary ml-3">{Math.round((item.value/1000)*100)}%</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* College Breakdown */}
-        <Card className="lg:col-span-3 border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">College / Department Engagement</CardTitle>
-            <CardDescription>Visitor volume categorized by department</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={collegeStats} layout="vertical">
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeights: '600'}} width={100} />
-                  <Tooltip cursor={{fill: 'transparent'}} />
-                  <Bar dataKey="visits" fill="#7AAACE" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

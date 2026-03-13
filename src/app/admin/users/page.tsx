@@ -126,7 +126,7 @@ export default function AccessManagementPage() {
             <TableHeader className="bg-white sticky top-0 z-10">
               <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Patron Identity</TableHead>
-                <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Primary College</TableHead>
+                <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Primary Department</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Demographics</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Activity Start</TableHead>
                 <TableHead className="h-16 pr-10 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
@@ -155,7 +155,7 @@ export default function AccessManagementPage() {
                     <div className="flex flex-wrap gap-1">
                       {patron.departments?.map((dept: string, i: number) => (
                         <span key={i} className="text-[9px] font-black text-slate-500 bg-slate-100 px-2.5 py-1 rounded uppercase border border-slate-200">
-                          {dept.split(':')[0]}
+                          {dept}
                         </span>
                       ))}
                     </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -89,8 +90,7 @@ export default function ReportsPage() {
       
       if (dateKey === todayStr) totalToday++;
 
-      v.patronDepartments?.forEach((d: string) => {
-        const name = d.split(':')[0];
+      v.patronDepartments?.forEach((name: string) => {
         deptMap[name] = (deptMap[name] || 0) + 1;
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
@@ -348,17 +348,22 @@ export default function ReportsPage() {
 
               <div className="p-10 bg-slate-50 rounded-2xl border border-slate-100 mb-12">
                 <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Most Active Department (Detailed)</p>
-                <div className="flex justify-between items-end">
-                  <h3 className="text-3xl font-black text-slate-900 uppercase leading-none">{analytics?.mostActiveDept}</h3>
-                  <div className="text-right">
-                    <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
-                    <p className="text-2xl font-mono font-bold text-primary">{analytics?.mostActiveDeptCount}</p>
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-2xl font-black text-slate-900 uppercase leading-tight">{analytics?.mostActiveDept}</h3>
+                  <div className="flex justify-between items-end pt-4 border-t border-slate-200/50">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-slate-400 uppercase">Total Traffic Share</p>
+                      <p className="text-xl font-mono font-bold text-primary">{analytics?.mostActiveDeptPercent}%</p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
+                      <p className="text-xl font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</p>
+                    </div>
                   </div>
                 </div>
                 <div className="mt-6 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                   <div className="h-full bg-primary" style={{ width: `${analytics?.mostActiveDeptPercent}%` }} />
                 </div>
-                <p className="mt-2 text-[9px] font-bold text-slate-500 uppercase text-right">{analytics?.mostActiveDeptPercent}% Share of Total Traffic</p>
               </div>
 
               {includeLogs && (
@@ -381,7 +386,7 @@ export default function ReportsPage() {
                         <tr key={v.id}>
                           <td className="p-3 font-mono text-slate-500">{format(new Date(v.timestamp), 'HH:mm')}</td>
                           <td className="p-3 font-black text-slate-900 uppercase">{v.patronName}</td>
-                          <td className="p-3 uppercase font-bold text-slate-600">{v.patronDepartments?.[0]?.split(':')[0]}</td>
+                          <td className="p-3 uppercase font-bold text-slate-600">{v.patronDepartments?.[0]}</td>
                           <td className="p-3 uppercase font-bold text-primary text-center">{v.purpose}</td>
                         </tr>
                       ))}

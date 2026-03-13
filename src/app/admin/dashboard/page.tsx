@@ -53,8 +53,7 @@ export default function DashboardPage() {
 
     const deptCounts: Record<string, number> = {};
     todayVisits.forEach(v => {
-      v.patronDepartments?.forEach((d: string) => {
-        const name = d.split(':')[0];
+      v.patronDepartments?.forEach((name: string) => {
         deptCounts[name] = (deptCounts[name] || 0) + 1;
       });
     });
@@ -191,7 +190,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-6 py-4 text-center align-middle">
                         <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200 inline-block">
-                          {visit.patronDepartments?.[0]?.split(':')[0]}
+                          {visit.patronDepartments?.[0]}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase align-middle">

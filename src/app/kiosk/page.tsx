@@ -9,7 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, ContactRound, ArrowLeft, Loader2, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { MOCK_PATRONS } from '@/lib/data';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, getDocs, limit, doc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
@@ -19,6 +22,7 @@ export default function KioskAuthPage() {
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const db = useFirestore();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,17 +36,17 @@ export default function KioskAuthPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      const patron = MOCK_PATRONS.find(p => 
-        (activeTab === 'rfid' && p.schoolId === rfid) || 
-        (activeTab === 'email' && p.email === email)
-      );
 
-      if (!patron) {
-        // Redirect to registration for new users
+    try {
+      const patronsRef = collection(db, 'patrons');
+      const field = activeTab === 'rfid' ? 'schoolId' : 'email';
+      const value = activeTab === 'rfid' ? rfid : email;
+
+      const q = query(patronsRef, where(field, '==', value), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setIsLoading(false);
         if (activeTab === 'rfid' && rfid.length >= 3) {
           router.push(`/kiosk/register?schoolId=${encodeURIComponent(rfid)}`);
           return;
@@ -57,31 +61,54 @@ export default function KioskAuthPage() {
         toast({
           variant: "destructive",
           title: "Registration Required",
-          description: "This School ID is not in our system. If you are an NEU student/staff, please register using the form.",
+          description: "No profile found. Please register using the form.",
         });
         return;
       }
 
-      if (patron.isBlocked) {
-        router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patron.name)}`);
+      const patronDoc = querySnapshot.docs[0];
+      const patronData = patronDoc.data();
+
+      if (patronData.isBlocked) {
+        // Log a blocked attempt for admin visibility
+        const visitsRef = collection(db, 'visits');
+        addDoc(visitsRef, {
+          patronId: patronDoc.id,
+          schoolId: patronData.schoolId,
+          patronName: patronData.name,
+          patronDepartments: patronData.departments,
+          patronAge: patronData.age,
+          patronGender: patronData.gender,
+          purpose: "Restricted Attempt",
+          timestamp: new Date().toISOString(),
+          status: "blocked"
+        }).catch(err => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: 'visits',
+            operation: 'create',
+          }));
+        });
+
+        router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
       } else {
-        router.push(`/kiosk/purpose?patronId=${patron.id}`);
+        router.push(`/kiosk/purpose?patronId=${patronDoc.id}`);
       }
-    }, 1200);
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "System Error",
+        description: "Could not verify identity. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSSO = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const mockEmail = "new.user@neu.edu.ph";
-      const existing = MOCK_PATRONS.find(p => p.email === mockEmail);
-      if (existing) {
-        router.push(`/kiosk/purpose?patronId=${existing.id}`);
-      } else {
-        router.push(`/kiosk/register?email=${encodeURIComponent(mockEmail)}`);
-      }
-    }, 1000);
+    // Simplified SSO for prototype
+    setEmail('sso.test@neu.edu.ph');
+    setActiveTab('email');
   };
 
   return (
@@ -158,20 +185,8 @@ export default function KioskAuthPage() {
                       variant="outline"
                       className="w-full h-16 text-lg border-2 border-slate-100 hover:bg-slate-50 flex items-center justify-center gap-4 rounded-2xl font-bold transition-all hover:border-primary/30 shadow-sm"
                     >
-                      <div className="relative w-8 h-8">
-                         <Image 
-                          src="https://picsum.photos/seed/google/80/80" 
-                          fill
-                          alt="Google Logo" 
-                          className="rounded-full"
-                          data-ai-hint="google logo"
-                        />
-                      </div>
                       Sign in with NEU Email
                     </Button>
-                    <p className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      UNIVERSITY DOMAIN LOCK ACTIVE (@neu.edu.ph)
-                    </p>
                   </div>
                   
                   <div className="relative">

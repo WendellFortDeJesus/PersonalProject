@@ -5,22 +5,57 @@ import { Button } from '@/components/ui/button';
 import { PURPOSES } from '@/lib/data';
 import * as Icons from 'lucide-react';
 import { useState, Suspense } from 'react';
+import { useFirestore } from '@/firebase';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 function PurposeSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patronId = searchParams.get('patronId');
   const [selected, setSelected] = useState<string | null>(null);
+  const db = useFirestore();
+  const { toast } = useToast();
 
-  const handleSelect = (id: string) => {
+  const handleSelect = async (id: string) => {
+    if (!patronId) return;
     setSelected(id);
-    // Simulate logging the entry
-    console.log(`Logging visit for patron ${patronId} with purpose ${id}`);
     
-    // Slight delay for visual feedback then navigate to success
-    setTimeout(() => {
+    try {
+      // 1. Fetch Patron details
+      const patronRef = doc(db, 'patrons', patronId);
+      const patronSnap = await getDoc(patronRef);
+      
+      if (!patronSnap.exists()) {
+        throw new Error("Patron not found");
+      }
+
+      const patronData = patronSnap.data();
+      const purposeLabel = PURPOSES.find(p => p.id === id)?.label || "Other";
+
+      // 2. Log Visit
+      const visitsRef = collection(db, 'visits');
+      await addDoc(visitsRef, {
+        patronId,
+        schoolId: patronData.schoolId,
+        patronName: patronData.name,
+        patronDepartments: patronData.departments,
+        patronAge: patronData.age,
+        patronGender: patronData.gender,
+        purpose: purposeLabel,
+        timestamp: new Date().toISOString(),
+        status: "granted"
+      });
+
       router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}`);
-    }, 400);
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: "destructive",
+        title: "Log Error",
+        description: "Failed to record visit. Please notify staff.",
+      });
+    }
   };
 
   return (

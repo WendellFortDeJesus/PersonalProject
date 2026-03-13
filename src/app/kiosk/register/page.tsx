@@ -12,6 +12,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
 import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -24,9 +28,10 @@ const formSchema = z.object({
 function RegistrationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const schoolId = searchParams.get('schoolId');
-  const email = searchParams.get('email');
+  const schoolId = searchParams.get('schoolId') || "";
+  const email = searchParams.get('email') || "";
   const [isLoading, setIsLoading] = useState(false);
+  const db = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,16 +46,48 @@ function RegistrationContent() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    // Simulate database save to Users Table
-    setTimeout(() => {
-      setIsLoading(false);
-      const queryParams = new URLSearchParams({
+    try {
+      // 1. Save Patron Profile
+      const patronsRef = collection(db, 'patrons');
+      const patronDoc = await addDoc(patronsRef, {
+        schoolId,
+        email,
         name: values.name,
-        departments: JSON.stringify(values.departments),
-        purposeId: values.purposeId
+        departments: values.departments,
+        age: values.age,
+        gender: values.gender,
+        role: "Visitor", // Default for kiosk registration
+        isBlocked: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
-      router.push(`/kiosk/success?${queryParams.toString()}`);
-    }, 1500);
+
+      // 2. Log Initial Visit
+      const visitsRef = collection(db, 'visits');
+      const purpose = PURPOSES.find(p => p.id === values.purposeId)?.label || "Unknown";
+      
+      await addDoc(visitsRef, {
+        patronId: patronDoc.id,
+        schoolId,
+        patronName: values.name,
+        patronDepartments: values.departments,
+        patronAge: values.age,
+        patronGender: values.gender,
+        purpose,
+        timestamp: new Date().toISOString(),
+        status: "granted"
+      });
+
+      router.push(`/kiosk/success?patronId=${patronDoc.id}&name=${encodeURIComponent(values.name)}`);
+    } catch (err) {
+      console.error(err);
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: 'patrons',
+        operation: 'create',
+      }));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

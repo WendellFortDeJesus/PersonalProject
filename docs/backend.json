@@ -1,264 +1,55 @@
 {
   "entities": {
     "Patron": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Patron",
       "type": "object",
-      "description": "Represents a student, faculty member, or staff member who visits the library. Patrons can log in using either their RF-ID or email for check-in. This entity supports user access management including blocking or unblocking specific patrons.",
+      "description": "Represents a library patron (student, staff, or faculty).",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Patron entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the patron (e.g., 'Alice Johnson')."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the patron. It serves as a unique identifier for login and account management if provided.",
-          "format": "email"
-        },
-        "rfid": {
-          "type": "string",
-          "description": "The RF-ID tag number associated with the patron. It serves as a unique identifier for quick check-in if provided."
-        },
-        "status": {
-          "type": "string",
-          "description": "The current access status of the patron (e.g., 'active' or 'blocked'), used for user access management.",
-          "format": "enum"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the patron record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the patron record was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "schoolId": { "type": "string", "description": "RFID or School ID" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["Student", "Faculty", "Staff", "Visitor"] },
+        "departments": { "type": "array", "items": { "type": "string" } },
+        "age": { "type": "number" },
+        "gender": { "type": "string" },
+        "isBlocked": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "photoUrl": { "type": "string" }
       },
-      "required": [
-        "id",
-        "name",
-        "status",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "VisitPurpose": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "VisitPurpose",
-      "type": "object",
-      "description": "Defines the pre-defined reasons or purposes a visitor might have for visiting the library, enabling structured data collection during check-in.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the VisitPurpose entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "A concise name for the visit purpose (e.g., 'Study', 'Research', 'Meeting')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A more detailed explanation of the visit purpose."
-        },
-        "isActive": {
-          "type": "boolean",
-          "description": "Indicates whether this purpose is currently active and available for selection by visitors."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the visit purpose record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the visit purpose record was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "isActive",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "schoolId", "name", "isBlocked"]
     },
     "Visit": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Visit",
       "type": "object",
-      "description": "Records each individual check-in event of a patron, linking them to their purpose of visit and timestamps. This data is used for metrics and reporting on the admin dashboard.",
+      "description": "A check-in event logged at the kiosk.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Visit record."
-        },
-        "patronId": {
-          "type": "string",
-          "description": "Reference to the Patron who made this visit. (Relationship: Patron 1:N Visit)"
-        },
-        "purposeId": {
-          "type": "string",
-          "description": "Reference to the VisitPurpose selected for this visit. (Relationship: VisitPurpose 1:N Visit)"
-        },
-        "checkInTime": {
-          "type": "string",
-          "description": "The timestamp when the patron checked into the library.",
-          "format": "date-time"
-        },
-        "checkOutTime": {
-          "type": "string",
-          "description": "The timestamp when the patron checked out of the library, if recorded. Allows tracking visit duration.",
-          "format": "date-time"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the visit record was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the visit record was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "patronId": { "type": "string" },
+        "schoolId": { "type": "string" },
+        "patronName": { "type": "string" },
+        "patronDepartments": { "type": "array", "items": { "type": "string" } },
+        "patronAge": { "type": "number" },
+        "patronGender": { "type": "string" },
+        "purpose": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["granted", "blocked"] }
       },
-      "required": [
-        "id",
-        "patronId",
-        "purposeId",
-        "checkInTime",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "AdminAccount": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AdminAccount",
-      "type": "object",
-      "description": "Represents a library staff member with access to the backend administration dashboard, enabling them to manage patrons, view metrics, and generate reports. Authentication data (like passwords) is handled by an external system.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AdminAccount entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The full name of the library staff member."
-        },
-        "email": {
-          "type": "string",
-          "description": "The unique email address used by the admin for secure login.",
-          "format": "email"
-        },
-        "role": {
-          "type": "string",
-          "description": "The role or permission level of the admin account within the system (e.g., 'Librarian', 'Manager', 'SystemAdmin').",
-          "format": "enum"
-        },
-        "lastLogin": {
-          "type": "string",
-          "description": "Timestamp of the last successful login for this admin account.",
-          "format": "date-time"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the admin account was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the admin account was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "email",
-        "role",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "patronId", "timestamp", "status"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/admin_accounts/{adminId}",
-        "definition": {
-          "entityName": "AdminAccount",
-          "schema": {
-            "$ref": "#/backend/entities/AdminAccount"
-          },
-          "description": "Stores administrative user profiles. The document ID (`adminId`) corresponds to the Firebase Authentication UID of the administrator, enabling direct role-based access control (DBAC). Includes fields like name, email, and role.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The unique Firebase Authentication UID of the administrator."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/patrons/{patronId}",
-        "definition": {
-          "entityName": "Patron",
-          "schema": {
-            "$ref": "#/backend/entities/Patron"
-          },
-          "description": "Contains records for all library visitors (students, faculty, staff). The document ID (`patronId`) is the unique identifier for each patron, which may correspond to a Firebase Authentication UID if the patron logs in, or an internal ID. Admins have full CRUD access for user access management (e.g., blocking).",
-          "params": [
-            {
-              "name": "patronId",
-              "description": "The unique identifier for a specific patron, potentially matching a Firebase Auth UID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/visit_purposes/{purposeId}",
-        "definition": {
-          "entityName": "VisitPurpose",
-          "schema": {
-            "$ref": "#/backend/entities/VisitPurpose"
-          },
-          "description": "Defines the pre-configured reasons for library visits. These documents are publicly readable (for visitor selection) and writable only by administrators. All documents in this collection share the same security posture.",
-          "params": [
-            {
-              "name": "purposeId",
-              "description": "The unique identifier for a specific visit purpose."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/visits/{visitId}",
-        "definition": {
-          "entityName": "Visit",
-          "schema": {
-            "$ref": "#/backend/entities/Visit"
-          },
-          "description": "Records individual check-in events. Each document links to a patron and a visit purpose using `patronId` and `purposeId`. Only authenticated patrons (matching `patronId` with `request.auth.uid`) can create new visit records. All visit records are readable only by administrators for dashboard display, metrics, and reporting.",
-          "params": [
-            {
-              "name": "visitId",
-              "description": "The unique identifier for a specific visit record."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore data structure for PatronPoint is designed to meet the core principles of Authorization Independence, Clarity of Intent, DBAC, QAPs, and Invariants, while adhering to the specified design strategies. Each collection is structured for a homogeneous security posture, simplifying security rules and enhancing debuggability.\n\n**Authorization Independence via Denormalization:**\n\n1.  **/admin_accounts/{adminId}**: Authorization is independent because the `adminId` directly corresponds to `request.auth.uid`. No `get()` operations are needed to determine an admin's role from a parent document; the role is contained within their specific `AdminAccount` document (e.g., `get(/admin_accounts/$(request.auth.uid)).data.role`). This eliminates hierarchical authorization dependencies.\n2.  **/patrons/{patronId}**: This is a top-level collection. While an admin's access to manage patrons is determined by their `/admin_accounts/{request.auth.uid}` status, the `Patron` documents themselves do not denormalize authorization context for child documents. Patrons can read their own `Patron` document if `patronId` matches `request.auth.uid`.\n3.  **/visit_purposes/{purposeId}**: This collection has a consistent security posture (read-all for selection, write-admin for management) and does not rely on any parent document for authorization, making it inherently independent.\n4.  **/visits/{visitId}**: Each `Visit` document includes `patronId` and `purposeId`. Authorization for creating a `Visit` is based on `request.auth.uid` matching the `patronId` in the new document. A data validation check (e.g., `get(/patrons/$(request.auth.uid)).data.status == 'active'`) for the patron's active status is performed on the *initiating user's own* `Patron` document. This is considered acceptable as it's a validation of the user's current state, not an inheritance of authorization from an arbitrary parent document to a subcollection. This avoids the problematic `get()` patterns that lead to non-atomic operations or complex, hard-to-debug rule chains across different data entities.\n\n**QAPs (Query-Aware Permissions) for Secure List Operations:**\n\n1.  **/admin_accounts**: `list` operations are restricted to authenticated administrators, typically limited to their own record or to higher-privileged admins viewing other admin records. This is secured by checking `request.auth.uid` against existing `AdminAccount` documents.\n2.  **/patrons**: Only authenticated administrators are allowed to `list` all `Patron` documents. This enables the User Access Management dashboard feature securely, without requiring clients to filter results. Patrons can only `read` their specific document, preventing unauthorized listing of other patrons.\n3.  **/visit_purposes**: All users (visitors and admins) can `list` `VisitPurpose` documents. This is a secure 'read-all' collection as the data is public for selection by visitors. Write access is restricted to administrators.\n4.  **/visits**: Only authenticated administrators are allowed to `list` all `Visit` documents. This directly supports the Metrics and Reporting Dashboard feature, ensuring that only authorized personnel can view visitor check-in data. Visitors (patrons) cannot `list` visit records, either their own or others, making `list` operations highly secure and performant for the intended admin use case."
+    "/patrons/{patronId}": {
+      "schema": "#/entities/Patron",
+      "description": "Library visitor profiles."
+    },
+    "/visits/{visitId}": {
+      "schema": "#/entities/Visit",
+      "description": "Log of all check-in attempts."
+    }
   }
 }

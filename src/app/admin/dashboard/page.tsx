@@ -42,7 +42,6 @@ export default function DashboardPage() {
     todayStart.setHours(0, 0, 0, 0);
     const todayVisits = visits.filter(v => new Date(v.timestamp).getTime() >= todayStart.getTime());
     
-    // Simulating occupancy - in a real app this would use check-out times
     const inside = todayVisits.filter(v => v.status === 'granted').length; 
     const newest = visits[0] || null;
     const totalToday = todayVisits.length;
@@ -84,7 +83,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-0 animate-fade-in flex flex-col h-full bg-white">
-      {/* System Status & Search */}
       <header className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white border-b sticky top-0 z-20">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
@@ -110,7 +108,6 @@ export default function DashboardPage() {
       </header>
 
       <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-        {/* KPI Tiles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className={cn("p-6 border rounded-2xl flex flex-col justify-between h-32 transition-colors", isAtCapacity ? "bg-red-50 border-red-200" : "bg-white")}>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currently Inside</p>
@@ -139,12 +136,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Master Log Split (75/25) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
           <div className="lg:col-span-9 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm">
             <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
               <h2 className="text-[10px] font-black text-primary uppercase tracking-widest">Master Visitor Log</h2>
-              <Badge variant="outline" className="h-7 px-4 text-[8px] font-black uppercase tracking-widest">Institutional Audit</Badge>
+              <Badge variant="outline" className="h-7 px-4 text-[8px] font-black uppercase tracking-widest">Library Audit</Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">

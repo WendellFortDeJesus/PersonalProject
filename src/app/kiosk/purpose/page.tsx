@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -107,7 +106,7 @@ function PurposeSelectionContent() {
         <div className="absolute top-8 left-12">
           <div className="flex items-center gap-2">
             <Icons.Library className="h-6 w-6 text-primary" />
-            <span className="font-headline font-bold text-primary text-sm tracking-widest">NEU LIBRARY</span>
+            <span className="font-headline font-bold text-primary text-sm tracking-widest uppercase">PatronPoint</span>
           </div>
         </div>
 
@@ -116,7 +115,6 @@ function PurposeSelectionContent() {
           <p className="text-xl text-slate-700 font-medium">Select your primary purpose of visit</p>
         </div>
 
-        {/* Centered Flex Layout for Purpose Buttons */}
         <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
           {(settings?.purposes || PURPOSES).map((purpose: any) => {
             const IconComponent = (Icons as any)[purpose.icon] || Icons.HelpCircle;

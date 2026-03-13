@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -47,7 +46,6 @@ function RegistrationContent() {
   const { data: settings, isLoading: isSettingsLoading } = useDoc(settingsRef);
 
   const requireAge = settings?.requireAge ?? true;
-
   const formSchema = useMemo(() => createFormSchema(requireAge), [requireAge]);
 
   const form = useForm<any>({
@@ -174,13 +172,13 @@ function RegistrationContent() {
           style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
         >
           <div className="absolute top-6 left-8 flex items-center gap-2">
-            <span className="font-headline font-bold text-primary text-xs tracking-widest uppercase">NEU University Library</span>
+            <span className="font-headline font-bold text-primary text-xs tracking-widest uppercase">PatronPoint Library</span>
           </div>
           
           <CardHeader className="text-center pt-16">
             <CardTitle className="text-3xl font-headline font-bold text-primary uppercase tracking-tight">Identity Registration</CardTitle>
             <CardDescription className="text-base font-bold text-slate-700 uppercase tracking-tight mt-2">
-              Create your library profile. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
+              {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4">
@@ -269,8 +267,8 @@ function RegistrationContent() {
                         <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Department</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left overflow-hidden">
-                              <SelectValue placeholder="Select your department" />
+                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left">
+                              <SelectValue placeholder="Select Department" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[300px]">
@@ -285,7 +283,7 @@ function RegistrationContent() {
                   />
                 </div>
 
-                <Button disabled={isLoading} className="w-full h-18 text-xl font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 py-6">
+                <Button disabled={isLoading} className="w-full h-18 text-xl font-black uppercase tracking-widest rounded-2xl shadow-xl bg-primary hover:bg-primary/90 py-6 transition-all active:scale-[0.98]">
                   {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Verify and Check-in"}
                 </Button>
               </form>

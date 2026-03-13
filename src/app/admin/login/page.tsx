@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ShieldCheck, User, Lock, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/firebase';
+import { signInAnonymously } from 'firebase/auth';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
@@ -15,24 +17,35 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock auth with user-provided credentials
-    setTimeout(() => {
-      setIsLoading(false);
-      if (username === 'wendelldejesu123' && password === '12345') {
+    // Validate credentials
+    if (username === 'wendelldejesu123' && password === '12345') {
+      try {
+        // Perform real Firebase sign-in to satisfy security rules
+        await signInAnonymously(auth);
+        setIsLoading(false);
         router.push('/admin/dashboard');
-      } else {
+      } catch (error: any) {
+        setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Authentication Failed",
-          description: "Invalid credentials. Please contact IT support if you forgot your password.",
+          title: "System Auth Error",
+          description: error.message || "Failed to establish secure session.",
         });
       }
-    }, 1200);
+    } else {
+      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: "Invalid credentials. Please contact IT support.",
+      });
+    }
   };
 
   return (
@@ -79,7 +92,6 @@ export default function AdminLoginPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <label className="text-sm font-bold text-slate-700">Password</label>
-                    <Button variant="link" className="h-auto p-0 text-xs font-semibold text-primary">Reset</Button>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />

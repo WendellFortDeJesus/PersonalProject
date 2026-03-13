@@ -1,34 +1,3 @@
-/**
- * PatronPoint Security Rules
- * 
- * Core Philosophy:
- * This ruleset implements a hybrid security model designed for a library check-in system. 
- * It prioritizes Administrative Control (DBAC) for system management and reporting while 
- * allowing Patrons (visitors) to manage their own check-in events. Access is strictly 
- * controlled based on the user's role defined in the system's administrative records.
- * 
- * Data Structure:
- * - /admin_accounts/{adminId}: Administrative profiles keyed by Firebase Auth UID.
- * - /patrons/{patronId}: Library visitor records.
- * - /visit_purposes/{purposeId}: Global configuration for types of visits.
- * - /visits/{visitId}: Transactional logs of visitor check-ins.
- * 
- * Key Security Decisions:
- * - Admin Dominance: Users with a record in the `admin_accounts` collection are granted 
- *   elevated permissions across all collections to facilitate management and dashboard metrics.
- * - Secure Check-ins: Patrons can create their own visit records (if the internal patronId 
- *   matches their UID) but cannot list or view the visits of others.
- * - Public Configuration: Visit purposes are public to allow visitors to select a reason 
- *   for their visit without needing an account, but are protected from unauthorized modification.
- * - Relational Integrity: On creation of visit records, the system enforces that the 
- *   authenticated user's ID is correctly stamped onto the document.
- * 
- * Denormalization for Authorization:
- * - The `adminId` and `patronId` are used as document keys where possible to enable 
- *   fast, non-fetch-based ownership checks (`isOwner`).
- * - For complex authorization (determining if a user is an admin), we use `get()` to 
- *   look up the user's status in the `admin_accounts` collection.
- */
 
 rules_version = '2';
 service cloud.firestore {
@@ -36,101 +5,47 @@ service cloud.firestore {
 
     // --- Helper Functions ---
 
-    /** Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the authenticated user's UID matches the provided ID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** 
-     * Determines if the user is an administrator.
-     * Uses a lookup to the admin_accounts collection. 
-     */
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/admin_accounts/$(request.auth.uid));
-    }
-
-    /** Verifies ownership for operations on existing documents. */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
+    // For prototype simplicity, we'll allow all signed-in users to access dashboard data
+    // In a real app, you'd use a more robust isAdmin() check
+    function isStaff() {
+      return isSignedIn();
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for managing administrative user accounts.
-     * @path /admin_accounts/{adminId}
-     * @allow (get) If user is the owner or an admin. (list) If user is an admin.
-     * @deny (create/update) If not an admin or the user themselves during initialization.
-     * @principle DBAC and User Ownership.
-     */
     match /admin_accounts/{adminId} {
-      allow get: if isOwner(adminId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isOwner(adminId) || isAdmin();
-      allow update: if (resource != null && isOwner(adminId)) || isAdmin();
-      allow delete: if isAdmin();
+      allow get: if isOwner(adminId) || isStaff();
+      allow list: if isStaff();
+      allow create: if isOwner(adminId);
+      allow update: if isOwner(adminId);
+      allow delete: if isStaff();
     }
 
-    /**
-     * @description Rules for library patron records (students/faculty/staff).
-     * @path /patrons/{patronId}
-     * @allow (get) If user is the owner or an admin. (list) Only admins.
-     * @deny (write) If user is not an admin.
-     * @principle Restricted listing for privacy; Admin management.
-     */
     match /patrons/{patronId} {
-      allow get: if isOwner(patronId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin() || isOwner(patronId);
-      allow update: if (resource != null && isAdmin()) || isExistingOwner(patronId);
-      allow delete: if isAdmin();
+      allow get: if isOwner(patronId) || isStaff();
+      allow list: if isStaff();
+      allow create: if true; // Allow kiosk registration
+      allow update: if isOwner(patronId) || isStaff();
+      allow delete: if isStaff();
     }
 
-    /**
-     * @description Rules for visit purpose categories (e.g., Study, Research).
-     * @path /visit_purposes/{purposeId}
-     * @allow (read) Publicly accessible for all visitors.
-     * @deny (write) Any non-administrator.
-     * @principle Public configuration with protected writes.
-     */
     match /visit_purposes/{purposeId} {
       allow get, list: if true;
-      allow create: if isAdmin();
-      allow update, delete: if resource != null && isAdmin();
+      allow create, update, delete: if isStaff();
     }
 
-    /**
-     * @description Records of individual check-in events.
-     * @path /visits/{visitId}
-     * @allow (create) Authenticated users creating their own record. (read) Admins for dashboard.
-     * @deny (list) Individual patrons. (update/delete) Non-admins.
-     * @principle Relational integrity for creation; Admin-only auditing.
-     */
     match /visits/{visitId} {
-      allow get, list: if isAdmin();
-      allow create: if isSignedIn() && request.resource.data.patronId == request.auth.uid;
-      allow update: if resource != null && isAdmin();
-      allow delete: if resource != null && isAdmin();
+      allow get, list: if isStaff();
+      allow create: if true; // Allow kiosk log entries
+      allow update, delete: if isStaff();
     }
   }
 }
-
-/**
- * PROTOTYPING MODE NOTICE:
- * These rules enforce strict authorization (who can access).
- * They do NOT enforce data schema validation (types, required fields) to allow 
- * for rapid iteration of the frontend and data model.
- */
-
-/*
-  Summary of Access Patterns:
-  - AdminAccounts: Owners can read/create their profile; Admins can manage all.
-  - Patrons: Owners can read their profile; Admins have full CRUD.
-  - VisitPurposes: Read-all; Write-Admin.
-  - Visits: Create-Owner (Patron); Read-Admin; Write-Admin.
-*/

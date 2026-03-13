@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,23 +14,25 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
+  const { user, isUserLoading: isAuthLoading } = useUser();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Real-time listener for visits
+  // Real-time listener for visits - only if user is authenticated
   const visitsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(50));
-  }, [db]);
+  }, [db, user]);
 
-  const { data: visits, isLoading } = useCollection(visitsQuery);
+  const { data: visits, isLoading: isDataLoading } = useCollection(visitsQuery);
 
   const safeFormat = (date: string | Date | undefined, formatStr: string, fallback = "...") => {
     if (!mounted || !date) return fallback;
@@ -42,6 +45,32 @@ export default function DashboardPage() {
   };
 
   const totalLoginsToday = visits?.length || 0;
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="font-bold text-slate-400">Verifying Admin Access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Card className="max-w-md text-center p-10 border-dashed border-2">
+          <CardContent className="space-y-4">
+            <UserX className="h-12 w-12 text-destructive mx-auto" />
+            <h2 className="text-2xl font-bold text-slate-800">Access Denied</h2>
+            <p className="text-slate-500">You must be logged in as a staff member to view this dashboard.</p>
+            <Button onClick={() => window.location.href = '/admin/login'}>Go to Login</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -181,7 +210,7 @@ export default function DashboardPage() {
             ))}
           </div>
           
-          {(!visits || visits.length === 0) && !isLoading && (
+          {(!visits || visits.length === 0) && !isDataLoading && (
             <div className="p-32 text-center space-y-4">
               <div className="bg-slate-50 p-10 rounded-full w-fit mx-auto border border-slate-100">
                 <Users className="h-16 w-16 text-slate-200" />
@@ -191,7 +220,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {isLoading && (
+          {isDataLoading && (
             <div className="p-32 text-center">
               <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
               <p className="text-slate-400 mt-4 font-bold">Establishing Push Connection...</p>
@@ -203,7 +232,6 @@ export default function DashboardPage() {
   );
 }
 
-// Simple loader helper
 function Loader2(props: any) {
   return (
     <svg

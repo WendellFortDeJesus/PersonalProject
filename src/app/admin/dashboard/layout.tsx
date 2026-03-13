@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -17,7 +17,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,8 +25,8 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 
   const menuItems = [
     { label: 'Dashboard', href: '/admin/dashboard' },
-    { label: 'Users', href: '/admin/users' },
-    { label: 'Reports', href: '/admin/reports' },
+    { label: 'Access Management', href: '/admin/users' },
+    { label: 'Analytics & Reports', href: '/admin/reports' },
     { label: 'System Settings', href: '/admin/settings' },
   ];
 
@@ -42,8 +41,8 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         <Sidebar variant="sidebar" collapsible="icon" className="border-r border-slate-200">
           <SidebarHeader className="p-6 border-b border-slate-100">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-headline font-black text-primary text-xl tracking-tighter">PatronPoint</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1 leading-none">Library</span>
+              <span className="font-headline font-black text-primary text-xl tracking-tighter">NEU</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] -mt-1 leading-none">Library System</span>
             </div>
           </SidebarHeader>
           <SidebarContent className="px-3 py-6">
@@ -56,7 +55,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                     tooltip={item.label}
                     className={`h-12 rounded-xl transition-all duration-200 ${
                       pathname === item.href 
-                      ? 'bg-primary text-white shadow-md hover:bg-primary/95 hover:text-white' 
+                      ? 'bg-primary text-white shadow-md' 
                       : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
@@ -94,8 +93,8 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             
             <div className="flex items-center gap-6">
               <div className="hidden md:flex flex-col items-end">
-                <p className="text-[10px] font-black text-slate-900 leading-none uppercase">Admin Operator</p>
-                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1">Librarian</p>
+                <p className="text-[10px] font-black text-slate-900 leading-none uppercase tracking-tighter">Command Center</p>
+                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1">Institutional Root</p>
               </div>
               <Avatar className="h-9 w-9 border border-slate-200">
                 <AvatarImage src="https://picsum.photos/seed/admin/100/100" />
@@ -104,7 +103,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             </div>
           </header>
           
-          <main className="p-6 overflow-y-auto">
+          <main className="p-0 overflow-y-auto h-[calc(100vh-64px)]">
             {children}
           </main>
         </SidebarInset>

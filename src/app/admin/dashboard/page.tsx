@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -61,7 +62,7 @@ export default function DashboardPage() {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Card className="max-w-md text-center p-10 border-dashed border-2">
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <UserX className="h-12 w-12 text-destructive mx-auto" />
             <h2 className="text-2xl font-bold text-slate-800">Access Denied</h2>
             <p className="text-slate-500">You must be logged in as a staff member to view this dashboard.</p>
@@ -159,7 +160,7 @@ export default function DashboardPage() {
                     <Avatar className="h-16 w-16 border-4 border-white shadow-md">
                       <AvatarImage src={`https://picsum.photos/seed/${visit.patronId}/150/150`} />
                       <AvatarFallback className="text-xl bg-primary/10 text-primary font-bold">
-                        {visit.patronName[0]}
+                        {visit.patronName?.[0] || 'G'}
                       </AvatarFallback>
                     </Avatar>
                     <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${visit.status === 'blocked' ? 'bg-red-500' : 'bg-green-500'}`} />
@@ -179,7 +180,7 @@ export default function DashboardPage() {
                       <span className="text-slate-500">{visit.patronAge} Yrs • {visit.patronGender}</span>
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
                       <div className="flex flex-wrap gap-1.5">
-                        {visit.patronDepartments.map((dept, i) => (
+                        {visit.patronDepartments?.map((dept: string, i: number) => (
                           <span key={i} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[11px] font-bold">
                             {dept}
                           </span>

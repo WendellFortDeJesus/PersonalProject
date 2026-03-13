@@ -1,19 +1,20 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Users, 
-  Clock, 
   TrendingUp, 
   Download,
   Calendar as CalendarIcon,
   Filter,
   BarChart3,
-  PieChart as PieChartIcon,
   UserCheck,
-  Building2
+  Building2,
+  Clock,
+  ChevronRight,
+  UserPlus
 } from 'lucide-react';
 import { 
   Bar, 
@@ -25,21 +26,18 @@ import {
   Cell,
   PieChart,
   Pie,
-  Line,
-  LineChart,
   CartesianGrid,
-  Legend,
   Area,
   AreaChart
 } from 'recharts';
-import { MOCK_VISITS, PURPOSES, DEPARTMENTS } from '@/lib/data';
+import { MOCK_PATRONS, MOCK_VISITS } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { format, isAfter, subHours } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 // Peak Hours Data (Visits vs Time of Day)
 const peakHoursData = [
@@ -67,23 +65,6 @@ const genderData = [
   { name: 'Other', value: 10, color: '#E2E8F0' },
 ];
 
-// Purpose Distribution
-const purposeStats = [
-  { name: 'Reading Books', value: 450, color: '#355872' },
-  { name: 'Research / Thesis', value: 300, color: '#7AAACE' },
-  { name: 'Use of Computer', value: 150, color: '#9CD5FF' },
-  { name: 'Doing Assignments', value: 100, color: '#BBDDFF' },
-];
-
-// Department Rankings
-const departmentalUsage = [
-  { name: 'Informatics', visits: 420 },
-  { name: 'Engineering', visits: 340 },
-  { name: 'Business', visits: 210 },
-  { name: 'Arts/Sci', visits: 180 },
-  { name: 'Nursing', visits: 120 },
-];
-
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: new Date(new Date().setDate(new Date().getDate() - 7)),
@@ -95,7 +76,7 @@ export default function DashboardPage() {
   const handleDownloadReport = () => {
     toast({
       title: "Generating Comprehensive Report",
-      description: "Preparing Demographic Heatmap, Peak Hours Analysis, and Departmental Usage rankings...",
+      description: "Preparing Demographic Heatmap, Peak Hours Analysis, and New Visitor Logs...",
     });
     
     setTimeout(() => {
@@ -105,6 +86,13 @@ export default function DashboardPage() {
       });
     }, 2500);
   };
+
+  const isNewVisitor = (createdAt: string) => {
+    return isAfter(new Date(createdAt), subHours(new Date(), 24));
+  };
+
+  const newVisitors = MOCK_PATRONS.filter(p => isNewVisitor(p.createdAt))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -196,14 +184,14 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Top College</p>
-                <h3 className="text-2xl font-bold mt-1 text-primary truncate">Informatics</h3>
-                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">
-                  42% of total traffic
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">New Registrations</p>
+                <h3 className="text-4xl font-bold mt-1 text-primary">{newVisitors.length}</h3>
+                <p className="text-[10px] font-bold text-blue-600 mt-2 bg-blue-50 px-2 py-0.5 rounded-full w-fit">
+                  LAST 24 HOURS
                 </p>
               </div>
-              <div className="p-3 bg-secondary/20 rounded-2xl">
-                <Building2 className="h-6 w-6 text-secondary-foreground" />
+              <div className="p-3 bg-blue-100 rounded-2xl">
+                <UserPlus className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -215,8 +203,8 @@ export default function DashboardPage() {
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Main Purpose</p>
                 <h3 className="text-2xl font-bold mt-1 text-primary">Reading</h3>
-                <p className="text-[10px] font-bold text-green-600 mt-2">
-                  MOST ACTIVE: 10AM-2PM
+                <p className="text-[10px] font-bold text-green-600 mt-2 uppercase">
+                  PEAK: 10AM-2PM
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-2xl">
@@ -298,53 +286,55 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Departmental Usage Ranking */}
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Departmental Usage Ranking</CardTitle>
-            <CardDescription>Most active colleges and offices</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={departmentalUsage} layout="vertical">
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 'bold'}} width={100} />
-                  <Tooltip cursor={{fill: 'transparent'}} />
-                  <Bar dataKey="visits" fill="#7AAACE" radius={[0, 4, 4, 0]} barSize={24} />
-                </BarChart>
-              </ResponsiveContainer>
+        {/* New Visitor Login Users (Replaces Departmental Usage & Purpose Summary) */}
+        <Card className="border-none shadow-sm lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle className="text-lg font-bold">New Visitor Login Users</CardTitle>
+              <CardDescription>Recently registered patrons in the last 24 hours</CardDescription>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Purpose Summary */}
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Purpose Summary</CardTitle>
-            <CardDescription>Justifying facility allocation by visit reasons</CardDescription>
+            <Button variant="ghost" size="sm" className="text-primary font-bold gap-1 rounded-lg">
+              View Directory
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={purposeStats}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={8}
-                    dataKey="value"
-                  >
-                    {purposeStats.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={36}/>
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {newVisitors.length > 0 ? (
+                newVisitors.map((visitor) => (
+                  <div key={visitor.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-4 group hover:bg-white hover:shadow-md transition-all cursor-pointer">
+                    <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                      <AvatarImage src={visitor.photoUrl || `https://picsum.photos/seed/${visitor.id}/100/100`} />
+                      <AvatarFallback>{visitor.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-800 truncate">{visitor.name}</span>
+                        <Badge className="bg-blue-500 text-[8px] h-3.5 px-1 font-bold">NEW</Badge>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                        {visitor.schoolId}
+                      </span>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Clock className="h-3 w-3 text-slate-300" />
+                        <span className="text-[10px] text-slate-500">
+                          Registered {format(new Date(visitor.createdAt), 'h:mm a')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-12 flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="p-4 bg-slate-100 rounded-full">
+                    <Users className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <div>
+                    <p className="text-slate-500 font-bold">No new visitors today</p>
+                    <p className="text-xs text-slate-400">Visitor activity will appear here as they register.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

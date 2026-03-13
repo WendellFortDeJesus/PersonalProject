@@ -20,7 +20,8 @@ import {
   Loader2,
   ToggleLeft,
   ToggleRight,
-  Upload
+  Upload,
+  Palette
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +30,18 @@ import { Switch } from '@/components/ui/switch';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+const COLOR_PRESETS = [
+  { name: 'Blue', value: '#355872' },
+  { name: 'Sky', value: '#7AAACE' },
+  { name: 'Green', value: '#22c55e' },
+  { name: 'Orange', value: '#f97316' },
+  { name: 'Red', value: '#ef4444' },
+  { name: 'Purple', value: '#a855f7' },
+  { name: 'Pink', value: '#ec4899' },
+  { name: 'Indigo', value: '#6366f1' },
+];
 
 export default function SystemSettingsPage() {
   const db = useFirestore();
@@ -42,6 +55,7 @@ export default function SystemSettingsPage() {
 
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptCode, setNewDeptCode] = useState('');
+  const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0].value);
   const [newPurposeLabel, setNewPurposeLabel] = useState('');
   const [themeUrl, setThemeUrl] = useState('');
 
@@ -72,6 +86,7 @@ export default function SystemSettingsPage() {
         id,
         name: newDeptName,
         code: newDeptCode,
+        color: selectedColor,
         isActive: true
       };
       
@@ -174,6 +189,26 @@ export default function SystemSettingsPage() {
                       onChange={(e) => setNewDeptCode(e.target.value)}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Report Color Theme
+                    </Label>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {COLOR_PRESETS.map((color) => (
+                        <button
+                          key={color.value}
+                          onClick={() => setSelectedColor(color.value)}
+                          className={cn(
+                            "h-8 w-8 rounded-full border-2 transition-all",
+                            selectedColor === color.value ? "border-slate-900 scale-110 shadow-md" : "border-transparent"
+                          )}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
                   <Button onClick={addDepartment} className="w-full h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
                     <Plus className="h-4 w-4 mr-2" />
                     Register Unit
@@ -211,10 +246,13 @@ export default function SystemSettingsPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
-                  {settings?.departments?.map((dept: any, i: number) => (
+                  {settings?.departments?.map((dept: any) => (
                     <div key={dept.id} className={`flex items-center justify-between p-5 group hover:bg-slate-50/50 transition-colors ${!dept.isActive ? 'opacity-50' : ''}`}>
                       <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
+                        <div 
+                          className="h-10 w-10 rounded-xl flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                          style={{ backgroundColor: dept.color || '#355872' }}
+                        >
                           {dept.code}
                         </div>
                         <div className="flex flex-col">

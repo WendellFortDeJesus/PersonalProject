@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "library-bg",
+      "description": "Modern Academic Library",
+      "imageUrl": "https://picsum.photos/seed/library1/1920/1080",
+      "imageHint": "modern library"
+    },
+    {
+      "id": "admin-avatar",
+      "description": "Admin User Portrait",
+      "imageUrl": "https://picsum.photos/seed/admin/150/150",
+      "imageHint": "professional portrait"
+    }
+  ]
+}

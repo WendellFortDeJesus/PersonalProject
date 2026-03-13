@@ -53,10 +53,9 @@ function PurposeSelectionContent() {
       const visitData = {
         patronId,
         schoolId: patronData.schoolId,
-        patronName: patronData.name,
+        patronName: patronData.name.toUpperCase(),
         patronDepartments: patronData.departments,
         patronAge: patronData.age,
-        patronGender: patronData.gender,
         purpose: purposeLabel,
         timestamp: new Date().toISOString(),
         status: "granted"
@@ -111,8 +110,8 @@ function PurposeSelectionContent() {
         </div>
 
         <div className="text-center space-y-2 pt-8">
-          <h1 className={cn("text-5xl font-headline font-bold tracking-tight", textColor)}>Fast-Track Check-in</h1>
-          <p className="text-xl text-slate-700 font-medium">Select today's primary purpose of visit</p>
+          <h1 className={cn("text-5xl font-headline font-bold tracking-tight", textColor)}>Identity Terminal</h1>
+          <p className="text-xl text-slate-700 font-medium">Select your primary purpose of visit</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">

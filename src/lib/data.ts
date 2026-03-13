@@ -9,7 +9,6 @@ export interface Patron {
   role: 'Student' | 'Faculty' | 'Staff' | 'Visitor';
   departments: string[];
   age: number;
-  gender: string;
   isBlocked: boolean;
   lastVisit?: string;
   createdAt: string;
@@ -23,7 +22,6 @@ export interface Visit {
   patronName: string;
   patronDepartments: string[];
   patronAge: number;
-  patronGender: string;
   purpose: string;
   timestamp: string;
   status: 'granted' | 'blocked';
@@ -58,11 +56,4 @@ export const DEPARTMENTS = [
   'College of Criminology: BS in Criminology',
   'Administrative Staff / Faculty',
   'External Guest / Visitor'
-];
-
-export const GENDERS = [
-  'Male',
-  'Female',
-  'Non-binary',
-  'Prefer not to say'
 ];

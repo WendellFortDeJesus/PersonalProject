@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
+import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
@@ -20,15 +20,12 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
-const createFormSchema = (requireAge: boolean, requireGender: boolean) => {
+const createFormSchema = (requireAge: boolean) => {
   return z.object({
     name: z.string().min(2, "Name is too short"),
     department: z.string().min(1, "Select your college department"),
     age: requireAge 
       ? z.string().min(1, "Age is required").refine((val) => !isNaN(parseInt(val)), "Age must be a number")
-      : z.string().optional(),
-    gender: requireGender 
-      ? z.string().min(1, "Select gender")
       : z.string().optional(),
     purposeId: z.string().min(1, "Select purpose of visit"),
   });
@@ -49,9 +46,8 @@ function RegistrationContent() {
   const { data: settings, isLoading: isSettingsLoading } = useDoc(settingsRef);
 
   const requireAge = settings?.requireAge ?? true;
-  const requireGender = settings?.requireGender ?? true;
 
-  const formSchema = useMemo(() => createFormSchema(requireAge, requireGender), [requireAge, requireGender]);
+  const formSchema = useMemo(() => createFormSchema(requireAge), [requireAge]);
 
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
@@ -59,7 +55,6 @@ function RegistrationContent() {
       name: '',
       department: '',
       age: '',
-      gender: '',
       purposeId: '',
     },
   });
@@ -84,10 +79,9 @@ function RegistrationContent() {
       const patronData = {
         schoolId,
         email,
-        name: values.name,
+        name: values.name.toUpperCase(),
         departments: [values.department],
         age: values.age ? Number(values.age) : 0,
-        gender: values.gender || 'Not specified',
         role: "Visitor",
         isBlocked: false,
         createdAt: new Date().toISOString(),
@@ -107,10 +101,9 @@ function RegistrationContent() {
       const visitData = {
         patronId: patronDoc.id,
         schoolId,
-        patronName: values.name,
+        patronName: values.name.toUpperCase(),
         patronDepartments: [values.department],
         patronAge: values.age ? Number(values.age) : 0,
-        patronGender: values.gender || 'Not specified',
         purpose,
         timestamp: new Date().toISOString(),
         status: "granted"
@@ -182,7 +175,7 @@ function RegistrationContent() {
           <CardHeader className="text-center pt-16">
             <CardTitle className="text-3xl font-headline font-bold text-primary uppercase tracking-tight">Identity Registration</CardTitle>
             <CardDescription className="text-base font-bold text-slate-700 uppercase tracking-tight mt-2">
-              Create your library profile to continue. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
+              Create your library profile. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4">
@@ -212,29 +205,6 @@ function RegistrationContent() {
                         <FormControl>
                           <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold" />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Gender {!requireGender && "(Optional)"}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold">
-                              <SelectValue placeholder="Select Gender" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {GENDERS.map((g) => (
-                              <SelectItem key={g} value={g} className="font-bold">{g}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -23,9 +24,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { GENDERS } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -37,10 +37,15 @@ export default function AccessManagementPage() {
   const [editingPatron, setEditingPatron] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDept, setSelectedDept] = useState('all');
-  const [selectedGender, setSelectedGender] = useState('all');
 
   const db = useFirestore();
   const { toast } = useToast();
+
+  const configRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: config } = useDoc(configRef);
 
   const patronsQuery = useMemoFirebase(() => {
     return query(collection(db, 'patrons'), orderBy('name', 'asc'));
@@ -52,8 +57,7 @@ export default function AccessManagementPage() {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
-    const matchesGender = selectedGender === 'all' || p.gender === selectedGender;
-    return matchesSearch && matchesDept && matchesGender;
+    return matchesSearch && matchesDept;
   });
 
   const handleToggleBlock = (patron: any) => {
@@ -72,12 +76,12 @@ export default function AccessManagementPage() {
 
   return (
     <div className="flex h-full overflow-hidden bg-white">
-      {/* Left Sidebar (20%): Advanced Segmentation Control */}
+      {/* Left Sidebar (20%) */}
       <aside className="w-80 border-r bg-white p-8 space-y-10 overflow-y-auto shrink-0 hidden lg:block">
         <div className="space-y-8">
           <div className="space-y-1">
             <h2 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Segmentation</h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Filter library identity records</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Filter identity records</p>
           </div>
 
           <div className="space-y-6">
@@ -99,19 +103,9 @@ export default function AccessManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Academic Units</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Gender Profile</Label>
-              <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold">
-                  <SelectValue placeholder="All Genders" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Profiles</SelectItem>
-                  {GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  {config?.departments?.map((d: any) => (
+                    <SelectItem key={d.id} value={d.name}>{d.code}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -120,12 +114,12 @@ export default function AccessManagementPage() {
 
         <div className="pt-8 border-t">
           <Button variant="outline" className="w-full h-11 border-primary/20 text-primary hover:bg-primary/5 rounded-xl font-black uppercase text-[10px] tracking-widest">
-            Export Master CSV
+            Export Registry
           </Button>
         </div>
       </aside>
 
-      {/* Main Content (80%): Edge-to-Edge Data Grid */}
+      {/* Main Content (80%) */}
       <main className="flex-1 bg-slate-50/30 overflow-y-auto">
         <div className="bg-white min-h-full border-l">
           <Table>
@@ -133,9 +127,9 @@ export default function AccessManagementPage() {
               <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Patron Identity</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Primary College</TableHead>
-                <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Demographics</TableHead>
+                <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Age Index</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Activity Start</TableHead>
-                <TableHead className="h-16 pr-10 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Override</TableHead>
+                <TableHead className="h-16 pr-10 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -168,7 +162,7 @@ export default function AccessManagementPage() {
                   </TableCell>
                   <TableCell>
                     <span className="text-[10px] font-mono font-black text-primary/60 uppercase">
-                      {patron.age}Y • {patron.gender}
+                      {patron.age}Y
                     </span>
                   </TableCell>
                   <TableCell>
@@ -179,16 +173,16 @@ export default function AccessManagementPage() {
                   <TableCell className="text-right pr-10">
                     <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button 
-                        variant="ghost" size="sm" className="h-9 px-4 text-primary font-black uppercase text-[9px] tracking-widest rounded-xl hover:bg-primary/5"
+                        variant="ghost" size="sm" className="h-9 px-4 text-primary font-black uppercase text-[9px] tracking-widest rounded-xl"
                         onClick={() => { setEditingPatron(patron); setIsEditDialogOpen(true); }}
                       >
                         Edit
                       </Button>
                       <Button 
-                        variant="ghost" size="sm" className={cn("h-9 px-4 font-black uppercase text-[9px] tracking-widest rounded-xl", patron.isBlocked ? "text-green-600 hover:bg-green-50" : "text-red-400 hover:bg-red-50")}
+                        variant="ghost" size="sm" className={cn("h-9 px-4 font-black uppercase text-[9px] tracking-widest rounded-xl", patron.isBlocked ? "text-green-600" : "text-red-400")}
                         onClick={() => handleToggleBlock(patron)}
                       >
-                        {patron.isBlocked ? 'Unlock' : 'Restrict'}
+                        {patron.isBlocked ? 'Unlock' : 'Block'}
                       </Button>
                     </div>
                   </TableCell>
@@ -199,20 +193,17 @@ export default function AccessManagementPage() {
           
           {isLoading && (
             <div className="p-32 text-center">
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] animate-pulse">Compiling Global Registry...</p>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] animate-pulse">Compiling Registry...</p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Profile Editor Modal */}
+      {/* Profile Editor */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md rounded-[2rem] overflow-hidden p-0 border-none shadow-2xl">
+        <DialogContent className="max-w-md rounded-[2rem] p-0 border-none shadow-2xl">
           <DialogHeader className="p-10 bg-primary text-white">
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Profile Management</DialogTitle>
-            <DialogDescription className="text-white/60 font-bold uppercase tracking-widest text-[9px] mt-2">
-              System override for formal visitor identity
-            </DialogDescription>
           </DialogHeader>
           <div className="p-10 space-y-6">
             <div className="space-y-4">
@@ -220,22 +211,9 @@ export default function AccessManagementPage() {
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Legal Identity</Label>
                 <Input value={editingPatron?.name || ''} className="h-12 rounded-xl font-bold uppercase" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
-                  <Input type="number" value={editingPatron?.age || ''} className="h-12 rounded-xl font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Gender Profile</Label>
-                  <Select value={editingPatron?.gender || ''}>
-                    <SelectTrigger className="h-12 rounded-xl font-bold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
+                <Input type="number" value={editingPatron?.age || ''} className="h-12 rounded-xl font-bold" />
               </div>
             </div>
           </div>

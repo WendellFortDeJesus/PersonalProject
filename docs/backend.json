@@ -13,7 +13,6 @@
         "role": { "type": "string", "enum": ["Student", "Faculty", "Staff", "Visitor"] },
         "departments": { "type": "array", "items": { "type": "string" } },
         "age": { "type": "number" },
-        "gender": { "type": "string" },
         "isBlocked": { "type": "boolean" },
         "blockReason": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
@@ -33,7 +32,6 @@
         "patronName": { "type": "string" },
         "patronDepartments": { "type": "array", "items": { "type": "string" } },
         "patronAge": { "type": "number" },
-        "patronGender": { "type": "string" },
         "purpose": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["granted", "blocked"] }
@@ -79,7 +77,6 @@
         "welcomeTextColor": { "type": "string", "enum": ["white", "black"] },
         "timeoutSeconds": { "type": "number", "default": 3 },
         "requireAge": { "type": "boolean", "default": true },
-        "requireGender": { "type": "boolean", "default": true },
         "defaultChartType": { "type": "string", "enum": ["pie", "bar"] },
         "reportHeaderTitle": { "type": "string" },
         "reportFooterText": { "type": "string" },

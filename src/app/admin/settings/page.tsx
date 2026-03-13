@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -68,7 +69,7 @@ export default function SystemSettingsPage() {
     
     toast({
       title: "Settings Updated",
-      description: `${newDept.code} has been added to the system.`,
+      description: `${newDept.code} added to registry.`,
     });
   };
 
@@ -76,11 +77,6 @@ export default function SystemSettingsPage() {
     if (!settingsRef || !settings?.departments) return;
     const updatedDepts = settings.departments.filter((d: any) => d.id !== deptId);
     handleSaveSettings({ departments: updatedDepts });
-    
-    toast({
-      title: "Settings Updated",
-      description: "Department has been removed.",
-    });
   };
 
   const filteredDepts = settings?.departments?.filter((d: any) => 
@@ -96,67 +92,39 @@ export default function SystemSettingsPage() {
 
   return (
     <div className="space-y-8 pb-16 animate-fade-in fluid-container">
-      {/* Header Panel */}
       <div className="flex items-center justify-between h-32 bg-slate-900 border-none shadow-2xl p-10 rounded-[2rem]">
         <div className="space-y-1">
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter">System Settings</h1>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Global configuration and institutional logic</p>
-        </div>
-        <div className="flex items-center gap-6">
-          <Badge className="h-10 px-6 rounded-2xl bg-primary/20 text-primary border-primary/20 font-black uppercase text-[10px] tracking-widest">
-            Configuration Active
-          </Badge>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Configuration and data logic</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Academic Infrastructure */}
-        <div className="lg:col-span-4 bg-white border rounded-[2rem] flex flex-col h-[800px] p-0 overflow-hidden shadow-sm">
+        <div className="lg:col-span-4 bg-white border rounded-[2rem] flex flex-col h-[700px] p-0 overflow-hidden shadow-sm">
           <div className="p-10 bg-slate-50 border-b space-y-6">
-            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Academic Departments</h2>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Academic Registry</h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <Input placeholder="College Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold uppercase text-xs" />
-                <div className="flex gap-4">
-                  <Input placeholder="Short Code" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-mono font-bold" />
-                  <Button onClick={handleAddDept} disabled={!newDeptName || !newDeptCode} className="h-14 px-8 rounded-2xl bg-primary shadow-lg font-black uppercase text-[10px] tracking-widest">Add</Button>
-                </div>
+              <Input placeholder="College Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-12 rounded-xl text-xs font-bold uppercase" />
+              <div className="flex gap-2">
+                <Input placeholder="Code" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-12 rounded-xl font-mono font-bold" />
+                <Button onClick={handleAddDept} disabled={!newDeptName || !newDeptCode} className="h-12 px-6 rounded-xl bg-primary font-black uppercase text-[10px]">Add</Button>
               </div>
-              <Input 
-                placeholder="Filter departments..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 rounded-2xl bg-white border-slate-100 text-[11px] font-bold uppercase"
-              />
             </div>
           </div>
-          
           <div className="flex-1 overflow-y-auto">
             <Table>
-              <TableHeader className="bg-white sticky top-0 z-10">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="pl-10 h-14 font-black uppercase text-[10px] tracking-widest text-slate-400">Department</TableHead>
-                  <TableHead className="h-14 font-black uppercase text-[10px] tracking-widest text-slate-400 text-right pr-10">Action</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {filteredDepts?.map((dept: any) => (
-                  <TableRow key={dept.id} className="zebra-row group transition-colors">
-                    <TableCell className="pl-10 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl flex items-center justify-center text-[10px] font-black text-white shadow-sm font-mono" style={{ backgroundColor: dept.color || '#006837' }}>{dept.code}</div>
-                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-tighter leading-tight max-w-[180px]">{dept.name}</span>
+                  <TableRow key={dept.id} className="group transition-colors">
+                    <TableCell className="pl-10">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg flex items-center justify-center text-[9px] font-black text-white font-mono" style={{ backgroundColor: dept.color || '#006837' }}>{dept.code}</div>
+                        <span className="text-[11px] font-black text-slate-700 uppercase truncate max-w-[150px]">{dept.name}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-10">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleRemoveDept(dept.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500 font-black uppercase text-[9px] tracking-widest"
-                      >
-                        Remove
-                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleRemoveDept(dept.id)} className="opacity-0 group-hover:opacity-100 text-red-500 font-black uppercase text-[9px]">Remove</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -165,88 +133,39 @@ export default function SystemSettingsPage() {
           </div>
         </div>
 
-        {/* Branding & UI */}
-        <div className="lg:col-span-5 bg-white border rounded-[2rem] flex flex-col h-[800px] shadow-sm p-10">
-          <h2 className="text-xl font-black text-primary uppercase tracking-tighter mb-10">Terminal Branding</h2>
+        {/* Branding */}
+        <div className="lg:col-span-5 bg-white border rounded-[2rem] p-10 shadow-sm">
+          <h2 className="text-xl font-black text-primary uppercase tracking-tighter mb-10">Branding</h2>
           <div className="space-y-10">
             <div className="space-y-4">
-              <Label className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Background Image URL</Label>
-              <div className="flex gap-3">
-                <Input value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold" />
-                <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="bg-primary h-14 px-10 rounded-2xl shadow-xl font-black uppercase text-[10px] tracking-widest">
-                  Apply
-                </Button>
-              </div>
+              <Label className="text-[11px] font-black uppercase text-slate-400">Background URL</Label>
+              <Input value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} onBlur={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="h-12 rounded-xl font-bold" />
             </div>
-
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <Label className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Overlay Opacity</Label>
-                <span className="text-sm font-mono font-bold text-primary bg-primary/10 px-4 py-1 rounded-full">{opacity}%</span>
-              </div>
-              <Slider 
-                value={[opacity]} max={100} min={10} step={1} 
-                onValueChange={(val) => { setOpacity(val[0]); handleSaveSettings({ overlayOpacity: val[0] / 100 }); }} 
-              />
+            <div className="space-y-4">
+              <Label className="text-[11px] font-black uppercase text-slate-400">Overlay Opacity: {opacity}%</Label>
+              <Slider value={[opacity]} max={100} min={10} step={1} onValueChange={(v) => { setOpacity(v[0]); handleSaveSettings({ overlayOpacity: v[0]/100 }); }} />
             </div>
-
-            <div className="pt-10 border-t space-y-8">
-              <div className="flex items-center justify-between">
-                <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Terminal Preview</h3>
-                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-[0.2em] border-primary/20 text-primary">Live Sync</Badge>
-              </div>
-              <div className="relative aspect-video rounded-[3rem] overflow-hidden border-[6px] border-slate-100 shadow-2xl group transition-transform hover:scale-[1.01]">
-                <img src={themeUrl} className="object-cover w-full h-full" alt="Terminal Preview" />
-                <div className="absolute inset-0 flex items-center justify-center p-12">
-                  <div 
-                    className="w-full h-full rounded-[2.5rem] shadow-2xl border border-white/40 flex flex-col items-center justify-center gap-4"
-                    style={{ backgroundColor: `rgba(255, 255, 255, ${opacity/100})`, backdropFilter: 'blur(16px)' }}
-                  >
-                     <div className="h-10 w-24 bg-primary/20 rounded-xl animate-pulse" />
-                     <div className="h-4 w-32 bg-slate-200/50 rounded-lg" />
-                  </div>
-                </div>
+            <div className="pt-10 border-t space-y-4">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Enforce Accuracy</p>
+              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl">
+                <span className="text-[10px] font-black text-slate-700 uppercase">Require Age Input</span>
+                <Switch checked={settings?.requireAge} onCheckedChange={(v) => handleSaveSettings({ requireAge: v })} />
               </div>
             </div>
           </div>
         </div>
 
         {/* System Variables */}
-        <div className="lg:col-span-3 bg-slate-50 border border-slate-100 rounded-[2rem] flex flex-col h-[800px] p-10 shadow-inner">
-          <h2 className="text-xl font-black text-primary uppercase tracking-tighter mb-10">System Rules</h2>
-          <div className="space-y-12">
-            <div className="space-y-6">
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-4 border-slate-200">Validation Rules</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-6 bg-white rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-primary/20">
-                  <span className="text-[11px] font-black text-slate-700 uppercase">Enforce Age Input</span>
-                  <Switch checked={settings?.requireAge} onCheckedChange={(val) => handleSaveSettings({ requireAge: val })} />
-                </div>
-                <div className="flex items-center justify-between p-6 bg-white rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-primary/20">
-                  <span className="text-[11px] font-black text-slate-700 uppercase">Require Gender</span>
-                  <Switch checked={settings?.requireGender} onCheckedChange={(val) => handleSaveSettings({ requireGender: val })} />
-                </div>
-              </div>
+        <div className="lg:col-span-3 bg-slate-50 border rounded-[2rem] p-10">
+          <h2 className="text-xl font-black text-primary uppercase tracking-tighter mb-10">Rules</h2>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-slate-400">Visitor Target</Label>
+              <Input type="number" value={settings?.dailyEngagementTarget} onChange={(e) => handleSaveSettings({ dailyEngagementTarget: parseInt(e.target.value) })} className="h-12 rounded-xl font-bold" />
             </div>
-
-            <div className="space-y-6">
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-4 border-slate-200">Institutional Targets</h3>
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Daily Visitor Target</Label>
-                  <Input type="number" value={settings?.dailyEngagementTarget || 50} onChange={(e) => handleSaveSettings({ dailyEngagementTarget: parseInt(e.target.value) })} className="h-14 rounded-2xl bg-white border-none font-mono font-bold text-lg shadow-inner text-primary" />
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Kiosk Timeout (Seconds)</Label>
-                  <Input type="number" value={settings?.timeoutSeconds || 3} onChange={(e) => handleSaveSettings({ timeoutSeconds: parseInt(e.target.value) })} className="h-14 rounded-2xl bg-white border-none font-mono font-bold text-lg shadow-inner text-primary" />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-auto pt-10 border-t border-slate-200">
-               <Button variant="ghost" className="w-full h-16 rounded-2xl bg-white border border-slate-200 font-black uppercase text-[10px] tracking-widest text-primary shadow-sm hover:bg-slate-100 transition-all">
-                Audit Logs
-              </Button>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-slate-400">Kiosk Timeout (Sec)</Label>
+              <Input type="number" value={settings?.timeoutSeconds} onChange={(e) => handleSaveSettings({ timeoutSeconds: parseInt(e.target.value) })} className="h-12 rounded-xl font-bold" />
             </div>
           </div>
         </div>

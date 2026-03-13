@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,13 +14,16 @@ import {
   PieChart, 
   Pie, 
   Legend, 
-  CartesianGrid
+  CartesianGrid,
+  LineChart,
+  Line
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, differenceInDays } from 'date-fns';
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, eachDayOfInterval } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { 
@@ -33,6 +37,8 @@ import {
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [includeLogs, setIncludeLogs] = useState(true);
+  const [includeCharts, setIncludeCharts] = useState(true);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
     to: new Date()
@@ -71,26 +77,31 @@ export default function ReportsPage() {
 
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
-    const hourlyMap: Record<string, number> = Array.from({ length: 11 }, (_, i) => ({ 
-      time: `${8 + i}:00`, 
-      count: 0 
-    })).reduce((acc, curr) => ({ ...acc, [curr.time]: 0 }), {});
+    const dayMap: Record<string, number> = {};
+    const hourlyMap: Record<string, number> = {};
 
     const uniquePatrons = new Set();
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    let totalToday = 0;
 
     filteredVisits.forEach(v => {
       uniquePatrons.add(v.patronId);
+      const vDate = new Date(v.timestamp);
+      const dateKey = format(vDate, 'yyyy-MM-dd');
+      
+      if (dateKey === todayStr) totalToday++;
+
       v.patronDepartments?.forEach((d: string) => {
         const name = d.split(':')[0];
         deptMap[name] = (deptMap[name] || 0) + 1;
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
       
-      const hour = new Date(v.timestamp).getHours();
-      if (hour >= 8 && hour <= 18) {
-        const timeKey = `${hour}:00`;
-        if (hourlyMap[timeKey] !== undefined) hourlyMap[timeKey]++;
-      }
+      dayMap[dateKey] = (dayMap[dateKey] || 0) + 1;
+      
+      const hour = vDate.getHours();
+      const timeKey = `${hour}:00`;
+      hourlyMap[timeKey] = (hourlyMap[timeKey] || 0) + 1;
     });
 
     const deptDistributionData = Object.entries(deptMap)
@@ -98,17 +109,29 @@ export default function ReportsPage() {
       .sort((a, b) => b.count - a.count);
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
-    const trafficFlowData = Object.entries(hourlyMap).map(([time, count]) => ({ time, count }));
+    
+    // Generate trend data for the Line Chart
+    const trendData = dateRange.from && dateRange.to 
+      ? eachDayOfInterval({ start: dateRange.from, end: dateRange.to }).map(day => {
+          const key = format(day, 'yyyy-MM-dd');
+          return { date: format(day, 'MMM dd'), count: dayMap[key] || 0 };
+        })
+      : [];
+
+    const peakHour = Object.entries(hourlyMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+    const mostActiveDept = deptDistributionData[0]?.name || 'N/A';
 
     return { 
       deptDistributionData, 
       purposeData, 
-      trafficFlowData, 
+      trendData,
       total: filteredVisits.length,
+      totalToday,
       uniqueCount: uniquePatrons.size,
+      mostActiveDept,
+      peakHour,
       filteredVisits,
       summary: {
-        peakHour: Object.entries(hourlyMap).sort((a, b) => (b[1] as number) - (a[1] as number))[0]?.[0] || 'N/A',
         dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`
       }
     };
@@ -124,7 +147,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-16 fluid-container">
-      {/* Tier 1: System Filters & KPI Matrix */}
+      {/* Tier 1: System Filters & KPI Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-4 bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-center space-y-6">
           <div className="space-y-1">
@@ -144,230 +167,240 @@ export default function ReportsPage() {
           <div className="pt-4 border-t flex items-center justify-between">
             <span className="text-[10px] font-black text-slate-400 uppercase">System Status</span>
             <span className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
               Intelligence Active
             </span>
           </div>
         </div>
 
-        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <Card className="p-8 flex flex-col justify-between h-full bg-primary text-white border-none shadow-xl rounded-2xl">
-            <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Total Traffic</p>
-            <h3 className="text-4xl font-mono font-medium mt-4">{analytics?.total}</h3>
-            <span className="text-[9px] font-bold text-accent uppercase mt-2 tracking-widest">Aggregate Count</span>
+        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Visitors (Today)</p>
+            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.totalToday}</h3>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Live Count</span>
           </Card>
 
-          <Card className="p-8 flex flex-col justify-between h-full bg-white border rounded-2xl shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Unique Patrons</p>
+          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Active Dept.</p>
+            <h3 className="text-lg font-black text-primary uppercase mt-4 truncate">{analytics?.mostActiveDept}</h3>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Peak Utilization</span>
+          </Card>
+
+          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Peak Hour Today</p>
+            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.peakHour}</h3>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Busiest Period</span>
+          </Card>
+
+          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Unique Registered</p>
             <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.uniqueCount}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Identified IDs</span>
-          </Card>
-
-          <Card className="p-8 flex flex-col justify-between h-full bg-white border rounded-2xl shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Peak window</p>
-            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.summary.peakHour}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Busiest period</span>
-          </Card>
-
-          <Card className="p-2 bg-slate-900 border-none rounded-2xl shadow-sm">
-            <Button onClick={() => setIsPreviewOpen(true)} className="w-full h-full bg-primary hover:bg-primary/90 rounded-xl flex flex-col items-center justify-center p-0 transition-all hover:scale-[1.02]">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white">Generate Official PDF</span>
-            </Button>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Active Database</span>
           </Card>
         </div>
       </div>
 
-      {/* Tier 2: Distribution Visuals (70/30 Split) */}
+      {/* Tier 2: Chart Grid (70/30 Split) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 bg-white border rounded-2xl h-[550px] flex flex-col p-0 overflow-hidden shadow-sm">
-          <div className="p-10 border-b bg-slate-50/50 flex justify-between items-end">
-            <div className="space-y-1">
-              <h2 className="text-2xl font-black text-primary uppercase tracking-tighter leading-none">College Attendance Density</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Comparative usage ranking by academic unit</p>
-            </div>
+        <div className="lg:col-span-8 bg-white border rounded-2xl h-[450px] flex flex-col p-0 overflow-hidden shadow-sm">
+          <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Engagement Trend</h2>
+            <Badge variant="outline" className="h-7 px-4 text-[9px] font-black uppercase tracking-widest">Last {differenceInDays(dateRange.to || new Date(), dateRange.from || new Date())} Days</Badge>
           </div>
-          <div className="flex-1 p-10">
+          <div className="flex-1 p-8">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics?.deptDistributionData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={220} 
+              <LineChart data={analytics?.trendData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="date" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{fontSize: 10, fontWeight: 700, fill: '#64748b', fontFamily: 'Inter'}} 
+                  tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} 
                 />
+                <YAxis hide />
                 <Tooltip 
-                  cursor={{fill: 'transparent'}} 
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase'}} 
+                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: '800'}} 
                 />
-                <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={32}>
-                  {analytics?.deptDistributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
-                  ))}
-                </Bar>
-              </BarChart>
+                <Line 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="#006837" 
+                  strokeWidth={4} 
+                  dot={{fill: '#006837', r: 4}} 
+                  activeDot={{r: 6, strokeWidth: 0}} 
+                />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="lg:col-span-4 bg-white border rounded-2xl h-[550px] flex flex-col p-0 overflow-hidden shadow-sm">
-          <div className="p-10 border-b bg-slate-50/50">
-            <h2 className="text-2xl font-black text-primary uppercase tracking-tighter leading-none">Visit intent</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Primary motivation breakdown</p>
+        <div className="lg:col-span-4 bg-white border rounded-2xl h-[450px] flex flex-col p-0 overflow-hidden shadow-sm">
+          <div className="p-8 border-b bg-slate-50/50">
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Visit Intent</h2>
           </div>
-          <div className="flex-1 p-10">
+          <div className="flex-1 p-8">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={analytics?.purposeData} innerRadius={90} outerRadius={125} paddingAngle={8} dataKey="value">
+                <Pie data={analytics?.purposeData} innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value">
                   {analytics?.purposeData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase'}} 
-                />
-                <Legend 
-                  iconType="circle" 
-                  wrapperStyle={{paddingTop: '30px', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase'}} 
-                />
+                <Tooltip contentStyle={{borderRadius: '12px', border: 'none', fontSize: '10px', fontWeight: '800'}} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{fontSize: '9px', fontWeight: 800, textTransform: 'uppercase'}} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Tier 3: High-Density Hourly Heatmap */}
-      <div className="bg-white border rounded-2xl p-0 overflow-hidden shadow-sm">
-        <div className="p-10 border-b bg-slate-50/50 flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-black text-primary uppercase tracking-tighter">Engagement Heatmap</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Hourly visitor density across terminal operational hours</p>
-          </div>
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary/10 rounded-sm" />
-              <span className="text-[9px] font-black text-slate-400 uppercase">Idle</span>
-              <div className="w-3 h-3 bg-primary rounded-sm ml-4" />
-              <span className="text-[9px] font-black text-slate-400 uppercase">Zenith</span>
-            </div>
-            <Badge variant="outline" className="h-9 px-6 rounded-xl border-slate-200 text-slate-500 font-bold uppercase text-[9px] tracking-widest">
-              High Density Analytics
-            </Badge>
-          </div>
+      {/* Tier 3: Department Rankings (Full Width) */}
+      <div className="bg-white border rounded-2xl h-[400px] flex flex-col p-0 overflow-hidden shadow-sm">
+        <div className="p-8 border-b bg-slate-50/50">
+          <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Department Utilization Ranking</h2>
         </div>
-        <div className="p-12 grid grid-cols-11 gap-6">
-          {analytics?.trafficFlowData.map((hour, idx) => (
-            <div key={idx} className="flex flex-col gap-4 items-center group">
-              <div 
-                className="w-full aspect-square rounded-xl transition-all duration-500 shadow-inner group-hover:scale-110"
-                style={{ 
-                  backgroundColor: hour.count > 0 ? `rgba(0, 104, 55, ${Math.min(1, 0.15 + (hour.count / 15))})` : '#f8fafc' 
-                }}
+        <div className="flex-1 p-8">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics?.deptDistributionData} layout="vertical">
+              <XAxis type="number" hide />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                width={200} 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{fontSize: 9, fontWeight: 700, fill: '#64748b'}} 
               />
-              <span className="text-[10px] font-mono font-bold text-slate-400 tracking-tighter">{hour.time}</span>
-            </div>
-          ))}
+              <Tooltip cursor={{fill: 'transparent'}} />
+              <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
+                {analytics?.deptDistributionData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Institutional Preview Modal */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-[1000px] h-[95vh] flex flex-col p-0 border-none rounded-[3rem] shadow-2xl overflow-hidden">
-          <div className="p-10 bg-slate-900 text-white flex items-center justify-between shrink-0">
-             <div className="space-y-1">
-              <DialogTitle className="text-2xl font-black uppercase tracking-tighter">Official Library Records</DialogTitle>
-              <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Institutional Visitor Management Division</DialogDescription>
+      {/* Simplified Export Module */}
+      <Card className="p-10 bg-slate-900 border-none rounded-[2rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="space-y-4">
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Report Configuration</h2>
+          <div className="flex flex-wrap gap-8">
+            <div className="flex items-center space-x-3">
+              <Checkbox id="logs" checked={includeLogs} onCheckedChange={(v) => setIncludeLogs(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
+              <label htmlFor="logs" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Full Log Table</label>
             </div>
-            <div className="flex gap-4">
-               <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-14 px-10 font-black uppercase tracking-widest text-[11px] shadow-xl">
-                Export PDF
-              </Button>
-              <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="text-white/40 hover:text-white rounded-xl h-14 px-6 font-black uppercase tracking-widest text-[11px]">
-                Close
-              </Button>
+            <div className="flex items-center space-x-3">
+              <Checkbox id="charts" checked={includeCharts} onCheckedChange={(v) => setIncludeCharts(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
+              <label htmlFor="charts" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Visual Charts</label>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto bg-slate-100 p-16">
-            <div className="bg-white shadow-2xl mx-auto max-w-[850px] min-h-[1100px] p-20 flex flex-col rounded-[2.5rem] border border-slate-200">
-              <div className="flex items-center justify-between border-b-[6px] border-slate-900 pb-10 mb-16">
+        </div>
+        <div className="flex gap-4">
+          <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02]">
+            Preview Report
+          </Button>
+          <Button onClick={() => window.print()} variant="outline" className="h-16 px-8 border-white/20 text-white hover:bg-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest">
+            Download PDF
+          </Button>
+        </div>
+      </Card>
+
+      {/* WYSIWYG Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-[900px] h-[90vh] p-0 border-none rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
+          <DialogHeader className="p-8 bg-slate-900 text-white shrink-0">
+            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Report Preview</DialogTitle>
+            <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">Institutional Library Log Records</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto bg-slate-100 p-12">
+            <div className="bg-white shadow-xl mx-auto max-w-[800px] min-h-[1000px] p-16 rounded-[2rem] border border-slate-200">
+              <div className="flex justify-between items-end border-b-4 border-slate-900 pb-8 mb-12">
                 <div>
-                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">NEU Central Library</h1>
-                  <p className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] pt-2">Administrative Registry Section</p>
+                  <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">NEU Central Library</h1>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] pt-1">Administrative Registry Section</p>
                 </div>
-                <div className="text-right text-[10px] font-black text-slate-400 leading-loose uppercase tracking-widest">
-                  Reference: LIB-{format(new Date(), 'yyyyMMdd')}<br/>
-                  Authority: Institutional Root<br/>
-                  Compiled: {format(new Date(), 'PP p')}
-                </div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Date: {format(new Date(), 'PP')}</p>
               </div>
 
-              <div className="text-center mb-16 space-y-4">
-                <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Attendance Analytics</h2>
-                <div className="inline-block px-8 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-[0.3em]">
-                  {analytics?.summary.dateRangeStr}
-                </div>
+              <div className="text-center mb-12 space-y-2">
+                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Attendance Report</h2>
+                <Badge variant="secondary" className="font-black uppercase tracking-widest text-[9px]">{analytics?.summary.dateRangeStr}</Badge>
               </div>
 
-              <div className="grid grid-cols-3 gap-6 mb-12">
-                 <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Total Entries</p>
-                  <p className="text-3xl font-mono font-medium text-slate-900">{analytics?.total}</p>
-                </div>
-                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Unique Users</p>
-                  <p className="text-3xl font-mono font-medium text-slate-900">{analytics?.uniqueCount}</p>
-                </div>
-                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-2">Peak window</p>
-                  <p className="text-3xl font-mono font-medium text-slate-900">{analytics?.summary.peakHour}</p>
-                </div>
+              <div className="grid grid-cols-4 gap-4 mb-12">
+                {[
+                  { label: 'Total Visits', val: analytics?.total },
+                  { label: 'Most Active', val: analytics?.mostActiveDept },
+                  { label: 'Peak Hour', val: analytics?.peakHour },
+                  { label: 'Unique IDs', val: analytics?.uniqueCount }
+                ].map((kpi, i) => (
+                  <div key={i} className="p-5 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{kpi.label}</p>
+                    <p className="text-lg font-mono font-bold text-slate-900 truncate">{kpi.val}</p>
+                  </div>
+                ))}
               </div>
 
-              <div className="overflow-hidden rounded-2xl border-2 border-slate-900 shadow-lg">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-900 text-white font-mono">
-                    <tr>
-                      <th className="p-5 uppercase tracking-widest text-[9px] font-black">Patron Identity</th>
-                      <th className="p-5 uppercase tracking-widest text-[9px] font-black">College / Unit</th>
-                      <th className="p-5 uppercase tracking-widest text-[9px] font-black">Intent</th>
-                      <th className="p-5 text-right uppercase tracking-widest text-[9px] font-black">Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {analytics?.filteredVisits.slice(0, 20).map((v) => (
-                      <tr key={v.id} className="zebra-row group">
-                        <td className="p-5">
-                          <p className="font-black text-slate-900 uppercase leading-none">{v.patronName}</p>
-                          <p className="text-[8px] font-mono font-bold text-slate-400 uppercase pt-1 tracking-tighter">{v.schoolId}</p>
-                        </td>
-                        <td className="p-5 font-bold text-slate-600 uppercase text-[9px] leading-tight max-w-[200px] truncate">{v.patronDepartments?.join(', ')}</td>
-                        <td className="p-5">
-                           <span className="text-[8px] font-black uppercase text-primary bg-primary/5 px-2 py-1 rounded border border-primary/10">
-                            {v.purpose}
-                          </span>
-                        </td>
-                        <td className="p-5 text-right font-mono text-[9px] font-bold text-slate-400 uppercase">
-                          {format(new Date(v.timestamp), 'MM/dd HH:mm')}
-                        </td>
+              {includeCharts && (
+                <div className="space-y-12 mb-12">
+                  <div className="h-48 border-t pt-8">
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest">Engagement Trend</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={analytics?.trendData}>
+                        <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="h-48 border-t pt-8">
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest">Departmental Ranking</p>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics?.deptDistributionData} layout="vertical">
+                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 7}} hide />
+                        <Bar dataKey="count" fill="#006837" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {includeLogs && (
+                <div className="border-t pt-8">
+                  <p className="text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest">Master Log Table</p>
+                  <table className="w-full text-left text-[8px] border-collapse">
+                    <thead className="bg-slate-900 text-white">
+                      <tr>
+                        <th className="p-3 uppercase font-black tracking-widest">Time</th>
+                        <th className="p-3 uppercase font-black tracking-widest">Name</th>
+                        <th className="p-3 uppercase font-black tracking-widest">ID</th>
+                        <th className="p-3 uppercase font-black tracking-widest">Dept</th>
+                        <th className="p-3 uppercase font-black tracking-widest">Purpose</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-auto pt-10 border-t border-slate-100 flex items-center justify-between text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">
-                <p>PATRONPOINT SECURE REPORTING</p>
-                <div className="flex items-center gap-2">
-                  <p>CONFIDENTIAL UNIVERSITY DOCUMENT</p>
+                    </thead>
+                    <tbody className="divide-y">
+                      {analytics?.filteredVisits.slice(0, 50).map((v) => (
+                        <tr key={v.id}>
+                          <td className="p-3 font-mono">{format(new Date(v.timestamp), 'HH:mm')}</td>
+                          <td className="p-3 font-bold uppercase">{v.patronName}</td>
+                          <td className="p-3 font-mono">{v.schoolId}</td>
+                          <td className="p-3 uppercase">{v.patronDepartments?.[0]?.split(':')[0]}</td>
+                          <td className="p-3 uppercase">{v.purpose}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-[7px] text-slate-400 italic mt-4">* Displaying first 50 records in preview</p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </DialogContent>
       </Dialog>
     </div>
   );
+}
+
+function differenceInDays(d1: Date, d2: Date) {
+  return Math.floor(Math.abs(d1.getTime() - d2.getTime()) / (1000 * 60 * 60 * 24));
 }

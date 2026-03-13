@@ -41,7 +41,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         <Sidebar variant="sidebar" collapsible="icon" className="border-r border-slate-200">
           <SidebarHeader className="p-6 border-b border-slate-100">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <span className="font-headline font-black text-primary text-xl tracking-tighter">NEU</span>
+              <span className="font-headline font-black text-primary text-lg tracking-tighter uppercase">PatronPoint</span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] -mt-1 leading-none">Library System</span>
             </div>
           </SidebarHeader>
@@ -93,8 +93,8 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             
             <div className="flex items-center gap-6">
               <div className="hidden md:flex flex-col items-end">
-                <p className="text-[10px] font-black text-slate-900 leading-none uppercase tracking-tighter">Command Center</p>
-                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1">Institutional Root</p>
+                <p className="text-[10px] font-black text-slate-900 leading-none uppercase tracking-tighter">ADMIN ACCESS</p>
+                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1">Library system</p>
               </div>
               <Avatar className="h-9 w-9 border border-slate-200">
                 <AvatarImage src="https://picsum.photos/seed/admin/100/100" />

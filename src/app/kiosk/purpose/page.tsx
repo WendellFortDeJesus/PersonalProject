@@ -4,13 +4,15 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PURPOSES, DEPARTMENTS } from '@/lib/data';
+import { PURPOSES } from '@/lib/data';
 import * as Icons from 'lucide-react';
 import { useState, Suspense } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 function PurposeSelectionContent() {
   const router = useRouter();
@@ -27,12 +29,18 @@ function PurposeSelectionContent() {
   const { data: settings } = useDoc(settingsRef);
 
   const handleSelect = async (id: string) => {
-    if (!patronId) return;
+    if (!patronId || !db) return;
     setSelected(id);
     
     try {
       const patronRef = doc(db, 'patrons', patronId);
-      const patronSnap = await getDoc(patronRef);
+      const patronSnap = await getDoc(patronRef).catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: patronRef.path,
+          operation: 'get',
+        }));
+        throw error;
+      });
       
       if (!patronSnap.exists()) {
         throw new Error("Patron not found");
@@ -42,8 +50,7 @@ function PurposeSelectionContent() {
       const currentPurposes = settings?.purposes || PURPOSES;
       const purposeLabel = currentPurposes.find((p: any) => p.id === id)?.label || "Other";
 
-      const visitsRef = collection(db, 'visits');
-      await addDoc(visitsRef, {
+      const visitData = {
         patronId,
         schoolId: patronData.schoolId,
         patronName: patronData.name,
@@ -53,6 +60,15 @@ function PurposeSelectionContent() {
         purpose: purposeLabel,
         timestamp: new Date().toISOString(),
         status: "granted"
+      };
+
+      await addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'visits',
+          operation: 'create',
+          requestResourceData: visitData,
+        }));
+        throw error;
       });
 
       router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}`);
@@ -72,7 +88,6 @@ function PurposeSelectionContent() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Layered Background */}
       <div className="absolute inset-0 z-0">
         <Image 
           src={backgroundUrl} 

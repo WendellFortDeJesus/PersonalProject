@@ -51,7 +51,14 @@ export default function KioskAuthPage() {
       const value = activeTab === 'rfid' ? rfid : email;
 
       const q = query(patronsRef, where(field, '==', value), limit(1));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(q).catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'patrons',
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw error;
+      });
 
       if (querySnapshot.empty) {
         setIsLoading(false);
@@ -78,8 +85,7 @@ export default function KioskAuthPage() {
       const patronData = patronDoc.data();
 
       if (patronData.isBlocked) {
-        const visitsRef = collection(db, 'visits');
-        addDoc(visitsRef, {
+        const visitData = {
           patronId: patronDoc.id,
           schoolId: patronData.schoolId,
           patronName: patronData.name,
@@ -89,10 +95,13 @@ export default function KioskAuthPage() {
           purpose: "Restricted Attempt",
           timestamp: new Date().toISOString(),
           status: "blocked"
-        }).catch(err => {
+        };
+        
+        addDoc(collection(db, 'visits'), visitData).catch(async (err) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: 'visits',
             operation: 'create',
+            requestResourceData: visitData,
           }));
         });
 
@@ -123,7 +132,6 @@ export default function KioskAuthPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Layered Background */}
       <div className="absolute inset-0 z-0">
         <Image 
           src={backgroundUrl} 

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Table, 
@@ -16,10 +16,8 @@ import {
   Edit3, 
   UserX, 
   UserCheck, 
-  Info,
   Loader2,
-  Filter,
-  MoreVertical
+  Filter
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,8 +29,7 @@ import {
   DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+  DialogTitle 
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,6 +38,8 @@ import { collection, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { DEPARTMENTS, GENDERS } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function VisitorManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,34 +60,55 @@ export default function VisitorManagementPage() {
   );
 
   const handleToggleBlock = (patron: any) => {
+    if (!db) return;
     const patronRef = doc(db, 'patrons', patron.id);
-    updateDoc(patronRef, { isBlocked: !patron.isBlocked });
+    const update = { isBlocked: !patron.isBlocked };
     
-    toast({
-      title: patron.isBlocked ? "Access Restored" : "User Blocked",
-      description: `${patron.name} has been ${patron.isBlocked ? 'granted' : 'revoked'} library access.`,
-      variant: patron.isBlocked ? "default" : "destructive",
-    });
+    updateDoc(patronRef, update)
+      .then(() => {
+        toast({
+          title: patron.isBlocked ? "Access Restored" : "User Blocked",
+          description: `${patron.name} has been ${patron.isBlocked ? 'granted' : 'revoked'} library access.`,
+          variant: patron.isBlocked ? "default" : "destructive",
+        });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: patronRef.path,
+          operation: 'update',
+          requestResourceData: update,
+        }));
+      });
   };
 
   const handleUpdatePatron = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingPatron) return;
+    if (!editingPatron || !db) return;
 
     const patronRef = doc(db, 'patrons', editingPatron.id);
-    await updateDoc(patronRef, {
+    const update = {
       name: editingPatron.name,
       age: editingPatron.age,
       gender: editingPatron.gender,
       departments: editingPatron.departments,
       updatedAt: new Date().toISOString()
-    });
+    };
 
-    setIsEditDialogOpen(false);
-    toast({
-      title: "Profile Updated",
-      description: `${editingPatron.name}'s details have been corrected.`,
-    });
+    updateDoc(patronRef, update)
+      .then(() => {
+        setIsEditDialogOpen(false);
+        toast({
+          title: "Profile Updated",
+          description: `${editingPatron.name}'s details have been corrected.`,
+        });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: patronRef.path,
+          operation: 'update',
+          requestResourceData: update,
+        }));
+      });
   };
 
   const isNewVisitor = (createdAt: string) => {

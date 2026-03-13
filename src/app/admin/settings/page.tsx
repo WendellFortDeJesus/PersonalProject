@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,28 +10,18 @@ import {
   Building2, 
   ClipboardCheck, 
   Trash2, 
-  FileText, 
-  FileDown, 
-  LayoutTemplate, 
-  Settings, 
-  AlertCircle, 
+  Palette, 
+  Timer, 
+  BarChart, 
+  UserX, 
+  Search, 
+  Archive, 
+  CheckCircle2, 
+  Upload, 
+  Sun, 
+  Moon, 
   Bell, 
-  Image as ImageIcon,
   Loader2,
-  Upload,
-  Palette,
-  Sun,
-  Moon,
-  Target,
-  Trophy,
-  Timer,
-  CheckCircle2,
-  XCircle,
-  Archive,
-  BarChart,
-  PieChart as PieIcon,
-  Search,
-  UserX,
   UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -39,11 +29,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const COLOR_PRESETS = [
   { name: 'Blue', value: '#355872' },
@@ -87,22 +79,26 @@ export default function SystemSettingsPage() {
 
   const handleSaveSettings = async (updates: any) => {
     if (!settingsRef) return;
-    try {
-      await setDoc(settingsRef, {
-        ...settings,
-        ...updates
-      }, { merge: true });
-      toast({
-        title: "Configuration Synchronized",
-        description: "System preferences updated successfully.",
+    const finalData = {
+      ...settings,
+      ...updates
+    };
+    
+    setDoc(settingsRef, finalData, { merge: true })
+      .then(() => {
+        toast({
+          title: "Configuration Synchronized",
+          description: "System preferences updated successfully.",
+        });
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: settingsRef.path,
+          operation: 'update',
+          requestResourceData: finalData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Sync Failed",
-        description: "Could not save system preferences.",
-      });
-    }
   };
 
   const addDepartment = () => {
@@ -152,24 +148,44 @@ export default function SystemSettingsPage() {
 
   const searchPatron = async () => {
     if (!db || blockSearch.length < 3) return;
-    const q = query(
-      collection(db, 'patrons'), 
-      where('schoolId', '>=', blockSearch),
-      where('schoolId', '<=', blockSearch + '\uf8ff')
-    );
-    const snap = await getDocs(q);
-    setFoundPatrons(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    try {
+      const q = query(
+        collection(db, 'patrons'), 
+        where('schoolId', '>=', blockSearch),
+        where('schoolId', '<=', blockSearch + '\uf8ff')
+      );
+      const snap = await getDocs(q);
+      setFoundPatrons(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (error) {
+      const permissionError = new FirestorePermissionError({
+        path: 'patrons',
+        operation: 'list',
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    }
   };
 
   const toggleBlockPatron = async (patron: any) => {
     if (!db) return;
     const ref = doc(db, 'patrons', patron.id);
-    await updateDoc(ref, { isBlocked: !patron.isBlocked });
-    searchPatron();
-    toast({
-      title: patron.isBlocked ? "Access Restored" : "User Blocked",
-      variant: patron.isBlocked ? "default" : "destructive"
-    });
+    const update = { isBlocked: !patron.isBlocked };
+    
+    updateDoc(ref, update)
+      .then(() => {
+        searchPatron();
+        toast({
+          title: patron.isBlocked ? "Access Restored" : "User Blocked",
+          variant: patron.isBlocked ? "default" : "destructive"
+        });
+      })
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: ref.path,
+          operation: 'update',
+          requestResourceData: update,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   if (isLoading) {
@@ -380,7 +396,15 @@ export default function SystemSettingsPage() {
                         <div className="p-2 bg-slate-100 rounded-lg"><ClipboardCheck className="h-4 w-4 text-slate-400" /></div>
                         <span className="font-bold text-slate-700">{p.label}</span>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-300 hover:text-red-500"
+                        onClick={() => {
+                          const updated = settings?.purposes?.filter((purpose: any) => purpose.id !== p.id);
+                          handleSaveSettings({ purposes: updated });
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -583,7 +607,15 @@ export default function SystemSettingsPage() {
                   {(settings?.blockReasons || ["Suspended", "Expired ID", "Unreturned Materials"]).map((r: string, i: number) => (
                     <div key={i} className="flex items-center justify-between p-4 px-6">
                       <span className="font-bold text-slate-700">{r}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-300 hover:text-red-500"
+                        onClick={() => {
+                          const updated = settings?.blockReasons?.filter((reason: string) => reason !== r);
+                          handleSaveSettings({ blockReasons: updated });
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

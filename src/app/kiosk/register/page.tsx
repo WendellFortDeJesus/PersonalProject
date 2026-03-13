@@ -64,7 +64,6 @@ function RegistrationContent() {
     },
   });
 
-  // Re-validate when settings load to ensure schema matches requirements
   useEffect(() => {
     if (!isSettingsLoading) {
       form.trigger();
@@ -79,10 +78,10 @@ function RegistrationContent() {
   }, [settings]);
 
   const onSubmit = async (values: any) => {
+    if (!db) return;
     setIsLoading(true);
     try {
-      const patronsRef = collection(db, 'patrons');
-      const patronDoc = await addDoc(patronsRef, {
+      const patronData = {
         schoolId,
         email,
         name: values.name,
@@ -93,12 +92,19 @@ function RegistrationContent() {
         isBlocked: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+      };
+
+      const patronDoc = await addDoc(collection(db, 'patrons'), patronData).catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'patrons',
+          operation: 'create',
+          requestResourceData: patronData,
+        }));
+        throw error;
       });
 
-      const visitsRef = collection(db, 'visits');
       const purpose = (settings?.purposes || PURPOSES).find((p: any) => p.id === values.purposeId)?.label || "Unknown";
-      
-      await addDoc(visitsRef, {
+      const visitData = {
         patronId: patronDoc.id,
         schoolId,
         patronName: values.name,
@@ -108,15 +114,20 @@ function RegistrationContent() {
         purpose,
         timestamp: new Date().toISOString(),
         status: "granted"
+      };
+      
+      await addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'visits',
+          operation: 'create',
+          requestResourceData: visitData,
+        }));
+        throw error;
       });
 
       router.push(`/kiosk/success?patronId=${patronDoc.id}&name=${encodeURIComponent(values.name)}`);
     } catch (err) {
       console.error(err);
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: 'patrons',
-        operation: 'create',
-      }));
     } finally {
       setIsLoading(false);
     }

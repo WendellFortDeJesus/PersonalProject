@@ -2,13 +2,21 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Building2, User } from 'lucide-react';
+import { CheckCircle2, Building2, User, ShieldAlert, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
+import { MOCK_PATRONS } from '@/lib/data';
 
 export default function SuccessPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const status = searchParams.get('status');
+  const patronId = searchParams.get('patronId');
+  const blockedName = searchParams.get('name');
+
+  const patron = MOCK_PATRONS.find(p => p.id === patronId);
+  const isBlocked = status === 'blocked';
 
   // Auto-reset after 5 seconds
   useEffect(() => {
@@ -19,61 +27,94 @@ export default function SuccessPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
+    <div className={cn("min-h-screen flex items-center justify-center p-4", isBlocked ? "bg-red-600" : "bg-primary")}>
       <div className="w-full max-w-2xl animate-fade-in">
-        <Card className="shadow-2xl overflow-hidden border-none rounded-[3rem]">
-          <div className="h-4 bg-accent" />
+        <Card className="shadow-2xl overflow-hidden border-none rounded-[3.5rem] bg-white">
+          <div className={cn("h-4", isBlocked ? "bg-red-700" : "bg-accent")} />
           <CardContent className="p-0">
-            {/* Success Banner */}
-            <div className="bg-green-50 py-6 px-12 flex items-center justify-center gap-4 border-b">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-              <h2 className="text-3xl font-headline font-bold text-green-800">Welcome to NEU Library!</h2>
+            {/* Header Banner */}
+            <div className={cn("py-8 px-12 flex items-center justify-center gap-4 border-b", isBlocked ? "bg-red-50 text-red-800" : "bg-green-50 text-green-800")}>
+              {isBlocked ? (
+                <ShieldAlert className="h-10 w-10 text-red-600" />
+              ) : (
+                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              )}
+              <h2 className="text-3xl font-headline font-bold">
+                {isBlocked ? "Restricted Access" : "Welcome to NEU Library!"}
+              </h2>
             </div>
 
-            <div className="p-12 text-center space-y-10">
+            <div className="p-14 text-center space-y-12">
               {/* Visitor Photo Area */}
               <div className="flex justify-center">
-                <div className="relative h-48 w-48 rounded-full border-8 border-slate-50 shadow-xl overflow-hidden bg-slate-100">
-                  <Image 
-                    src="https://picsum.photos/seed/alice/300/300" 
-                    alt="Visitor Photo"
-                    fill
-                    className="object-cover"
-                  />
-                  {/* Fallback Icon if no image */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 -z-10">
-                    <User className="h-20 w-20 text-slate-300" />
-                  </div>
+                <div className={cn("relative h-56 w-56 rounded-full border-8 shadow-2xl overflow-hidden flex items-center justify-center", isBlocked ? "border-red-50 bg-red-50" : "border-slate-50 bg-slate-100")}>
+                  {patron?.photoUrl && !isBlocked ? (
+                    <Image 
+                      src={patron.photoUrl} 
+                      alt="Visitor Photo"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      {isBlocked ? (
+                        <User className="h-24 w-24 text-red-200" />
+                      ) : (
+                        <User className="h-24 w-24 text-slate-300" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Validated Visitor</p>
-                  <h1 className="text-5xl font-headline font-bold text-primary">Alice Johnson</h1>
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <p className={cn("text-xs font-bold uppercase tracking-[0.3em]", isBlocked ? "text-red-400" : "text-slate-400")}>
+                    {isBlocked ? "System Notification" : "Validated Visitor"}
+                  </p>
+                  <h1 className={cn("text-5xl font-headline font-bold", isBlocked ? "text-red-700" : "text-primary")}>
+                    {patron?.name || blockedName || "Guest User"}
+                  </h1>
                 </div>
                 
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <div className="flex items-center gap-2 px-6 py-3 bg-primary/5 rounded-2xl text-primary border border-primary/10">
-                    <Building2 className="h-6 w-6" />
-                    <span className="text-lg font-bold">College of Informatics and Computing Sciences</span>
+                {isBlocked ? (
+                   <div className="flex flex-col items-center gap-6 p-8 bg-red-50 rounded-[2.5rem] border border-red-100">
+                    <div className="flex items-center gap-3 text-red-800">
+                      <AlertCircle className="h-8 w-8" />
+                      <span className="text-2xl font-bold">Please see the library help desk</span>
+                    </div>
+                    <p className="text-sm font-medium text-red-600/80">
+                      Your access credentials require administrative review before entry.
+                    </p>
                   </div>
-                  <div className="px-4 py-1.5 bg-slate-100 rounded-full text-slate-600 text-sm font-bold border border-slate-200 uppercase">
-                    Student
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <div className="flex items-center gap-3 px-8 py-4 bg-primary/5 rounded-[2rem] text-primary border border-primary/10 shadow-sm">
+                      <Building2 className="h-7 w-7" />
+                      <span className="text-xl font-bold">{patron?.department || "General Access"}</span>
+                    </div>
+                    <div className="px-6 py-2 bg-slate-100 rounded-full text-slate-500 text-xs font-bold border border-slate-200 uppercase tracking-widest">
+                      {patron?.role || "Visitor"}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="pt-8 border-t border-slate-100">
-                <p className="text-sm text-slate-500 font-medium">
-                  Your visit has been recorded. Enjoy your study time!
-                </p>
-                <div className="mt-6 flex items-center justify-center gap-2">
-                  <div className="h-2 w-2 bg-primary rounded-full animate-bounce" />
-                  <div className="h-2 w-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <div className="h-2 w-2 bg-primary/30 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="text-xs text-muted-foreground ml-2">Resetting terminal...</span>
+              {!isBlocked && (
+                <div className="pt-10 border-t border-slate-100">
+                  <p className="text-lg text-slate-400 font-medium">
+                    Session recorded successfully. Enjoy your study time!
+                  </p>
                 </div>
+              )}
+
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <div className="flex gap-2">
+                  <div className={cn("h-2 w-2 rounded-full animate-bounce", isBlocked ? "bg-red-300" : "bg-primary")} />
+                  <div className={cn("h-2 w-2 rounded-full animate-bounce [animation-delay:-0.15s]", isBlocked ? "bg-red-200" : "bg-primary/60")} />
+                  <div className={cn("h-2 w-2 rounded-full animate-bounce [animation-delay:-0.3s]", isBlocked ? "bg-red-100" : "bg-primary/30")} />
+                </div>
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Terminal Resetting</span>
               </div>
             </div>
           </CardContent>
@@ -81,4 +122,9 @@ export default function SuccessPage() {
       </div>
     </div>
   );
+}
+
+// Helper function needed for CN in success page
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(' ');
 }

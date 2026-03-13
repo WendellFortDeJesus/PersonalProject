@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ContactRound, ArrowLeft, Loader2, Globe } from 'lucide-react';
+import { Mail, ContactRound, ArrowLeft, Loader2, Globe, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MOCK_PATRONS } from '@/lib/data';
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
@@ -21,7 +22,6 @@ export default function KioskAuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Keep focus on RFID input if the RFID tab is active for "instant" scanner capture
     const timer = setInterval(() => {
       if (activeTab === 'rfid' && rfidInputRef.current && document.activeElement !== rfidInputRef.current) {
         rfidInputRef.current.focus();
@@ -34,38 +34,45 @@ export default function KioskAuthPage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call for both RFID and Email
     setTimeout(() => {
       setIsLoading(false);
-      // Validation for RFID or university email domain
-      const isRfidValid = activeTab === 'rfid' && rfid.length >= 5;
-      const isEmailValid = activeTab === 'email' && email.toLowerCase().endsWith('@neu.edu.ph');
+      
+      // Lookup patron
+      const patron = MOCK_PATRONS.find(p => 
+        (activeTab === 'rfid' && p.rfid === rfid) || 
+        (activeTab === 'email' && p.email === email)
+      );
 
-      if (isRfidValid || isEmailValid) {
-        router.push('/kiosk/purpose');
-      } else {
+      if (!patron) {
+        // Validation for new users or restricted domains
+        const isEmailValid = activeTab === 'email' && email.toLowerCase().endsWith('@neu.edu.ph');
+        if (isEmailValid) {
+          router.push('/kiosk/purpose?status=active');
+          return;
+        }
+
         toast({
           variant: "destructive",
-          title: "Access Denied",
-          description: activeTab === 'email' 
-            ? "Access restricted to @neu.edu.ph domain accounts only."
-            : "Invalid RFID scan. Please try tapping your NEU ID again.",
+          title: "Unrecognized ID",
+          description: "This ID is not in our system. Please see the library help desk.",
         });
-        if (activeTab === 'rfid') setRfid('');
+        setRfid('');
+        return;
+      }
+
+      if (patron.status === 'blocked') {
+        router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patron.name)}`);
+      } else {
+        router.push(`/kiosk/purpose?patronId=${patron.id}`);
       }
     }, 1200);
   };
 
   const handleSSO = () => {
     setIsLoading(true);
-    // Simulate Google SSO restricted to domain
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "SSO Verified",
-        description: "Authenticated with university email domain.",
-      });
-      router.push('/kiosk/purpose');
+      router.push('/kiosk/purpose?status=active');
     }, 1000);
   };
 
@@ -81,42 +88,42 @@ export default function KioskAuthPage() {
           Cancel Check-in
         </Button>
 
-        <Card className="shadow-xl border-none overflow-hidden rounded-[1.5rem]">
-          <div className="h-2 bg-primary w-full" />
-          <CardHeader className="text-center space-y-2 pb-2 pt-8">
-            <CardTitle className="text-3xl font-headline font-bold text-primary">Identity Terminal</CardTitle>
-            <CardDescription className="text-base font-medium">
-              Identify yourself to access the library
+        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white">
+          <div className="h-3 bg-primary w-full" />
+          <CardHeader className="text-center space-y-2 pb-2 pt-10">
+            <CardTitle className="text-4xl font-headline font-bold text-primary tracking-tight">Identity Terminal</CardTitle>
+            <CardDescription className="text-lg font-medium text-slate-500">
+              Verify your credentials to enter
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-8">
+          <CardContent className="p-10">
             <Tabs defaultValue="rfid" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 h-14 bg-slate-100 p-1 rounded-xl">
-                <TabsTrigger value="rfid" className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg">
-                  <ContactRound className="mr-2 h-4 w-4" />
+              <TabsList className="grid w-full grid-cols-2 mb-10 h-16 bg-slate-100/80 p-1.5 rounded-2xl">
+                <TabsTrigger value="rfid" className="text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all">
+                  <ContactRound className="mr-2 h-5 w-5" />
                   RFID Tap
                 </TabsTrigger>
-                <TabsTrigger value="email" className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm rounded-lg">
-                  <Globe className="mr-2 h-4 w-4" />
+                <TabsTrigger value="email" className="text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all">
+                  <Globe className="mr-2 h-5 w-5" />
                   SSO Login
                 </TabsTrigger>
               </TabsList>
               
               <TabsContent value="rfid" className="mt-0">
-                <form onSubmit={handleAuth} className="space-y-6">
-                  <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-primary/20 rounded-[2rem] bg-primary/5 transition-colors">
+                <form onSubmit={handleAuth} className="space-y-8">
+                  <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-primary/10 rounded-[3rem] bg-primary/5 group transition-all hover:bg-primary/10 hover:border-primary/20">
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
-                      <div className="relative p-8 bg-white rounded-full shadow-lg">
-                        <ContactRound className="h-16 w-16 text-primary" />
+                      <div className="relative p-10 bg-white rounded-full shadow-xl">
+                        <ContactRound className="h-20 w-20 text-primary" />
                       </div>
                     </div>
-                    <div className="mt-8 text-center space-y-1">
-                      <p className="text-lg font-bold text-slate-700">Ready to Scan</p>
-                      <p className="text-sm font-medium text-muted-foreground">Place your NEU ID near the reader</p>
+                    <div className="mt-10 text-center space-y-2">
+                      <p className="text-2xl font-bold text-slate-800">Scanner Ready</p>
+                      <p className="text-base font-medium text-slate-400">Place your NEU ID near the terminal</p>
                     </div>
                     
-                    <div className="mt-6 w-full max-w-xs px-4">
+                    <div className="mt-8 w-full max-w-xs px-6 opacity-0 focus-within:opacity-100 transition-opacity">
                        <Input 
                         ref={rfidInputRef}
                         placeholder="Scanner input active..."
@@ -124,28 +131,28 @@ export default function KioskAuthPage() {
                         autoComplete="off"
                         value={rfid}
                         onChange={(e) => setRfid(e.target.value)}
-                        className="h-14 text-center text-xl font-mono border-slate-200 focus-visible:ring-primary rounded-xl bg-white/50"
+                        className="h-14 text-center text-2xl font-mono border-slate-200 focus-visible:ring-primary rounded-xl bg-white shadow-sm"
                       />
                     </div>
                   </div>
-                  <Button disabled={isLoading || rfid.length < 5} className="w-full h-16 text-lg font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-lg transition-all">
-                    {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Verify RFID Scan"}
+                  <Button disabled={isLoading || rfid.length < 3} className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-xl transition-all active:scale-[0.98]">
+                    {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Initiate Verification"}
                   </Button>
                 </form>
               </TabsContent>
               
               <TabsContent value="email" className="mt-0">
-                <div className="space-y-6 py-4">
+                <div className="space-y-8 py-2">
                   <div className="space-y-4">
                     <Button 
                       onClick={handleSSO} 
                       disabled={isLoading} 
                       variant="outline"
-                      className="w-full h-16 text-lg border-2 border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-3 rounded-2xl font-bold transition-all hover:border-primary/30 shadow-sm"
+                      className="w-full h-16 text-lg border-2 border-slate-100 hover:bg-slate-50 flex items-center justify-center gap-4 rounded-2xl font-bold transition-all hover:border-primary/30 shadow-sm"
                     >
-                      <div className="relative w-6 h-6">
+                      <div className="relative w-8 h-8">
                          <Image 
-                          src="https://picsum.photos/seed/google/40/40" 
+                          src="https://picsum.photos/seed/google/80/80" 
                           fill
                           alt="Google Logo" 
                           className="rounded-full"
@@ -153,37 +160,37 @@ export default function KioskAuthPage() {
                       </div>
                       Sign in with NEU Email
                     </Button>
-                    <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Restricted to @neu.edu.ph accounts
+                    <p className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                      UNIVERSITY DOMAIN LOCK ACTIVE
                     </p>
                   </div>
                   
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-slate-200" />
+                      <span className="w-full border-t border-slate-100" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-3 text-slate-400 font-bold">Or Manual Entry</span>
+                      <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">Manual Lookup</span>
                     </div>
                   </div>
 
-                  <form onSubmit={handleAuth} className="space-y-4">
+                  <form onSubmit={handleAuth} className="space-y-5">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-primary px-1">University Email Address</label>
+                      <label className="text-sm font-bold text-primary ml-1">Official University Email</label>
                       <div className="relative">
-                        <Mail className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
+                        <Mail className="absolute left-5 top-5 h-5 w-5 text-muted-foreground" />
                         <Input 
-                          placeholder="yourname@neu.edu.ph" 
+                          placeholder="j.doe@neu.edu.ph" 
                           type="email" 
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-14 pl-12 rounded-xl text-lg border-slate-200 focus-visible:ring-primary"
+                          className="h-16 pl-14 rounded-2xl text-lg border-slate-100 bg-slate-50/50 focus-visible:ring-primary"
                         />
                       </div>
                     </div>
-                    <Button disabled={isLoading} className="w-full h-16 text-lg font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-lg transition-all">
-                      {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Proceed with Email"}
+                    <Button disabled={isLoading} className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-xl transition-all active:scale-[0.98]">
+                      {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Access System"}
                     </Button>
                   </form>
                 </div>

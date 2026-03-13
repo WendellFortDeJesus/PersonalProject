@@ -56,6 +56,7 @@ function PurposeSelectionContent() {
         patronName: patronData.name.toUpperCase(),
         patronDepartments: patronData.departments,
         patronAge: patronData.age,
+        patronGender: patronData.gender || 'Unknown',
         purpose: purposeLabel,
         timestamp: new Date().toISOString(),
         status: "granted"

@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 const createFormSchema = (requireAge: boolean) => {
   return z.object({
     name: z.string().min(1, "Name is required"),
+    gender: z.string().min(1, "Select your gender"),
     department: z.string().min(1, "Select your department"),
     age: requireAge 
       ? z.string().min(1, "Age is required").refine((val) => !isNaN(parseInt(val)), "Age must be a number")
@@ -53,6 +54,7 @@ function RegistrationContent() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      gender: '',
       department: '',
       age: '',
       purposeId: '',
@@ -80,6 +82,7 @@ function RegistrationContent() {
         schoolId,
         email,
         name: values.name.toUpperCase(),
+        gender: values.gender,
         departments: [values.department],
         age: values.age ? Number(values.age) : 0,
         role: "Visitor",
@@ -102,6 +105,7 @@ function RegistrationContent() {
         patronId: patronDoc.id,
         schoolId,
         patronName: values.name.toUpperCase(),
+        patronGender: values.gender,
         patronDepartments: [values.department],
         patronAge: values.age ? Number(values.age) : 0,
         purpose,
@@ -186,7 +190,7 @@ function RegistrationContent() {
                     control={form.control}
                     name="name"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="md:col-span-2">
                         <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Full Legal Name</FormLabel>
                         <FormControl>
                           <Input placeholder="JUAN DELA CRUZ" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold uppercase" />
@@ -205,6 +209,29 @@ function RegistrationContent() {
                         <FormControl>
                           <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold" />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Gender</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold">
+                              <SelectValue placeholder="Select Gender" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Male" className="font-bold">Male</SelectItem>
+                            <SelectItem value="Female" className="font-bold">Female</SelectItem>
+                            <SelectItem value="Other" className="font-bold">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -232,30 +259,30 @@ function RegistrationContent() {
                       </FormItem>
                     )}
                   />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Department</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left overflow-hidden">
-                            <SelectValue placeholder="Select your department" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-[300px]">
-                          {activeDepartments.map((dept: string) => (
-                            <SelectItem key={dept} value={dept} className="font-bold text-xs">{dept}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Department</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left overflow-hidden">
+                              <SelectValue placeholder="Select your department" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
+                            {activeDepartments.map((dept: string) => (
+                              <SelectItem key={dept} value={dept} className="font-bold text-xs">{dept}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <Button disabled={isLoading} className="w-full h-18 text-xl font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 py-6">
                   {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Verify and Check-in"}

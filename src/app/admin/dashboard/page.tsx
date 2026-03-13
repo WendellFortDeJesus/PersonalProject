@@ -179,7 +179,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase">
-                        {visit.patronAge}Y
+                        {visit.patronAge}Y / {visit.patronGender?.charAt(0) || 'U'}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2.5 py-1 rounded-full border border-primary/10">

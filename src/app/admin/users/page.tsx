@@ -127,7 +127,7 @@ export default function AccessManagementPage() {
               <TableRow className="hover:bg-transparent border-b">
                 <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Patron Identity</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Primary College</TableHead>
-                <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Age Index</TableHead>
+                <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Demographics</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Activity Start</TableHead>
                 <TableHead className="h-16 pr-10 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Actions</TableHead>
               </TableRow>
@@ -162,7 +162,7 @@ export default function AccessManagementPage() {
                   </TableCell>
                   <TableCell>
                     <span className="text-[10px] font-mono font-black text-primary/60 uppercase">
-                      {patron.age}Y
+                      {patron.age}Y / {patron.gender?.charAt(0) || 'U'}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -211,9 +211,24 @@ export default function AccessManagementPage() {
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Legal Identity</Label>
                 <Input value={editingPatron?.name || ''} className="h-12 rounded-xl font-bold uppercase" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
-                <Input type="number" value={editingPatron?.age || ''} className="h-12 rounded-xl font-bold" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
+                  <Input type="number" value={editingPatron?.age || ''} className="h-12 rounded-xl font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Gender</Label>
+                  <Select defaultValue={editingPatron?.gender || ''}>
+                    <SelectTrigger className="h-12 rounded-xl font-bold">
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>

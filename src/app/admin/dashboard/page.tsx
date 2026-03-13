@@ -1,22 +1,27 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
-import { useDoc } from '@/firebase';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import { 
+  Area, 
+  AreaChart, 
+  ResponsiveContainer, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  CartesianGrid 
+} from 'recharts';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
-  const [deptFilter, setDeptFilter] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
   
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -25,14 +30,12 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
 
-  // System Config
   const configRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: config } = useDoc(configRef);
 
-  // Real-time listener for visits
   const visitsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(50));
@@ -40,16 +43,31 @@ export default function DashboardPage() {
 
   const { data: rawVisits, isLoading: isDataLoading } = useCollection(visitsQuery);
 
-  // Filter logic
-  const visits = useMemo(() => {
-    if (!rawVisits) return [];
-    return rawVisits.filter(v => {
-      const matchesSearch = v.patronName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           v.schoolId?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDept = deptFilter === 'all' || v.patronDepartments?.includes(deptFilter);
-      return matchesSearch && matchesDept;
+  const stats = useMemo(() => {
+    if (!rawVisits) return { total: 0, avgAge: 0, topDept: 'N/A', chartData: [] };
+    
+    const total = rawVisits.length;
+    const sumAge = rawVisits.reduce((acc, v) => acc + (v.patronAge || 0), 0);
+    const avgAge = total > 0 ? Math.round(sumAge / total) : 0;
+    
+    const depts: Record<string, number> = {};
+    rawVisits.forEach(v => {
+      v.patronDepartments?.forEach((d: string) => {
+        depts[d] = (depts[d] || 0) + 1;
+      });
     });
-  }, [rawVisits, searchTerm, deptFilter]);
+    const topDept = Object.entries(depts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+    const hourly: Record<string, number> = {};
+    rawVisits.forEach(v => {
+      const h = new Date(v.timestamp).getHours();
+      const label = `${h}:00`;
+      hourly[label] = (hourly[label] || 0) + 1;
+    });
+    const chartData = Object.entries(hourly).map(([time, count]) => ({ time, count }));
+
+    return { total, avgAge, topDept, chartData };
+  }, [rawVisits]);
 
   const safeFormat = (date: string | Date | undefined, formatStr: string, fallback = "...") => {
     if (!mounted || !date) return fallback;
@@ -61,208 +79,110 @@ export default function DashboardPage() {
     }
   };
 
-  const totalLoginsToday = rawVisits?.length || 0;
-  const capacityLimit = config?.capacityLimit || 100;
-  const isAtCapacity = totalLoginsToday >= capacityLimit;
-  const engagementTarget = config?.dailyEngagementTarget || 50;
-  const goalProgress = Math.min(100, (totalLoginsToday / engagementTarget) * 100);
-
   if (isUserLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Authenticating Session...</p>
-        </div>
+        <p className="font-black text-slate-400 uppercase tracking-widest text-[10px]">Synchronizing Uplink...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-12">
-      {/* Capacity Alert Banner */}
-      {isAtCapacity && (
-        <Card className="border-none bg-destructive text-destructive-foreground shadow-2xl shadow-destructive/20 animate-pulse overflow-hidden rounded-[2rem]">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="space-y-0.5">
-                <p className="font-black uppercase tracking-[0.2em] text-sm">Critical Capacity Reached</p>
-                <p className="text-xs opacity-80 font-bold">Facility has reached the safety threshold of {capacityLimit} visitors.</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-white border-white/50 bg-white/10 font-black px-6 py-2 rounded-xl text-lg">
-              {totalLoginsToday} / {capacityLimit}
-            </Badge>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Enterprise KPI Suite */}
+    <div className="space-y-8 pb-12 animate-fade-in">
+      {/* KPI Data Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-none shadow-sm bg-primary text-white rounded-[2.5rem] overflow-hidden group">
+        <Card className="border-none shadow-sm bg-primary text-white rounded-[2rem]">
           <CardContent className="p-8">
-            <div className="flex justify-between items-start">
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em]">Facility Traffic</p>
-                <h3 className="text-5xl font-black">{totalLoginsToday}</h3>
-                <div className="text-xs font-bold text-white/70">
-                  +12% from yesterday
-                </div>
-              </div>
-            </div>
+            <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em] mb-4">Total Visitors Today</p>
+            <h3 className="text-5xl font-black">{stats.total}</h3>
+            <p className="text-[10px] font-bold mt-2 text-white/70 uppercase">Pulse Active</p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-[2.5rem] bg-white group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-white">
           <CardContent className="p-8">
-            <div className="flex justify-between items-start">
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Daily Goal</p>
-                <h3 className="text-5xl font-black text-primary">{Math.round(goalProgress)}%</h3>
-                <Progress value={goalProgress} className="h-2 w-32 bg-slate-100" />
-              </div>
-            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Top Academic Unit</p>
+            <h3 className="text-xl font-black text-primary truncate uppercase">{stats.topDept}</h3>
+            <p className="text-[10px] font-bold mt-2 text-slate-400 uppercase tracking-widest">Highest Engagement</p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-[2.5rem] bg-white group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-white">
           <CardContent className="p-8">
-            <div className="flex justify-between items-start">
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">System Status</p>
-                <div className="text-3xl font-black text-green-600">
-                  LIVE
-                </div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Push connection active</p>
-              </div>
-            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Average Patron Age</p>
+            <h3 className="text-5xl font-black text-primary">{stats.avgAge}</h3>
+            <p className="text-[10px] font-bold mt-2 text-slate-400 uppercase tracking-widest">Years Old</p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm rounded-[2.5rem] bg-white group">
+        <Card className="border-none shadow-sm rounded-[2rem] bg-white">
           <CardContent className="p-8">
-            <div className="flex justify-between items-start">
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Server Clock</p>
-                <h3 className="text-2xl font-black text-primary">{safeFormat(new Date(), 'HH:mm:ss')}</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{safeFormat(new Date(), 'MMM dd, yyyy')}</p>
-              </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Goal Progress</p>
+            <div className="flex items-center gap-4">
+              <h3 className="text-4xl font-black text-primary">{Math.min(100, Math.round((stats.total / (config?.dailyEngagementTarget || 50)) * 100))}%</h3>
             </div>
+            <Progress value={(stats.total / (config?.dailyEngagementTarget || 50)) * 100} className="h-1.5 mt-4" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Live Monitor Header */}
-      <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white p-8 rounded-[2.5rem] shadow-sm">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black text-primary tracking-tighter uppercase">Live Pulse Monitor</h2>
-          <p className="text-slate-500 font-bold tracking-tight">Real-time engagement from university library terminals</p>
-        </div>
-        
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
-            <Input 
-              placeholder="Search active visitor..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus-visible:ring-primary shadow-inner"
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Analytics Hub */}
+        <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
+          <div className="p-8 border-b bg-slate-50/50">
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Temporal Flow Analysis</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly distribution across the facility</p>
           </div>
-          <Select value={deptFilter} onValueChange={setDeptFilter}>
-            <SelectTrigger className="w-56 h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-600">
-              <SelectValue placeholder="All Academic Units" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Global Traffic</SelectItem>
-              {config?.departments?.map((dept: any) => (
-                <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+          <CardContent className="p-8 h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.chartData}>
+                <defs>
+                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#355872" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#355872" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} />
+                <Tooltip 
+                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}}
+                />
+                <Area type="monotone" dataKey="count" stroke="#355872" strokeWidth={4} fillOpacity={1} fill="url(#colorCount)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Live Text Ticker */}
+        <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
+          <div className="p-8 border-b bg-slate-50/50">
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Live Ticker</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sequential Entry Logs</p>
+          </div>
+          <CardContent className="p-0">
+            <div className="divide-y divide-slate-100 max-h-[450px] overflow-y-auto">
+              {rawVisits?.map((visit) => (
+                <div key={visit.id} className={cn("p-5 transition-colors", visit.status === 'blocked' ? 'bg-red-50' : 'hover:bg-slate-50')}>
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-black text-slate-900">{visit.patronName}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase font-mono">{safeFormat(visit.timestamp, 'HH:mm')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-[9px] font-black text-primary uppercase tracking-widest">{visit.schoolId}</span>
+                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase">{visit.purpose}</span>
+                  </div>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Sliding Traffic Cards */}
-      <div className="grid grid-cols-1 gap-4">
-        {visits.map((visit) => (
-          <Card key={visit.id} className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] overflow-hidden bg-white group">
-            <CardContent className="p-0">
-              <div className="flex flex-col md:flex-row md:items-center justify-between p-6 gap-6">
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20 border-4 border-white shadow-xl">
-                      <AvatarImage src={`https://picsum.photos/seed/${visit.patronId}/200/200`} />
-                      <AvatarFallback className="text-2xl bg-primary/10 text-primary font-black uppercase">
-                        {visit.patronName?.[0] || 'G'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-2xl font-black text-slate-800 tracking-tight">{visit.patronName}</span>
-                      <Badge 
-                        variant={visit.status === 'blocked' ? "destructive" : "secondary"} 
-                        className="font-black px-4 py-1.5 uppercase tracking-widest text-[10px] rounded-lg shadow-sm"
-                      >
-                        {visit.status === 'blocked' ? 'RESTRICTED ACCESS' : visit.purpose}
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-4">
-                      <span className="text-xs font-black text-primary uppercase tracking-[0.2em]">{visit.schoolId}</span>
-                      <div className="flex flex-wrap gap-2">
-                        {visit.patronDepartments?.map((deptName: string, i: number) => {
-                          const deptConfig = config?.departments?.find((d: any) => d.name === deptName);
-                          return (
-                            <Badge 
-                              key={i} 
-                              className="px-3 py-1 rounded-lg text-[9px] font-black border-none shadow-sm text-white transition-transform hover:scale-105"
-                              style={{ backgroundColor: deptConfig?.color || '#355872' }}
-                            >
-                              {deptName}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+              {(!rawVisits || rawVisits.length === 0) && !isDataLoading && (
+                <div className="p-20 text-center">
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">No Live Traffic</p>
                 </div>
-                
-                <div className="flex flex-col items-end gap-3 pr-4">
-                  <div className="text-primary font-black text-2xl">
-                    {safeFormat(visit.timestamp, 'h:mm:ss a')}
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                      {visit.status === 'blocked' ? 'SECURITY ALERT ISSUED' : 'SYSTEM LOGGED'}
-                    </span>
-                    {visit.status === 'blocked' && (
-                      <span className="text-[10px] font-black text-red-500 mt-2 flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
-                        DENY ENTRY IMMEDIATELY
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {visits.length === 0 && !isDataLoading && (
-        <div className="py-40 text-center space-y-6 bg-white rounded-[3rem] shadow-sm border border-dashed">
-          <div className="space-y-2">
-            <p className="text-slate-400 font-black text-2xl uppercase tracking-tighter">Quiet Environment</p>
-            <p className="text-slate-300 font-bold text-sm tracking-widest uppercase">No live traffic detected matching criteria</p>
-          </div>
-        </div>
-      )}
-
-      {isDataLoading && (
-        <div className="py-40 text-center">
-          <p className="text-slate-400 font-black text-xs uppercase tracking-[0.5em] animate-pulse">Establishing Secure Uplink...</p>
-        </div>
-      )}
     </div>
   );
 }

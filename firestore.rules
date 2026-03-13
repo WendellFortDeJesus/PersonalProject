@@ -29,22 +29,22 @@ service cloud.firestore {
     }
 
     match /patrons/{patronId} {
-      allow get: if isOwner(patronId) || isStaff();
-      allow list: if isStaff();
-      allow create: if true; // Allow kiosk registration
-      allow update: if isOwner(patronId) || isStaff();
+      // Kiosk needs to check if a patron exists by ID or query by email/schoolId
+      allow read: if true; 
+      allow create: if true; 
+      allow update: if isStaff() || isOwner(patronId);
       allow delete: if isStaff();
     }
 
     match /visits/{visitId} {
-      allow get, list: if isStaff();
+      allow read: if isStaff();
       allow create: if true; // Allow kiosk log entries
       allow update, delete: if isStaff();
     }
 
     // System configuration for colleges, purposes, and capacity limits
     match /system_config/{configId} {
-      allow read: if true; // Allow kiosk to read purposes/departments even before tap
+      allow read: if true; // Allow kiosk and guests to read branding/purposes
       allow write: if isStaff();
     }
   }

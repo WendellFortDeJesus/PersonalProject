@@ -13,8 +13,6 @@ import {
   PieChart, 
   Pie, 
   Legend, 
-  Area, 
-  AreaChart,
   CartesianGrid
 } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -22,7 +20,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, isWithinInterval, startOfDay, endOfDay, subDays, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { 
@@ -86,7 +83,8 @@ export default function ReportsPage() {
     filteredVisits.forEach(v => {
       uniquePatrons.add(v.patronId);
       v.patronDepartments?.forEach((d: string) => {
-        deptMap[d] = (deptMap[d] || 0) + 1;
+        const name = d.split(':')[0];
+        deptMap[name] = (deptMap[name] || 0) + 1;
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
       
@@ -118,7 +116,7 @@ export default function ReportsPage() {
     };
   }, [rawVisits, dateRange, config]);
 
-  if (isLoading) return <div className="p-32 text-center font-black uppercase tracking-widest text-primary/40 animate-pulse">Initializing BI Suite...</div>;
+  if (isLoading) return <div className="p-32 text-center font-black uppercase tracking-widest text-primary/40 animate-pulse">Loading Reports...</div>;
 
   const CHART_COLORS = ['#006837', '#22c55e', '#f59e0b', '#3b82f6', '#a855f7'];
 
@@ -126,8 +124,8 @@ export default function ReportsPage() {
     <div className="space-y-8 animate-fade-in pb-16 fluid-container">
       {/* Tier 1: Global Filters & KPIs */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-        <div className="lg:col-span-4 bento-tile flex flex-col justify-center gap-4 h-full">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Temporal Intelligence</p>
+        <div className="lg:col-span-4 flex flex-col justify-center gap-4 h-full">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Select Date Range</p>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-14 rounded-2xl font-black gap-3 px-6 border-slate-200 justify-start w-full">
@@ -141,7 +139,7 @@ export default function ReportsPage() {
         </div>
 
         <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <Card className="bento-tile p-6 flex flex-col justify-between h-full bg-primary text-white border-none shadow-xl">
+          <Card className="p-6 flex flex-col justify-between h-full bg-primary text-white border-none shadow-xl rounded-2xl">
             <p className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">Total Attendance</p>
             <h3 className="text-3xl font-mono font-medium mt-2">{analytics?.total}</h3>
             <div className="flex items-center gap-1 mt-2">
@@ -149,21 +147,21 @@ export default function ReportsPage() {
             </div>
           </Card>
 
-          <Card className="bento-tile p-6 flex flex-col justify-between h-full">
+          <Card className="p-6 flex flex-col justify-between h-full bg-white border rounded-2xl">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Unique Patrons</p>
             <h3 className="text-3xl font-mono font-medium text-primary mt-2">{analytics?.uniqueCount}</h3>
             <span className="text-[9px] font-bold text-slate-400 mt-2 uppercase">Registered IDs</span>
           </Card>
 
-          <Card className="bento-tile p-6 flex flex-col justify-between h-full">
+          <Card className="p-6 flex flex-col justify-between h-full bg-white border rounded-2xl">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Peak Time</p>
             <h3 className="text-3xl font-mono font-medium text-primary mt-2">{analytics?.summary.peakHour}</h3>
             <span className="text-[9px] font-bold text-slate-400 mt-2 uppercase">Daily Zenith</span>
           </Card>
 
-          <Card className="bento-tile p-6 flex flex-col justify-between h-full bg-slate-900 border-none">
+          <Card className="p-6 flex flex-col justify-between h-full bg-slate-900 border-none rounded-2xl">
             <Button onClick={() => setIsPreviewOpen(true)} className="w-full h-full bg-primary hover:bg-primary/90 rounded-2xl flex flex-col items-center justify-center p-0">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white">Generate BI Report</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white">Generate PDF Report</span>
             </Button>
           </Card>
         </div>
@@ -171,11 +169,11 @@ export default function ReportsPage() {
 
       {/* Tier 2: The Visual Layer (Charts) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 bento-tile h-[500px] flex flex-col p-0 overflow-hidden">
+        <div className="lg:col-span-8 bg-white border rounded-2xl h-[500px] flex flex-col p-0 overflow-hidden shadow-sm">
           <div className="p-8 border-b bg-slate-50/50 flex justify-between items-end">
             <div className="space-y-1">
-              <h2 className="text-xl font-black text-primary uppercase tracking-tighter leading-none">Utilization Intelligence</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Departmental traffic flow ranking</p>
+              <h2 className="text-xl font-black text-primary uppercase tracking-tighter leading-none">Utilization by Department</h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Comparative traffic flow</p>
             </div>
           </div>
           <div className="flex-1 p-8">
@@ -195,10 +193,10 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-4 bento-tile h-[500px] flex flex-col p-0 overflow-hidden">
+        <div className="lg:col-span-4 bg-white border rounded-2xl h-[500px] flex flex-col p-0 overflow-hidden shadow-sm">
           <div className="p-8 border-b bg-slate-50/50">
-            <h2 className="text-xl font-black text-primary uppercase tracking-tighter leading-none">Purpose Distribution</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Facility intent breakdown</p>
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter leading-none">Purpose Breakdown</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Facility intent distribution</p>
           </div>
           <div className="flex-1 p-8">
             <ResponsiveContainer width="100%" height="100%">
@@ -217,7 +215,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Tier 3: Heatmap & Analysis */}
-      <div className="bento-tile p-0 overflow-hidden">
+      <div className="bg-white border rounded-2xl p-0 overflow-hidden shadow-sm">
         <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Density Heatmap</h2>
@@ -255,15 +253,15 @@ export default function ReportsPage() {
         <DialogContent className="max-w-[1000px] h-[95vh] flex flex-col p-0 border-none rounded-[3.5rem] shadow-2xl overflow-hidden">
           <div className="p-10 bg-slate-900 text-white flex items-center justify-between shrink-0">
              <div className="space-y-1">
-              <DialogTitle className="text-3xl font-black uppercase tracking-tighter">Institutional BI Audit</DialogTitle>
-              <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">Authorized Administrative Reporting Engine</DialogDescription>
+              <DialogTitle className="text-3xl font-black uppercase tracking-tighter">Library Attendance Report</DialogTitle>
+              <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">Official Administrative Record</DialogDescription>
             </div>
             <div className="flex gap-4">
                <Button onClick={() => window.print()} className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-14 px-10 font-black uppercase tracking-widest text-xs shadow-xl">
-                Finalize PDF
+                Download PDF
               </Button>
               <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="text-white/40 hover:text-white rounded-2xl h-14 px-6 font-black uppercase tracking-widest text-xs">
-                Close Audit
+                Close
               </Button>
             </div>
           </div>
@@ -272,17 +270,17 @@ export default function ReportsPage() {
               <div className="flex items-center justify-between border-b-[8px] border-slate-900 pb-12 mb-20">
                 <div>
                   <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">NEU Central Library</h1>
-                  <p className="text-sm font-black text-slate-500 uppercase tracking-[0.4em] pt-2">Office of the Chief Librarian</p>
+                  <p className="text-sm font-black text-slate-500 uppercase tracking-[0.4em] pt-2">Visitor Management Division</p>
                 </div>
                 <div className="text-right text-[11px] font-black text-slate-400 leading-loose uppercase tracking-widest">
                   Ref: LIB-{format(new Date(), 'yyyyMMdd')}<br/>
                   Auth: SYSTEM_ROOT<br/>
-                  TS: {format(new Date(), 'HH:mm:ss')}
+                  Date: {format(new Date(), 'PP')}
                 </div>
               </div>
 
               <div className="text-center mb-20 space-y-6">
-                <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter">Utilization Summary</h2>
+                <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter">Attendance Summary</h2>
                 <div className="inline-block px-10 py-3 bg-slate-900 text-white rounded-full text-[11px] font-black uppercase tracking-[0.3em] shadow-lg">
                   {analytics?.summary.dateRangeStr}
                 </div>
@@ -308,7 +306,7 @@ export default function ReportsPage() {
                   <thead className="bg-slate-900 text-white">
                     <tr>
                       <th className="p-6 uppercase tracking-widest text-[10px] font-black">Patron Identity</th>
-                      <th className="p-6 uppercase tracking-widest text-[10px] font-black">Academic Unit</th>
+                      <th className="p-6 uppercase tracking-widest text-[10px] font-black">College / Unit</th>
                       <th className="p-6 uppercase tracking-widest text-[10px] font-black">Intent</th>
                       <th className="p-6 text-right uppercase tracking-widest text-[10px] font-black">Timestamp</th>
                     </tr>
@@ -336,9 +334,9 @@ export default function ReportsPage() {
               </div>
 
               <div className="mt-auto pt-16 border-t border-slate-100 flex items-center justify-between text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
-                <p>PATRONPOINT SECURE BI ENGINE</p>
+                <p>PATRONPOINT SECURE REPORTING</p>
                 <div className="flex items-center gap-2">
-                  <p>OFFICIAL UNIVERSITY RECORD</p>
+                  <p>OFFICIAL UNIVERSITY DOCUMENT</p>
                 </div>
               </div>
             </div>

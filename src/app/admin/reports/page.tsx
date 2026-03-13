@@ -19,7 +19,8 @@ import {
   Target,
   TrendingUp,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from 'lucide-react';
 import { 
   Bar, 
@@ -39,13 +40,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
 import { 
   Dialog, 
   DialogContent, 
@@ -53,7 +53,6 @@ import {
   DialogTitle, 
   DialogDescription
 } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);

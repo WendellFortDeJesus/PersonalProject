@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Download, 
@@ -16,7 +16,9 @@ import {
   Check,
   X,
   ChevronDown,
-  Info
+  Info,
+  Printer,
+  FileCheck
 } from 'lucide-react';
 import { 
   Bar, 
@@ -43,13 +45,22 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
     to: new Date()
@@ -69,6 +80,13 @@ export default function ReportsPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // System Config
+  const configRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: config } = useDoc(configRef);
 
   // Real-time data fetching
   const visitsQuery = useMemoFirebase(() => {
@@ -116,27 +134,22 @@ export default function ReportsPage() {
     })).reduce((acc, curr) => ({ ...acc, [curr.time]: 0 }), {});
 
     filteredVisits.forEach(v => {
-      // Gender
       const gender = v.patronGender || 'Unknown';
       genderMap[gender] = (genderMap[gender] || 0) + 1;
 
-      // Age
       const age = v.patronAge;
       if (age <= 20) ageMap['18-20']++;
       else if (age <= 23) ageMap['21-23']++;
       else if (age <= 26) ageMap['24-26']++;
       else ageMap['27+']++;
 
-      // Dept (multi-select)
       v.patronDepartments?.forEach((d: string) => {
         deptMap[d] = (deptMap[d] || 0) + 1;
       });
 
-      // Purpose
       const purpose = v.purpose || 'Other';
       purposeMap[purpose] = (purposeMap[purpose] || 0) + 1;
 
-      // Peak Hours (8 AM to 6 PM focus)
       const hour = new Date(v.timestamp).getHours();
       if (hour >= 8 && hour <= 18) {
         const timeKey = `${hour}:00`;
@@ -154,14 +167,33 @@ export default function ReportsPage() {
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
     const peakHoursData = Object.entries(hourlyMap).map(([time, visits]) => ({ time, visits }));
 
-    return { genderData, ageData, deptData, purposeData, peakHoursData, total: filteredVisits.length };
+    // Executive Summary Metrics
+    const busiestDay = filteredVisits.length > 0 ? 
+      format(new Date(filteredVisits[0].timestamp), 'EEEE') : 'N/A';
+    const topCollege = deptData[0]?.name || 'N/A';
+
+    return { 
+      genderData, 
+      ageData, 
+      deptData, 
+      purposeData, 
+      peakHoursData, 
+      total: filteredVisits.length,
+      filteredVisits,
+      summary: {
+        busiestDay,
+        topCollege,
+        dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`
+      }
+    };
   }, [rawVisits, dateRange, selectedDepartments, selectedGenders, ageRange, selectedPurposes]);
 
-  const handleExport = (formatType: 'PDF' | 'CSV') => {
-    toast({
-      title: `Exporting ${formatType} Report`,
-      description: `Your ${formatType} file for ${analytics?.total || 0} entries is being prepared with active filters.`,
-    });
+  const handleExport = () => {
+    setIsPreviewOpen(true);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleQuickDate = (type: 'day' | 'week' | 'month') => {
@@ -197,7 +229,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 print:hidden">
         <div className="space-y-1">
           <h1 className="text-3xl font-headline font-bold text-primary">Library Traffic Reports</h1>
           <p className="text-slate-500 font-medium">Filtered insights and demographic breakdowns</p>
@@ -213,7 +245,7 @@ export default function ReportsPage() {
             {showFilters ? "Hide Filters" : "Custom Filter Panel"}
           </Button>
           
-          <Button onClick={() => handleExport('PDF')} className="rounded-xl gap-2 bg-primary h-12 px-6 shadow-lg shadow-primary/20">
+          <Button onClick={handleExport} className="rounded-xl gap-2 bg-primary h-12 px-6 shadow-lg shadow-primary/20">
             <Download className="h-5 w-5" />
             Download PDF
           </Button>
@@ -222,7 +254,7 @@ export default function ReportsPage() {
 
       {/* Filter Panel */}
       {showFilters && (
-        <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white animate-in slide-in-from-top-4 duration-300">
+        <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white animate-in slide-in-from-top-4 duration-300 print:hidden">
           <CardHeader className="bg-slate-50 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -236,7 +268,6 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Date Range & Quick Presets */}
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Time Interval</Label>
                 <div className="flex flex-col gap-2">
@@ -275,7 +306,6 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Department Multiselect */}
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Colleges / Units</Label>
                 <div className="max-h-[150px] overflow-y-auto space-y-2 pr-2 scrollbar-hide">
@@ -299,7 +329,6 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Visitor Profile: Gender & Age */}
               <div className="space-y-6">
                 <div className="space-y-3">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Gender Identity</Label>
@@ -336,7 +365,6 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Purpose Multiselect */}
               <div className="space-y-4">
                 <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Visit Intent</Label>
                 <div className="max-h-[150px] overflow-y-auto space-y-2 pr-2 scrollbar-hide">
@@ -366,7 +394,6 @@ export default function ReportsPage() {
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Age Group Bar Chart */}
         <Card className="lg:col-span-2 border-none shadow-sm rounded-3xl overflow-hidden bg-white">
           <CardHeader className="bg-slate-50/50 pb-8">
             <div className="flex justify-between items-center">
@@ -404,7 +431,6 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Gender Pie Chart */}
         <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-center">Gender Segmentation</CardTitle>
@@ -430,20 +456,11 @@ export default function ReportsPage() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-8 flex gap-4">
-               {analytics?.genderData.map((g, i) => (
-                 <div key={i} className="flex flex-col items-center">
-                   <span className="text-lg font-bold text-primary">{g.value}</span>
-                   <span className="text-[10px] font-bold text-slate-400 uppercase">{g.name}</span>
-                 </div>
-               ))}
-            </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Peak Hours Area Chart */}
         <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -477,7 +494,6 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Department Ranking */}
         <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -511,61 +527,135 @@ export default function ReportsPage() {
                   </div>
                 </div>
               ))}
-              {(!analytics?.deptData || analytics.deptData.length === 0) && (
-                <div className="py-20 text-center space-y-2">
-                  <Info className="h-8 w-8 text-slate-200 mx-auto" />
-                  <p className="text-slate-300 font-medium italic">No departmental activity found for current filters.</p>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Purpose Statistics */}
-      <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="text-center pb-0 pt-10">
-          <CardTitle className="text-2xl font-bold">Intent-Based Usage Summary</CardTitle>
-          <CardDescription>Understanding why students are using the library</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col md:flex-row items-center gap-12 p-12">
-          <div className="h-[350px] w-full md:w-1/2">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analytics?.purposeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={100}
-                  outerRadius={130}
-                  paddingAngle={8}
-                  dataKey="value"
-                >
-                  {analytics?.purposeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="w-full md:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {analytics?.purposeData.map((item, i) => (
-              <div key={i} className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 flex flex-col items-center text-center hover:bg-white hover:shadow-lg transition-all group">
-                <div className="w-5 h-5 rounded-full mb-3 shadow-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">{item.name}</p>
-                <p className="text-4xl font-bold text-primary">{item.value}</p>
-                <p className="text-[10px] font-bold text-slate-300 mt-2 uppercase tracking-widest">Selected Intent</p>
+      {/* Report Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-[1000px] h-[90vh] flex flex-col p-0 overflow-hidden border-none rounded-[2rem]">
+          <DialogHeader className="p-6 bg-slate-900 text-white flex-row items-center justify-between space-y-0">
+            <div>
+              <DialogTitle className="text-xl font-bold">PDF Report Preview</DialogTitle>
+              <DialogDescription className="text-slate-400">Professional layout for university records</DialogDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20" onClick={handlePrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print PDF
+              </Button>
+              <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => setIsPreviewOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto bg-slate-100 p-12 print:p-0 print:bg-white">
+            <div id="print-area" className="bg-white shadow-xl mx-auto max-w-[800px] min-h-[1050px] p-16 print:shadow-none print:max-w-none font-serif">
+              {/* Official Header */}
+              {config?.useLetterhead && (
+                <div className="flex items-center justify-between border-b-4 border-slate-900 pb-8 mb-12">
+                  <div className="flex items-center gap-6">
+                    <div className="h-24 w-24 bg-primary flex items-center justify-center text-white rounded-xl shadow-lg">
+                      <FileCheck className="h-12 w-12" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">University Central Library</h1>
+                      <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Office of the Chief Librarian</p>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs font-bold text-slate-400">
+                    <p>GEN-ID: {format(new Date(), 'yyyyMMdd-HHmm')}</p>
+                    <p>DATE: {format(new Date(), 'PPpp')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Title Section */}
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-black text-slate-800 underline underline-offset-8">FACILITY UTILIZATION REPORT</h2>
+                <p className="text-lg font-medium text-slate-500 mt-4 italic">Reporting Period: {analytics?.summary.dateRangeStr}</p>
               </div>
-            ))}
-            {(!analytics?.purposeData || analytics.purposeData.length === 0) && (
-              <div className="col-span-2 py-10 text-center text-slate-300 italic">
-                Gathering intent data based on your filters...
+
+              {/* Executive Summary Section */}
+              <div className="grid grid-cols-3 gap-8 mb-16">
+                <div className="p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Total Utilization</p>
+                  <p className="text-4xl font-black text-primary">{analytics?.total}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">Recorded Visits</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Peak Activity</p>
+                  <p className="text-2xl font-black text-primary">{analytics?.summary.busiestDay}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">Most Active Day</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Primary Unit</p>
+                  <p className="text-xl font-black text-primary truncate">{analytics?.summary.topCollege}</p>
+                  <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">Top Participating College</p>
+                </div>
               </div>
-            )}
+
+              {/* Data Table Section */}
+              <div className="mb-16">
+                <h3 className="text-xl font-black text-slate-800 border-b-2 border-slate-200 pb-2 mb-6 uppercase tracking-widest">Detailed Activity Log</h3>
+                <div className="overflow-hidden rounded-xl border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-slate-900 text-white font-black uppercase">
+                        <th className="p-3">Visitor Name</th>
+                        <th className="p-3">College / Dept</th>
+                        <th className="p-3">Demographics</th>
+                        <th className="p-3">Intent of Visit</th>
+                        <th className="p-3 text-right">Timestamp</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {analytics?.filteredVisits.slice(0, 15).map((visit) => (
+                        <tr key={visit.id}>
+                          <td className="p-3 font-bold text-slate-800">{visit.patronName}</td>
+                          <td className="p-3 font-medium text-slate-500 italic">{visit.patronDepartments?.[0]}</td>
+                          <td className="p-3 text-slate-500">{visit.patronAge} / {visit.patronGender}</td>
+                          <td className="p-3">
+                            <Badge variant="secondary" className="text-[9px] font-bold uppercase">{visit.purpose}</Badge>
+                          </td>
+                          <td className="p-3 text-right font-mono text-[10px] text-slate-400">
+                            {format(new Date(visit.timestamp), 'MM/dd HH:mm')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {analytics && analytics.filteredVisits.length > 15 && (
+                    <div className="p-4 bg-slate-50 text-center text-[10px] font-bold text-slate-400 italic">
+                      ... and {analytics.filteredVisits.length - 15} more entries in full database log ...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Signature Section */}
+              <div className="mt-auto pt-24 flex justify-between">
+                <div className="w-64 border-t-2 border-slate-900 pt-3 text-center">
+                  <p className="text-xs font-black uppercase text-slate-900">System Administrator</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Certified Digital Record</p>
+                </div>
+                <div className="w-64 border-t-2 border-slate-900 pt-3 text-center">
+                  <p className="text-xs font-black uppercase text-slate-900">Head Librarian</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Official University Endorsement</p>
+                </div>
+              </div>
+
+              {/* Footer Stamp */}
+              <div className="mt-12 pt-8 border-t border-slate-100 flex items-center justify-between text-[9px] font-bold text-slate-300 uppercase tracking-widest">
+                <p>PATRONPOINT SECURE LOGGING SYSTEM V2.4</p>
+                <p>© 2026 UNIVERSITY RECORDS BUREAU</p>
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

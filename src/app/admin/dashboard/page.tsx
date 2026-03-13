@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
   Users, 
@@ -9,14 +9,17 @@ import {
   UserCheck,
   CalendarDays,
   Activity,
-  UserX
+  UserX,
+  AlertTriangle,
+  Bell
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
+import { useDoc } from '@/firebase';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -27,7 +30,14 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
 
-  // Real-time listener for visits - only if user is authenticated
+  // System Config for Capacity Alerts
+  const configRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: config } = useDoc(configRef);
+
+  // Real-time listener for visits
   const visitsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(50));
@@ -46,6 +56,8 @@ export default function DashboardPage() {
   };
 
   const totalLoginsToday = visits?.length || 0;
+  const capacityLimit = config?.capacityLimit || 100;
+  const isAtCapacity = totalLoginsToday >= capacityLimit;
 
   if (isAuthLoading) {
     return (
@@ -75,6 +87,24 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
+      {/* Capacity Alert */}
+      {isAtCapacity && (
+        <Card className="border-none bg-red-500 text-white shadow-lg animate-bounce">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-6 w-6" />
+              <div>
+                <p className="font-bold">CAPACITY THRESHOLD REACHED</p>
+                <p className="text-xs text-white/80">Library has reached the defined limit of {capacityLimit} visitors.</p>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-white border-white font-bold">
+              {totalLoginsToday} / {capacityLimit}
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="border-none shadow-sm bg-primary text-white">
@@ -100,10 +130,10 @@ export default function DashboardPage() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">System Status</p>
-                <h3 className="text-4xl font-bold mt-2 text-primary flex items-center gap-2">
+                <div className="text-4xl font-bold mt-2 text-primary flex items-center gap-2">
                   <Activity className="h-8 w-8 text-green-500" />
                   ONLINE
-                </h3>
+                </div>
                 <div className="text-sm font-medium mt-4 text-slate-500 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                   Firebase Sync Active

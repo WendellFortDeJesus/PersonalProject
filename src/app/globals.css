@@ -78,37 +78,64 @@
 
 @media print {
   body {
-    @apply bg-white text-black;
+    background-color: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .no-print {
+  
+  /* Hide UI elements */
+  .no-print, 
+  header, 
+  nav, 
+  aside, 
+  footer, 
+  button, 
+  .sidebar-inset, 
+  [role="dialog"] > button,
+  [data-sidebar="trigger"],
+  [data-sidebar="sidebar"] {
     display: none !important;
   }
-  .print-only {
+
+  /* Force display of the report area */
+  .report-print-container {
     display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    z-index: 9999 !important;
   }
-  /* Ensure charts and colors are visible in print */
+
+  /* Remove Dialog styling for print */
+  [role="dialog"] {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .report-print-container > div {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 20px !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Color adjustment for charts */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-  }
-  /* Hide the UI elements when printing the report preview */
-  header, nav, aside, footer, button, .sidebar-inset, [role="dialog"] > button {
-    display: none !important;
-  }
-  /* The report preview should take up the whole page */
-  [role="dialog"] {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-  .report-print-container {
-    padding: 0 !important;
-    background: white !important;
   }
 }

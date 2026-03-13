@@ -137,7 +137,43 @@ export default function ReportsPage() {
   }, [rawVisits, dateRange]);
 
   const handlePrint = () => {
-    window.print();
+    // If the modal isn't open, we open it first to ensure the printable content is in the DOM
+    if (!isPreviewOpen) {
+      setIsPreviewOpen(true);
+      // Wait for the modal to render before printing
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    } else {
+      window.print();
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!analytics?.filteredVisits) return;
+    
+    const headers = ["Time", "Name", "ID/Email", "Access Method", "Department", "Purpose", "Age", "Gender"];
+    const rows = analytics.filteredVisits.map(v => [
+      format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss'),
+      v.patronName,
+      v.authMethod === 'SSO Login' ? v.patronEmail : v.schoolId,
+      v.authMethod,
+      v.patronDepartments?.[0] || 'N/A',
+      v.purpose,
+      v.patronAge,
+      v.patronGender
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `library_report_${format(new Date(), 'yyyyMMdd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (isLoading || !mounted) return (
@@ -302,12 +338,15 @@ export default function ReportsPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02]">
             Preview Library Report
           </Button>
-          <Button onClick={handlePrint} className="h-16 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl font-black uppercase text-[10px] tracking-widest">
+          <Button onClick={handlePrint} className="h-16 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">
             Download PDF
+          </Button>
+          <Button onClick={handleExportCSV} variant="outline" className="h-16 px-8 border-slate-700 text-slate-300 hover:bg-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest">
+            Export CSV
           </Button>
         </div>
       </Card>
@@ -321,8 +360,8 @@ export default function ReportsPage() {
                 <DialogTitle className="text-xl font-black uppercase tracking-tighter">Library Report Preview</DialogTitle>
                 <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">NEU Central Library Registry Records</DialogDescription>
               </div>
-              <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest">
-                Download PDF
+              <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
+                Generate PDF
               </Button>
             </div>
           </DialogHeader>
@@ -412,7 +451,7 @@ export default function ReportsPage() {
               Close Preview
             </Button>
             <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">
-              Download PDF Report
+              Save as PDF
             </Button>
           </DialogFooter>
         </DialogContent>

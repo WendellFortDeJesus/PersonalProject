@@ -69,6 +69,7 @@
           } 
         },
         "capacityLimit": { "type": "number" },
+        "dailyEngagementTarget": { "type": "number", "description": "Target number of visitors per day." },
         "reportFormat": { "type": "string", "enum": ["pdf", "excel"] },
         "useLetterhead": { "type": "boolean" },
         "themeImageUrl": { "type": "string", "description": "Background image for the kiosk terminals." },

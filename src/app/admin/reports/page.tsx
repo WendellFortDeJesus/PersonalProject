@@ -18,7 +18,9 @@ import {
   Award,
   BarChart3,
   PieChart as PieIcon,
-  Users
+  Users,
+  Target,
+  ArrowRight
 } from 'lucide-react';
 import { 
   Bar, 
@@ -33,12 +35,14 @@ import {
   Legend, 
   Area, 
   AreaChart,
-  CartesianGrid
+  CartesianGrid,
+  Line,
+  ComposedChart
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, isWithinInterval, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -55,6 +59,7 @@ import {
   DialogTitle, 
   DialogDescription
 } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -64,7 +69,6 @@ export default function ReportsPage() {
     to: new Date()
   });
   
-  // Filter States
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
@@ -79,14 +83,12 @@ export default function ReportsPage() {
     setMounted(true);
   }, []);
 
-  // System Config for dynamic departments and colors
   const configRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: config } = useDoc(configRef);
 
-  // Real-time data fetching
   const visitsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'));
@@ -94,40 +96,35 @@ export default function ReportsPage() {
 
   const { data: rawVisits, isLoading } = useCollection(visitsQuery);
 
-  // Filter and Process Data
   const analytics = useMemo(() => {
     if (!rawVisits || !config) return null;
 
     const filteredVisits = rawVisits.filter(v => {
-      // 1. Date Range Filter
       const visitDate = new Date(v.timestamp);
       const isDateMatch = !dateRange.from || !dateRange.to || isWithinInterval(visitDate, { 
         start: startOfDay(dateRange.from), 
         end: endOfDay(dateRange.to) 
       });
-
-      // 2. Department Filter
       const isDeptMatch = selectedDepartments.length === 0 || 
         v.patronDepartments?.some((d: string) => selectedDepartments.includes(d));
-
-      // 3. Gender Filter
       const isGenderMatch = selectedGenders.length === 0 || selectedGenders.includes(v.patronGender);
-
-      // 4. Age Range Filter
       const isAgeMatch = v.patronAge >= ageRange[0] && v.patronAge <= ageRange[1];
-
-      // 5. Purpose Filter
       const isPurposeMatch = selectedPurposes.length === 0 || selectedPurposes.includes(v.purpose);
 
       return isDateMatch && isDeptMatch && isGenderMatch && isAgeMatch && isPurposeMatch;
     });
+
+    // Metrics
+    const uniquePatrons = new Set(filteredVisits.map(v => v.patronId)).size;
+    const totalDays = Math.max(1, differenceInDays(dateRange.to || new Date(), dateRange.from || subDays(new Date(), 30)));
+    const targetEngagement = (config.dailyEngagementTarget || 50) * totalDays;
+    const engagementProgress = Math.min(100, (filteredVisits.length / targetEngagement) * 100);
 
     const genderMap: Record<string, number> = {};
     const ageMap: Record<string, number> = { '18-20': 0, '21-23': 0, '24-26': 0, '27+': 0 };
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
     
-    // Hourly distribution (8 AM to 6 PM)
     const hourlyMap: Record<string, number> = Array.from({ length: 11 }, (_, i) => ({ 
       time: `${8 + i}:00`, 
       count: 0 
@@ -154,16 +151,12 @@ export default function ReportsPage() {
       const hour = dateObj.getHours();
       if (hour >= 8 && hour <= 18) {
         const timeKey = `${hour}:00`;
-        if (hourlyMap[timeKey] !== undefined) {
-          hourlyMap[timeKey]++;
-        }
+        if (hourlyMap[timeKey] !== undefined) hourlyMap[timeKey]++;
       }
     });
 
     const genderData = Object.entries(genderMap).map(([name, value]) => ({ name, value }));
     const ageData = Object.entries(ageMap).map(([group, count]) => ({ group, count }));
-    
-    // College Distribution Data
     const deptDistributionData = Object.entries(deptMap)
       .map(([name, count]) => {
         const deptConfig = config.departments?.find((d: any) => d.name === name);
@@ -177,9 +170,12 @@ export default function ReportsPage() {
       .sort((a, b) => b.count - a.count);
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
-    const trafficFlowData = Object.entries(hourlyMap).map(([time, count]) => ({ time, count }));
+    const trafficFlowData = Object.entries(hourlyMap).map(([time, count]) => ({ 
+      time, 
+      count,
+      target: config.dailyEngagementTarget / 11 || 5 // Hourly target
+    }));
 
-    // Executive Summary Metrics
     const busiestDay = filteredVisits.length > 0 ? 
       format(new Date(filteredVisits[0].timestamp), 'EEEE') : 'N/A';
     const topCollege = deptDistributionData[0]?.name || 'N/A';
@@ -191,6 +187,9 @@ export default function ReportsPage() {
       purposeData, 
       trafficFlowData, 
       total: filteredVisits.length,
+      uniquePatrons,
+      engagementProgress,
+      targetEngagement,
       filteredVisits,
       summary: {
         busiestDay,
@@ -200,23 +199,14 @@ export default function ReportsPage() {
     };
   }, [rawVisits, dateRange, selectedDepartments, selectedGenders, ageRange, selectedPurposes, config]);
 
-  const handleExport = () => {
-    setIsPreviewOpen(true);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const handleExport = () => setIsPreviewOpen(true);
+  const handlePrint = () => window.print();
 
   const handleQuickDate = (type: 'day' | 'week' | 'month') => {
     const now = new Date();
-    if (type === 'day') {
-      setDateRange({ from: startOfDay(now), to: endOfDay(now) });
-    } else if (type === 'week') {
-      setDateRange({ from: startOfWeek(now), to: endOfWeek(now) });
-    } else if (type === 'month') {
-      setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
-    }
+    if (type === 'day') setDateRange({ from: startOfDay(now), to: endOfDay(now) });
+    else if (type === 'week') setDateRange({ from: startOfWeek(now), to: endOfWeek(now) });
+    else if (type === 'month') setDateRange({ from: startOfMonth(now), to: endOfMonth(now) });
   };
 
   const resetFilters = () => {
@@ -231,7 +221,7 @@ export default function ReportsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
-        <p className="text-slate-400 font-bold">Compiling Facility Analytics...</p>
+        <p className="text-slate-400 font-bold">Compiling Facility Intelligence...</p>
       </div>
     );
   }
@@ -240,11 +230,10 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 print:hidden">
         <div className="space-y-1">
           <h1 className="text-4xl font-black text-primary tracking-tight uppercase">Library Intelligence</h1>
-          <p className="text-slate-500 font-medium">Facility utilization, temporal trends, and demographic ROI</p>
+          <p className="text-slate-500 font-medium">Facility utilization, demographic ROI, and temporal trends</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -254,17 +243,16 @@ export default function ReportsPage() {
             className="rounded-2xl h-14 gap-2 px-6 shadow-sm"
           >
             <Filter className="h-5 w-5" />
-            {showFilters ? "Close Filters" : "Analytics Filter Panel"}
+            {showFilters ? "Hide Filters" : "Analytics Control Panel"}
           </Button>
           
           <Button onClick={handleExport} className="rounded-2xl gap-3 bg-primary h-14 px-8 shadow-xl shadow-primary/20">
             <Download className="h-5 w-5" />
-            Generate PDF Report
+            Export Formal Report
           </Button>
         </div>
       </div>
 
-      {/* Filter Panel */}
       {showFilters && (
         <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white animate-in slide-in-from-top-4 duration-300 print:hidden mb-8">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
@@ -274,8 +262,8 @@ export default function ReportsPage() {
                   <Filter className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold">Segmentation & Control</CardTitle>
-                  <CardDescription>Filter the intelligence dashboard by demographic or organizational dependencies</CardDescription>
+                  <CardTitle className="text-xl font-bold">Segmentation Control</CardTitle>
+                  <CardDescription>Filter intelligence data by demographic or organizational dependencies</CardDescription>
                 </div>
               </div>
               <Button variant="ghost" onClick={resetFilters} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
@@ -412,9 +400,39 @@ export default function ReportsPage() {
         </Card>
       )}
 
+      {/* Goal Tracking Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden p-8 flex flex-col justify-center gap-6">
+          <div className="flex justify-between items-end">
+            <div className="space-y-1">
+              <h3 className="text-2xl font-black text-primary flex items-center gap-3">
+                <Target className="h-6 w-6 text-accent-foreground" />
+                Engagement Goal Progress
+              </h3>
+              <p className="text-slate-500 font-medium">Tracking against university engagement KPIs</p>
+            </div>
+            <div className="text-right">
+              <span className="text-3xl font-black text-primary">{Math.round(analytics?.engagementProgress || 0)}%</span>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Achieved</p>
+            </div>
+          </div>
+          <Progress value={analytics?.engagementProgress} className="h-4 bg-slate-100" />
+          <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <span>0 Visitors</span>
+            <span>Target: {analytics?.targetEngagement} visitors</span>
+          </div>
+        </Card>
+
+        <Card className="border-none shadow-sm rounded-[2.5rem] bg-accent/10 border border-accent/20 p-8 flex flex-col justify-center items-center text-center space-y-2">
+          <Users className="h-10 w-10 text-accent-foreground" />
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Unique Patrons</p>
+          <h3 className="text-4xl font-black text-primary">{analytics?.uniquePatrons}</h3>
+          <p className="text-[10px] font-medium text-slate-500 italic">Distinct individuals served</p>
+        </Card>
+      </div>
+
       {/* Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Departmental Distribution - Power Users */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-8">
             <div className="flex items-center gap-4">
@@ -422,8 +440,8 @@ export default function ReportsPage() {
                 <BarChart3 className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-black text-primary">Departmental Distribution</CardTitle>
-                <CardDescription className="text-base">Volume breakdown by Academic Unit (Power Users)</CardDescription>
+                <CardTitle className="text-2xl font-black text-primary">Departmental ROI</CardTitle>
+                <CardDescription className="text-base">Utilization volume by academic unit</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -454,7 +472,6 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Visitor Purpose - Intent Analytics */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-8">
             <div className="flex items-center gap-4">
@@ -463,7 +480,7 @@ export default function ReportsPage() {
               </div>
               <div>
                 <CardTitle className="text-2xl font-black text-primary">Visitor Intent Breakdown</CardTitle>
-                <CardDescription className="text-base">Breakdown of facility usage reasons (Intent Analytics)</CardDescription>
+                <CardDescription className="text-base">Facility usage reasons analysis</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -488,7 +505,6 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Peak Traffic Flow - Temporal Analytics */}
         <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-8">
             <div className="flex items-center gap-4">
@@ -496,14 +512,14 @@ export default function ReportsPage() {
                 <Clock className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-black text-primary">Peak Traffic Flow</CardTitle>
-                <CardDescription className="text-base">Hourly utilization spikes during operational windows (Temporal Analytics)</CardDescription>
+                <CardTitle className="text-2xl font-black text-primary">Peak Traffic Flow vs Target</CardTitle>
+                <CardDescription className="text-base">Hourly utilization compared to university targets</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-10 pt-0 h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics?.trafficFlowData}>
+              <ComposedChart data={analytics?.trafficFlowData}>
                 <defs>
                   <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#355872" stopOpacity={0.3}/>
@@ -533,73 +549,38 @@ export default function ReportsPage() {
                   fillOpacity={1} 
                   fill="url(#colorTraffic)" 
                 />
-              </AreaChart>
+                <Line 
+                  type="monotone" 
+                  dataKey="target" 
+                  stroke="#f97316" 
+                  strokeWidth={2} 
+                  strokeDasharray="5 5" 
+                  dot={false}
+                  name="Engagement Target"
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Demographic Highlights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-slate-100 rounded-[1.5rem]">
-                <Users className="h-7 w-7 text-slate-500" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-black text-primary">Age Cluster Analysis</CardTitle>
-                <CardDescription className="text-base">Distribution of age groups among library visitors</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics?.ageData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="group" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 'black'}} />
-                <YAxis hide />
-                <Tooltip />
-                <Bar dataKey="count" fill="#7AAACE" radius={[8, 8, 0, 0]} barSize={60} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Key Metrics Snapshot */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-primary text-white flex flex-col justify-center items-center p-8 text-center space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.3em] opacity-60">Verified Records</p>
-            <h3 className="text-7xl font-black">{analytics?.total}</h3>
-            <p className="text-sm font-bold border-t border-white/20 pt-4 w-full">TOTAL FOOT TRAFFIC</p>
-          </Card>
-          
-          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white flex flex-col justify-center items-center p-8 text-center space-y-4 border border-slate-100">
-            <TrendingUp className="h-10 w-10 text-green-500" />
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Primary ROI Source</p>
-            <h3 className="text-2xl font-black text-primary truncate w-full px-2">{analytics?.summary.topCollege}</h3>
-            <p className="text-sm font-bold border-t border-slate-100 pt-4 w-full text-slate-500 uppercase">Top Academic Unit</p>
-          </Card>
-        </div>
-      </div>
-
-      {/* Report Preview Modal (Existing Professional PDF Mockup) */}
+      {/* Official Report Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-[1100px] h-[95vh] flex flex-col p-0 overflow-hidden border-none rounded-[3rem] shadow-2xl">
-          <div className="p-8 bg-slate-900 text-white flex items-center justify-between shrink-0">
+          <div className="p-8 bg-slate-900 text-white flex items-center justify-between shrink-0 print:hidden">
             <div className="space-y-1">
               <DialogTitle className="text-2xl font-black flex items-center gap-3">
                 <FileCheck className="h-8 w-8 text-green-400" />
                 OFFICIAL SYSTEM GENERATED REPORT
               </DialogTitle>
               <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                Valid and certified for university record keeping
+                Validated university record for facility ROI assessment
               </DialogDescription>
             </div>
             <div className="flex gap-4">
               <Button variant="outline" className="h-12 bg-white/10 border-white/20 hover:bg-white/20 rounded-xl px-6 font-bold" onClick={handlePrint}>
                 <Printer className="h-5 w-5 mr-3" />
-                Print Document
+                Print Official PDF
               </Button>
               <Button variant="ghost" className="h-12 text-white hover:bg-white/10 rounded-xl px-4" onClick={() => setIsPreviewOpen(false)}>
                 <X className="h-6 w-6" />
@@ -609,7 +590,6 @@ export default function ReportsPage() {
 
           <div className="flex-1 overflow-y-auto bg-slate-200/50 p-16 print:p-0 print:bg-white custom-scrollbar">
             <div id="print-area" className="bg-white shadow-2xl mx-auto max-w-[850px] min-h-[1100px] p-20 print:shadow-none print:max-w-none font-serif flex flex-col rounded-[2rem] print:rounded-none">
-              {/* Official Header */}
               {config?.useLetterhead && (
                 <div className="flex items-center justify-between border-b-[6px] border-slate-900 pb-10 mb-16">
                   <div className="flex items-center gap-10">
@@ -619,10 +599,10 @@ export default function ReportsPage() {
                     <div className="space-y-1">
                       <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">University Central Library</h1>
                       <p className="text-sm font-black text-slate-500 uppercase tracking-[0.4em] pt-1">Office of the Chief Librarian</p>
-                      <p className="text-[10px] font-bold text-slate-400 tracking-widest">A-202, Admin Building, NEU Main Campus</p>
+                      <p className="text-[10px] font-bold text-slate-400 tracking-widest">Formal Utilization Intelligence Record</p>
                     </div>
                   </div>
-                  <div className="text-right space-y-2">
+                  <div className="text-right">
                     <div className="bg-slate-100 p-3 rounded-xl border border-slate-200">
                       <p className="text-[10px] font-black text-slate-800 tracking-tighter">REF: LIB-{format(new Date(), 'yyyy-MM-dd')}-XR</p>
                       <p className="text-[10px] font-bold text-slate-400">TIMESTAMP: {format(new Date(), 'HH:mm:ss')}</p>
@@ -631,52 +611,95 @@ export default function ReportsPage() {
                 </div>
               )}
 
-              {/* Title Section */}
-              <div className="text-center mb-20 space-y-4">
-                <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tight">Utilization Performance Report</h2>
+              <div className="text-center mb-16 space-y-4">
+                <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tight">Facility Utilization Report</h2>
                 <div className="inline-block px-8 py-2 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-[0.3em]">
                   {analytics?.summary.dateRangeStr}
                 </div>
               </div>
 
-              {/* Executive Metrics */}
-              <div className="grid grid-cols-3 gap-10 mb-20">
-                <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-slate-100 shadow-sm">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Total Utilization</p>
-                  <p className="text-5xl font-black text-primary leading-none">{analytics?.total}</p>
-                  <p className="text-[11px] font-bold text-slate-500 mt-4 uppercase border-t pt-4">Verified Log Entries</p>
+              {/* Summary Highlights */}
+              <div className="grid grid-cols-4 gap-6 mb-16">
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Visits</p>
+                  <p className="text-4xl font-black text-primary">{analytics?.total}</p>
                 </div>
-                <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-slate-100 shadow-sm">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Peak Activity Day</p>
-                  <p className="text-3xl font-black text-primary leading-none">{analytics?.summary.busiestDay}</p>
-                  <p className="text-[11px] font-bold text-slate-500 mt-4 uppercase border-t pt-4">Daily Volume Max</p>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Unique Users</p>
+                  <p className="text-4xl font-black text-primary">{analytics?.uniquePatrons}</p>
                 </div>
-                <div className="p-8 bg-slate-50 rounded-[2rem] border-2 border-slate-100 shadow-sm">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Leading Academic Unit</p>
-                  <p className="text-2xl font-black text-primary leading-tight truncate">{analytics?.summary.topCollege}</p>
-                  <p className="text-[11px] font-bold text-slate-500 mt-4 uppercase border-t pt-4">Primary ROI Source</p>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Peak Day</p>
+                  <p className="text-2xl font-black text-primary">{analytics?.summary.busiestDay}</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Goal Reach</p>
+                  <p className="text-3xl font-black text-primary">{Math.round(analytics?.engagementProgress || 0)}%</p>
                 </div>
               </div>
 
-              {/* Activity Table */}
+              {/* Visual Analytics Sections in Report */}
+              <div className="space-y-12 mb-16">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">I. Temporal Utilization Flow</h3>
+                  <div className="h-[200px] w-full border border-slate-100 rounded-3xl p-4 bg-slate-50/30">
+                     <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={analytics?.trafficFlowData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="time" hide />
+                        <YAxis hide />
+                        <Area type="monotone" dataKey="count" stroke="#355872" strokeWidth={4} fill="#355872" fillOpacity={0.1} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">II. Demographic Ratio</h3>
+                    <div className="h-[180px] w-full border border-slate-100 rounded-3xl p-4 bg-slate-50/30 flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={analytics?.genderData} innerRadius={40} outerRadius={60} dataKey="value">
+                            {analytics?.genderData.map((e, i) => <Cell key={i} fill={CHART_COLORS[i % 5]} />)}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">III. Intent Analytics</h3>
+                    <div className="h-[180px] w-full border border-slate-100 rounded-3xl p-4 bg-slate-50/30 flex items-center justify-center">
+                       <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={analytics?.purposeData} innerRadius={40} outerRadius={60} dataKey="value">
+                            {analytics?.purposeData.map((e, i) => <Cell key={i} fill={CHART_COLORS[i % 5]} />)}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="mb-20">
-                <h3 className="text-xl font-black text-slate-900 border-b-4 border-slate-900 pb-3 mb-8 uppercase tracking-[0.2em]">Activity Ledger</h3>
+                <h3 className="text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4 mb-8">IV. Formal Activity Ledger</h3>
                 <div className="overflow-hidden rounded-2xl border-2 border-slate-900">
                   <table className="w-full text-left text-[11px] border-collapse">
                     <thead>
                       <tr className="bg-slate-900 text-white font-black uppercase tracking-widest">
-                        <th className="p-4 border-r border-white/20">Visitor Identity</th>
-                        <th className="p-4 border-r border-white/20">Departmental Group</th>
-                        <th className="p-4 border-r border-white/20">Visit Intent</th>
-                        <th className="p-4 text-right">Validated Time</th>
+                        <th className="p-4 border-r border-white/20">Identity</th>
+                        <th className="p-4 border-r border-white/20">Unit</th>
+                        <th className="p-4 border-r border-white/20">Purpose</th>
+                        <th className="p-4 text-right">Timestamp</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {analytics?.filteredVisits.slice(0, 20).map((visit) => (
+                      {analytics?.filteredVisits.slice(0, 30).map((visit) => (
                         <tr key={visit.id}>
                           <td className="p-4 font-black text-slate-900 border-r border-slate-100">
                             {visit.patronName}
-                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">{visit.schoolId}</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{visit.schoolId}</p>
                           </td>
                           <td className="p-4 font-bold text-slate-600 italic border-r border-slate-100">
                             {visit.patronDepartments?.join(', ')}
@@ -694,20 +717,19 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Official Seal and Signatures */}
               <div className="mt-auto">
                 <div className="grid grid-cols-2 gap-20 pt-20 border-t-2 border-slate-100">
                   <div className="text-center space-y-4">
-                    <div className="h-[2px] w-full bg-slate-900" />
-                    <p className="text-xs font-black uppercase text-slate-900 tracking-widest">System Record Officer</p>
+                    <div className="h-[1px] w-full bg-slate-900" />
+                    <p className="text-[10px] font-black uppercase text-slate-900 tracking-widest">System Record Officer</p>
                   </div>
                   <div className="text-center space-y-4">
-                    <div className="h-[2px] w-full bg-slate-900" />
-                    <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Chief Librarian / Registrar</p>
+                    <div className="h-[1px] w-full bg-slate-900" />
+                    <p className="text-[10px] font-black uppercase text-slate-900 tracking-widest">Chief Librarian / Registrar</p>
                   </div>
                 </div>
 
-                <div className="mt-16 pt-8 border-t border-slate-100 flex items-center justify-between text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">
+                <div className="mt-16 pt-8 border-t border-slate-100 flex items-center justify-between text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">
                   <p>PATRONPOINT SECURE ANALYTICS ENGINE</p>
                   <p>&copy; 2026 UNIVERSITY RECORDS</p>
                 </div>

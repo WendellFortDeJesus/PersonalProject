@@ -1,32 +1,28 @@
+
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Plus, 
-  Settings2, 
   Building2, 
   ClipboardCheck, 
   Trash2, 
-  Edit3, 
-  ShieldAlert,
-  Save,
-  FileText,
-  FileDown,
-  LayoutTemplate,
-  CheckCircle2,
-  Settings,
-  AlertCircle,
-  Bell
+  FileText, 
+  FileDown, 
+  LayoutTemplate, 
+  Settings, 
+  AlertCircle, 
+  Bell, 
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -34,16 +30,15 @@ export default function SystemSettingsPage() {
   const db = useFirestore();
   const { toast } = useToast();
 
-  // Real-time system settings from Firestore
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
 
-  // Local editing states
   const [newDept, setNewDept] = useState('');
   const [newPurposeLabel, setNewPurposeLabel] = useState('');
+  const [themeUrl, setThemeUrl] = useState('');
 
   const handleSaveSettings = async (updates: any) => {
     if (!settingsRef) return;
@@ -54,7 +49,7 @@ export default function SystemSettingsPage() {
       }, { merge: true });
       toast({
         title: "Configuration Synchronized",
-        description: "Terminal preferences updated across the university network.",
+        description: "System preferences updated successfully.",
       });
     } catch (err) {
       toast({
@@ -114,9 +109,10 @@ export default function SystemSettingsPage() {
       </div>
 
       <Tabs defaultValue="foundational" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-[800px] mb-8 h-12 bg-slate-100 p-1 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-5 max-w-[1000px] mb-8 h-12 bg-slate-100 p-1 rounded-2xl">
           <TabsTrigger value="foundational" className="rounded-xl font-bold">College Registry</TabsTrigger>
           <TabsTrigger value="purposes" className="rounded-xl font-bold">Visit Purposes</TabsTrigger>
+          <TabsTrigger value="appearance" className="rounded-xl font-bold">Library Theme</TabsTrigger>
           <TabsTrigger value="exports" className="rounded-xl font-bold">Export Config</TabsTrigger>
           <TabsTrigger value="alerts" className="rounded-xl font-bold">Threshold Alerts</TabsTrigger>
         </TabsList>
@@ -235,6 +231,53 @@ export default function SystemSettingsPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="appearance" className="space-y-6">
+          <Card className="border-none shadow-sm rounded-3xl overflow-hidden max-w-2xl">
+            <CardHeader className="bg-slate-50/50 pb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary/10 rounded-2xl">
+                  <ImageIcon className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold">Library Theme Image</CardTitle>
+                  <CardDescription>Set the background for all visitor terminals</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-10 space-y-6">
+              <div className="space-y-2">
+                <Label>Dynamic Background URL</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="https://images.unsplash.com/..." 
+                    className="h-12 rounded-xl"
+                    value={themeUrl || settings?.themeImageUrl || ''}
+                    onChange={(e) => setThemeUrl(e.target.value)}
+                  />
+                  <Button 
+                    onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })}
+                    className="h-12 rounded-xl"
+                  >
+                    Update Theme
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  Use high-resolution images for the best look on large displays.
+                </p>
+              </div>
+              
+              {settings?.themeImageUrl && (
+                <div className="relative h-48 w-full rounded-2xl overflow-hidden border-2 border-slate-100 shadow-inner">
+                  <img src={settings.themeImageUrl} alt="Theme Preview" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <span className="text-white font-bold text-sm bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">Active Terminal Background</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="exports" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
@@ -316,7 +359,7 @@ export default function SystemSettingsPage() {
                     </div>
                   ) : (
                     <div className="text-center space-y-4">
-                      <ShieldAlert className="h-12 w-12 text-slate-200 mx-auto" />
+                      <AlertCircle className="h-12 w-12 text-slate-200 mx-auto" />
                       <p className="font-bold text-slate-400">Plain Report Format Selected</p>
                     </div>
                   )}
@@ -367,24 +410,5 @@ export default function SystemSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
-}
-
-function Loader2(props: any) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
   );
 }

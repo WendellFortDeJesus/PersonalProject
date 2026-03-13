@@ -13,12 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
-import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { UserPlus, ArrowLeft, Loader2, Library } from 'lucide-react';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import placeholderData from '@/app/lib/placeholder-images.json';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -36,7 +35,11 @@ function RegistrationContent() {
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
 
-  const welcomeImage = placeholderData.placeholderImages.find(img => img.id === 'registration-welcome');
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,7 +55,6 @@ function RegistrationContent() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      // 1. Save Patron Profile
       const patronsRef = collection(db, 'patrons');
       const patronDoc = await addDoc(patronsRef, {
         schoolId,
@@ -67,9 +69,8 @@ function RegistrationContent() {
         updatedAt: new Date().toISOString(),
       });
 
-      // 2. Log Initial Visit
       const visitsRef = collection(db, 'visits');
-      const purpose = PURPOSES.find(p => p.id === values.purposeId)?.label || "Unknown";
+      const purpose = (settings?.purposes || PURPOSES).find((p: any) => p.id === values.purposeId)?.label || "Unknown";
       
       await addDoc(visitsRef, {
         patronId: patronDoc.id,
@@ -95,40 +96,49 @@ function RegistrationContent() {
     }
   };
 
+  const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-6 animate-fade-in">
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+      {/* Background Layer */}
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src={backgroundUrl} 
+          alt="Library Background" 
+          fill 
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-primary/20 backdrop-blur-md" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-2xl space-y-6 animate-fade-in">
         <Button 
           variant="ghost" 
           onClick={() => router.push('/kiosk')}
-          className="text-muted-foreground hover:text-primary"
+          className="text-white hover:bg-white/10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Terminal
         </Button>
 
-        <Card className="shadow-2xl border-none rounded-[2.5rem] bg-white overflow-hidden">
-          {welcomeImage && (
-            <div className="relative h-48 w-full">
-              <Image 
-                src={welcomeImage.imageUrl} 
-                alt={welcomeImage.description}
-                fill
-                className="object-cover"
-                data-ai-hint={welcomeImage.imageHint}
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
+        <Card className="shadow-2xl border-none rounded-[2.5rem] bg-white/70 backdrop-blur-xl border border-white/30 overflow-hidden">
+          {/* NEU Logo Header */}
+          <div className="absolute top-6 left-8">
+            <div className="flex items-center gap-2">
+              <Library className="h-6 w-6 text-primary" />
+              <span className="font-headline font-bold text-primary text-xs tracking-widest">NEU LIBRARY</span>
             </div>
-          )}
-          <CardHeader className="text-center pt-8">
+          </div>
+          
+          <CardHeader className="text-center pt-16">
             <div className="flex justify-center mb-4">
               <div className="p-3 bg-primary/10 rounded-2xl">
                 <UserPlus className="h-8 w-8 text-primary" />
               </div>
             </div>
             <CardTitle className="text-3xl font-headline font-bold text-primary">First-Time Registration</CardTitle>
-            <CardDescription className="text-base font-medium">
+            <CardDescription className="text-base font-medium text-slate-700">
               Create your library profile to continue. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
             </CardDescription>
           </CardHeader>
@@ -141,9 +151,9 @@ function RegistrationContent() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel className="text-primary font-bold">Full Legal Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Juan Dela Cruz" {...field} className="h-12 rounded-xl" />
+                          <Input placeholder="Juan Dela Cruz" {...field} className="h-12 rounded-xl bg-white/50 border-white/50 focus:bg-white" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -155,9 +165,9 @@ function RegistrationContent() {
                     name="age"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Age</FormLabel>
+                        <FormLabel className="text-primary font-bold">Age</FormLabel>
                         <FormControl>
-                          <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-12 rounded-xl" />
+                          <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-12 rounded-xl bg-white/50 border-white/50 focus:bg-white" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -169,10 +179,10 @@ function RegistrationContent() {
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Gender</FormLabel>
+                        <FormLabel className="text-primary font-bold">Gender Identity</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl">
+                            <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
                               <SelectValue placeholder="Select Gender" />
                             </SelectTrigger>
                           </FormControl>
@@ -192,15 +202,15 @@ function RegistrationContent() {
                     name="purposeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Purpose of Visit</FormLabel>
+                        <FormLabel className="text-primary font-bold">Purpose of Visit</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl">
+                            <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
                               <SelectValue placeholder="Select Purpose" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {PURPOSES.map((p) => (
+                            {(settings?.purposes || PURPOSES).map((p: any) => (
                               <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
                             ))}
                           </SelectContent>
@@ -216,18 +226,18 @@ function RegistrationContent() {
                   name="departments"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>College / Department</FormLabel>
+                      <FormLabel className="text-primary font-bold">College / Department (Multiselect)</FormLabel>
                       <Select 
                         onValueChange={(value) => field.onChange([value])} 
                         defaultValue={field.value?.[0]}
                       >
                         <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl">
-                            <SelectValue placeholder="Select Department" />
+                          <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
+                            <SelectValue placeholder="Select Primary Department" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {DEPARTMENTS.map((dept) => (
+                          {(settings?.departments || DEPARTMENTS).map((dept: string) => (
                             <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                           ))}
                         </SelectContent>
@@ -237,7 +247,7 @@ function RegistrationContent() {
                   )}
                 />
 
-                <Button disabled={isLoading} className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all active:scale-[0.98]">
+                <Button disabled={isLoading} className="w-full h-16 text-xl font-bold rounded-2xl shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90">
                   {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Complete Registration & Check-in"}
                 </Button>
               </form>

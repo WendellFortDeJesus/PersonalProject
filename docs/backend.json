@@ -58,7 +58,8 @@
         },
         "capacityLimit": { "type": "number" },
         "reportFormat": { "type": "string", "enum": ["pdf", "excel"] },
-        "useLetterhead": { "type": "boolean" }
+        "useLetterhead": { "type": "boolean" },
+        "themeImageUrl": { "type": "string", "description": "Background image for the kiosk terminals." }
       }
     }
   },

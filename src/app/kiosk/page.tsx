@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -7,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ContactRound, ArrowLeft, Loader2, Globe } from 'lucide-react';
+import { Mail, ContactRound, ArrowLeft, Loader2, Globe, Library } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, limit, doc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, getDocs, limit, doc, addDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -23,6 +24,12 @@ export default function KioskAuthPage() {
   const router = useRouter();
   const { toast } = useToast();
   const db = useFirestore();
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -70,7 +77,6 @@ export default function KioskAuthPage() {
       const patronData = patronDoc.data();
 
       if (patronData.isBlocked) {
-        // Log a blocked attempt for admin visibility
         const visitsRef = collection(db, 'visits');
         addDoc(visitsRef, {
           patronId: patronDoc.id,
@@ -106,34 +112,53 @@ export default function KioskAuthPage() {
   };
 
   const handleSSO = () => {
-    // Simplified SSO for prototype
     setEmail('sso.test@neu.edu.ph');
     setActiveTab('email');
   };
 
+  const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-xl space-y-6 animate-fade-in">
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+      {/* Layered Background */}
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src={backgroundUrl} 
+          alt="Library Background" 
+          fill 
+          className="object-cover transition-opacity duration-1000"
+          priority
+        />
+        <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-xl space-y-6 animate-fade-in">
         <Button 
           variant="ghost" 
           onClick={() => router.push('/')}
-          className="group text-muted-foreground hover:text-primary mb-2"
+          className="group text-white hover:bg-white/10 mb-2"
         >
           <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Cancel Check-in
         </Button>
 
-        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white">
-          <div className="h-3 bg-primary w-full" />
-          <CardHeader className="text-center space-y-2 pb-2 pt-10">
+        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white/70 backdrop-blur-xl border border-white/30">
+          <div className="absolute top-8 left-10">
+            <div className="flex items-center gap-2">
+              <Library className="h-6 w-6 text-primary" />
+              <span className="font-headline font-bold text-primary text-sm tracking-widest">NEU LIBRARY</span>
+            </div>
+          </div>
+          
+          <CardHeader className="text-center space-y-2 pb-2 pt-20">
             <CardTitle className="text-4xl font-headline font-bold text-primary tracking-tight">Identity Terminal</CardTitle>
-            <CardDescription className="text-lg font-medium text-slate-500">
+            <CardDescription className="text-lg font-medium text-slate-700">
               Verify your School ID to enter
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-10">
+          <CardContent className="p-10 pt-6">
             <Tabs defaultValue="rfid" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-10 h-16 bg-slate-100/80 p-1.5 rounded-2xl">
+              <TabsList className="grid w-full grid-cols-2 mb-10 h-16 bg-black/5 p-1.5 rounded-2xl">
                 <TabsTrigger value="rfid" className="text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all">
                   <ContactRound className="mr-2 h-5 w-5" />
                   RFID Tap
@@ -146,7 +171,7 @@ export default function KioskAuthPage() {
               
               <TabsContent value="rfid" className="mt-0">
                 <form onSubmit={handleAuth} className="space-y-8">
-                  <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-primary/10 rounded-[3rem] bg-primary/5 group transition-all hover:bg-primary/10 hover:border-primary/20">
+                  <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-primary/20 rounded-[3rem] bg-white/40 group transition-all hover:bg-white/60 hover:border-primary/40">
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
                       <div className="relative p-10 bg-white rounded-full shadow-xl">
@@ -155,7 +180,7 @@ export default function KioskAuthPage() {
                     </div>
                     <div className="mt-10 text-center space-y-2">
                       <p className="text-2xl font-bold text-slate-800">Scanner Ready</p>
-                      <p className="text-base font-medium text-slate-400">Place your NEU School ID near the terminal</p>
+                      <p className="text-base font-medium text-slate-500">Place your NEU School ID near the terminal</p>
                     </div>
                     
                     <div className="mt-8 w-full max-w-xs px-6 opacity-0 focus-within:opacity-100 transition-opacity">
@@ -166,7 +191,7 @@ export default function KioskAuthPage() {
                         autoComplete="off"
                         value={rfid}
                         onChange={(e) => setRfid(e.target.value)}
-                        className="h-14 text-center text-2xl font-mono border-slate-200 focus-visible:ring-primary rounded-xl bg-white shadow-sm"
+                        className="h-14 text-center text-2xl font-mono border-white/50 focus-visible:ring-primary rounded-xl bg-white/80 shadow-sm"
                       />
                     </div>
                   </div>
@@ -183,7 +208,7 @@ export default function KioskAuthPage() {
                       onClick={handleSSO} 
                       disabled={isLoading} 
                       variant="outline"
-                      className="w-full h-16 text-lg border-2 border-slate-100 hover:bg-slate-50 flex items-center justify-center gap-4 rounded-2xl font-bold transition-all hover:border-primary/30 shadow-sm"
+                      className="w-full h-16 text-lg border-white/50 bg-white/40 hover:bg-white/60 flex items-center justify-center gap-4 rounded-2xl font-bold transition-all hover:border-primary/30 shadow-sm"
                     >
                       Sign in with NEU Email
                     </Button>
@@ -191,10 +216,10 @@ export default function KioskAuthPage() {
                   
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-slate-100" />
+                      <span className="w-full border-t border-slate-300" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">Manual Lookup</span>
+                      <span className="bg-transparent px-4 text-slate-600 font-bold tracking-widest backdrop-blur-sm">Manual Lookup</span>
                     </div>
                   </div>
 
@@ -209,7 +234,7 @@ export default function KioskAuthPage() {
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-16 pl-14 rounded-2xl text-lg border-slate-100 bg-slate-50/50 focus-visible:ring-primary"
+                          className="h-16 pl-14 rounded-2xl text-lg border-white/50 bg-white/40 focus-visible:ring-primary"
                         />
                       </div>
                     </div>

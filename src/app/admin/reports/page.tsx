@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -120,7 +119,7 @@ export default function ReportsPage() {
       : [];
 
     const peakHour = Object.entries(hourlyMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-    const mostActiveDept = deptDistributionData[0]?.name || 'N/A';
+    const activeDept = deptDistributionData[0];
 
     return { 
       deptDistributionData, 
@@ -129,7 +128,8 @@ export default function ReportsPage() {
       total: filteredVisits.length,
       totalToday,
       uniqueCount: uniquePatrons.size,
-      mostActiveDept,
+      mostActiveDept: activeDept ? activeDept.name : 'N/A',
+      mostActiveDeptCount: activeDept ? activeDept.count : 0,
       peakHour,
       filteredVisits,
       summary: {
@@ -234,9 +234,12 @@ export default function ReportsPage() {
           </Card>
 
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Active Dept.</p>
-            <h3 className="text-lg font-black text-primary uppercase mt-4 truncate">{analytics?.mostActiveDept}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Peak Utilization</span>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Most Active Department</p>
+            <div className="mt-4 overflow-hidden">
+              <h3 className="text-lg font-black text-primary uppercase truncate leading-tight">{analytics?.mostActiveDept}</h3>
+              <p className="text-[10px] font-mono font-bold text-slate-600 mt-1">{analytics?.mostActiveDeptCount} Visitors Recorded</p>
+            </div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Unit Utilization</span>
           </Card>
 
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
@@ -361,10 +364,6 @@ export default function ReportsPage() {
             <Download className="h-5 w-5" />
             Download PDF
           </Button>
-          <Button onClick={handleExportCSV} variant="outline" className="h-16 px-10 border-accent text-accent hover:bg-accent/10 rounded-2xl font-black uppercase text-[10px] tracking-widest gap-3">
-            <FileSpreadsheet className="h-5 w-5" />
-            Export CSV
-          </Button>
         </div>
       </Card>
 
@@ -402,37 +401,42 @@ export default function ReportsPage() {
                 <Badge variant="secondary" className="font-black uppercase tracking-widest text-[9px]">{analytics?.summary.dateRangeStr}</Badge>
               </div>
 
-              <div className="grid grid-cols-4 gap-4 mb-12">
-                {[
-                  { label: 'Total Visits', val: analytics?.total },
-                  { label: 'Most Active', val: analytics?.mostActiveDept },
-                  { label: 'Peak Hour', val: analytics?.peakHour },
-                  { label: 'Unique IDs', val: analytics?.uniqueCount }
-                ].map((kpi, i) => (
-                  <div key={i} className="p-5 bg-slate-50 rounded-xl border border-slate-100 text-center">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">{kpi.label}</p>
-                    <p className="text-lg font-mono font-bold text-slate-900 truncate">{kpi.val}</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-6 mb-12">
+                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Total Visitors Today</p>
+                  <p className="text-4xl font-mono font-bold text-slate-900">{analytics?.totalToday}</p>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">{format(new Date(), 'PP')}</p>
+                </div>
+                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Most Active Department</p>
+                  <p className="text-lg font-black text-slate-900 uppercase truncate leading-tight">{analytics?.mostActiveDept}</p>
+                  <p className="text-[9px] font-mono font-bold text-primary mt-1">{analytics?.mostActiveDeptCount} Visitors Recorded</p>
+                </div>
               </div>
 
               {includeCharts && (
                 <div className="space-y-12 mb-12">
-                  <div className="h-48 border-t pt-8">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest">Engagement Trend</p>
+                  <div className="h-56 border-t pt-8">
+                    <p className="text-[10px] font-black text-slate-400 uppercase mb-6 tracking-widest">Engagement Trend</p>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={analytics?.trendData}>
                         <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="date" hide />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="h-48 border-t pt-8">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest">Departmental Ranking</p>
+                  <div className="h-64 border-t pt-8">
+                    <p className="text-[10px] font-black text-slate-400 uppercase mb-6 tracking-widest">Visit Intent (Purpose Distribution)</p>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics?.deptDistributionData} layout="vertical">
-                        <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 7}} hide />
-                        <Bar dataKey="count" fill="#006837" radius={[0, 4, 4, 0]} />
-                      </BarChart>
+                      <PieChart>
+                        <Pie data={analytics?.purposeData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                          {analytics?.purposeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
+                          ))}
+                        </Pie>
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} />
+                      </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
@@ -440,13 +444,13 @@ export default function ReportsPage() {
 
               {includeLogs && (
                 <div className="border-t pt-8">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest">Master Log Table</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">Student / Visitor Registry</p>
                   <table className="w-full text-left text-[8px] border-collapse">
                     <thead className="bg-slate-900 text-white">
                       <tr>
                         <th className="p-3 uppercase font-black tracking-widest">Time</th>
                         <th className="p-3 uppercase font-black tracking-widest">Name</th>
-                        <th className="p-3 uppercase font-black tracking-widest">ID/Email</th>
+                        <th className="p-3 uppercase font-black tracking-widest">ID / Email</th>
                         <th className="p-3 uppercase font-black tracking-widest">Department</th>
                         <th className="p-3 uppercase font-black tracking-widest text-center">Purpose</th>
                       </tr>
@@ -463,7 +467,7 @@ export default function ReportsPage() {
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-[7px] text-slate-400 italic mt-4">* Showing first 50 records in preview</p>
+                  <p className="text-[7px] text-slate-400 italic mt-4">* Showing current active registry records</p>
                 </div>
               )}
             </div>
@@ -473,9 +477,6 @@ export default function ReportsPage() {
               Close Preview
             </Button>
             <div className="flex gap-3">
-              <Button onClick={handleExportCSV} variant="outline" className="border-accent text-accent hover:bg-accent/10 rounded-xl px-8 font-black uppercase text-[10px] tracking-widest">
-                Export to CSV
-              </Button>
               <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">
                 Download PDF
               </Button>

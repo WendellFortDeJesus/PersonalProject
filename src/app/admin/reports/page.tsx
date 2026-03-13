@@ -110,7 +110,6 @@ export default function ReportsPage() {
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
     
-    // Generate trend data for the Line Chart
     const trendData = dateRange.from && dateRange.to 
       ? eachDayOfInterval({ start: dateRange.from, end: dateRange.to }).map(day => {
           const key = format(day, 'yyyy-MM-dd');
@@ -147,7 +146,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-16 fluid-container">
-      {/* Tier 1: System Filters & KPI Summary */}
+      {/* KPI Matrix */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-4 bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-center space-y-6">
           <div className="space-y-1">
@@ -200,7 +199,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Tier 2: Chart Grid (70/30 Split) */}
+      {/* Grid: Trend & Purpose (70/30) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 bg-white border rounded-2xl h-[450px] flex flex-col p-0 overflow-hidden shadow-sm">
           <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
@@ -254,10 +253,10 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Tier 3: Department Rankings (Full Width) */}
+      {/* Dept Ranking */}
       <div className="bg-white border rounded-2xl h-[400px] flex flex-col p-0 overflow-hidden shadow-sm">
         <div className="p-8 border-b bg-slate-50/50">
-          <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Department Utilization Ranking</h2>
+          <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Departmental Utilization Ranking</h2>
         </div>
         <div className="flex-1 p-8">
           <ResponsiveContainer width="100%" height="100%">
@@ -282,24 +281,24 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Simplified Export Module */}
+      {/* WYSIWYG Export Configuration */}
       <Card className="p-10 bg-slate-900 border-none rounded-[2rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-4">
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Report Configuration</h2>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Report Generation</h2>
           <div className="flex flex-wrap gap-8">
             <div className="flex items-center space-x-3">
               <Checkbox id="logs" checked={includeLogs} onCheckedChange={(v) => setIncludeLogs(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
-              <label htmlFor="logs" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Full Log Table</label>
+              <label htmlFor="logs" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Master Log Table</label>
             </div>
             <div className="flex items-center space-x-3">
               <Checkbox id="charts" checked={includeCharts} onCheckedChange={(v) => setIncludeCharts(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
-              <label htmlFor="charts" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Visual Charts</label>
+              <label htmlFor="charts" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Intelligence Charts</label>
             </div>
           </div>
         </div>
         <div className="flex gap-4">
           <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02]">
-            Preview Report
+            Preview Library Report
           </Button>
           <Button onClick={() => window.print()} variant="outline" className="h-16 px-8 border-white/20 text-white hover:bg-white/10 rounded-2xl font-black uppercase text-[10px] tracking-widest">
             Download PDF
@@ -307,12 +306,12 @@ export default function ReportsPage() {
         </div>
       </Card>
 
-      {/* WYSIWYG Preview Modal */}
+      {/* Report Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-[900px] h-[90vh] p-0 border-none rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col">
           <DialogHeader className="p-8 bg-slate-900 text-white shrink-0">
-            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Report Preview</DialogTitle>
-            <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">Institutional Library Log Records</DialogDescription>
+            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Library Report Preview</DialogTitle>
+            <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">NEU Central Library Registry Records</DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto bg-slate-100 p-12">
             <div className="bg-white shadow-xl mx-auto max-w-[800px] min-h-[1000px] p-16 rounded-[2rem] border border-slate-200">
@@ -390,7 +389,7 @@ export default function ReportsPage() {
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-[7px] text-slate-400 italic mt-4">* Displaying first 50 records in preview</p>
+                  <p className="text-[7px] text-slate-400 italic mt-4">* Showing first 50 records in preview</p>
                 </div>
               )}
             </div>

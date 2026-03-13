@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -32,8 +33,9 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     if (!visits) return { inside: 0, newest: null, totalToday: 0, totalLogged: 0, distribution: [] };
     
-    const today = new Date().setHours(0, 0, 0, 0);
-    const todayVisits = visits.filter(v => new Date(v.timestamp).getTime() >= today);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayVisits = visits.filter(v => new Date(v.timestamp).getTime() >= todayStart.getTime());
     
     const inside = todayVisits.filter(v => v.status === 'granted').length; 
     const newest = visits[0] || null;
@@ -74,7 +76,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-0 animate-fade-in flex flex-col h-full bg-white">
-      {/* Tier 1: System Status & Search */}
+      {/* System Status & Search */}
       <header className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white border-b sticky top-0 z-20">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
@@ -83,13 +85,13 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kiosk 01: Active</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kiosk 01: Online</span>
           </div>
         </div>
         
         <div className="flex-1 max-w-2xl w-full">
           <Input 
-            placeholder="Global Search (Name or ID Index)..." 
+            placeholder="Global Identity Lookup (Name or ID)..." 
             className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs uppercase tracking-tight"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -97,7 +99,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Tier 2: Dashboard Presence Row */}
+      {/* Presence Row */}
       <div className="p-6 space-y-6 flex-1 overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-6 bg-white border rounded-2xl flex flex-col justify-between h-32 shadow-sm">
@@ -127,12 +129,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Tier 3: Master Log Split (75/25) */}
+        {/* Master Log Split (75/25) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
           <div className="lg:col-span-9 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm">
             <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
               <h2 className="text-xs font-black text-primary uppercase tracking-widest">Master Visitor Log</h2>
-              <Badge variant="outline" className="h-7 px-4 text-[9px] font-black uppercase tracking-widest">Library Records</Badge>
+              <Badge variant="outline" className="h-7 px-4 text-[9px] font-black uppercase tracking-widest">Institutional Records</Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -188,10 +190,10 @@ export default function DashboardPage() {
                   <div key={i} className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center text-[9px] font-bold uppercase">
                       <span className="text-slate-600 truncate max-w-[150px]">{dept.name}</span>
-                      <span className="text-primary font-mono">{Math.round((dept.count / stats.totalToday) * 100)}%</span>
+                      <span className="text-primary font-mono">{stats.totalToday > 0 ? Math.round((dept.count / stats.totalToday) * 100) : 0}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${(dept.count / stats.totalToday) * 100}%` }} />
+                      <div className="h-full bg-primary" style={{ width: `${stats.totalToday > 0 ? (dept.count / stats.totalToday) * 100 : 0}%` }} />
                     </div>
                   </div>
                 ))}

@@ -155,7 +155,7 @@ export default function DashboardPage() {
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time In</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Access Method</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Patron Identity</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Department</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Department</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Demographics</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Purpose</th>
                   </tr>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 align-middle">
+                      <td className="px-6 py-4 text-center align-middle">
                         <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200 inline-block">
                           {visit.patronDepartments?.[0]?.split(':')[0]}
                         </span>

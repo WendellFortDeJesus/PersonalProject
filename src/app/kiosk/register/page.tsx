@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -13,11 +13,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
-import { UserPlus, ArrowLeft, Loader2, Library } from 'lucide-react';
+import { UserPlus, ArrowLeft, Loader2, Library, Check, ChevronDown } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -40,6 +45,14 @@ function RegistrationContent() {
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
+
+  // Filter for active departments
+  const activeDepartments = useMemo(() => {
+    if (!settings?.departments) return DEPARTMENTS;
+    return settings.departments
+      .filter((d: any) => typeof d === 'object' ? d.isActive : true)
+      .map((d: any) => typeof d === 'object' ? d.name : d);
+  }, [settings]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -225,23 +238,65 @@ function RegistrationContent() {
                   control={form.control}
                   name="departments"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-primary font-bold">College / Department (Multiselect)</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange([value])} 
-                        defaultValue={field.value?.[0]}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">
-                            <SelectValue placeholder="Select Primary Department" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {(settings?.departments || DEPARTMENTS).map((dept: string) => (
-                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-primary font-bold">Colleges / Departments (Multiselect)</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full h-auto min-h-[48px] justify-between rounded-xl bg-white/50 border-white/50 hover:bg-white/60 text-left font-normal",
+                                !field.value.length && "text-muted-foreground"
+                              )}
+                            >
+                              <div className="flex flex-wrap gap-1 py-1">
+                                {field.value.length > 0 ? (
+                                  field.value.map((dept) => (
+                                    <Badge key={dept} variant="secondary" className="rounded-md px-2 py-0 text-xs font-bold bg-primary/10 text-primary border-none">
+                                      {dept}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  "Select academic units"
+                                )}
+                              </div>
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0 rounded-2xl border-none shadow-2xl" align="start">
+                          <ScrollArea className="h-[300px] rounded-2xl">
+                            <div className="p-4 space-y-4">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Academic Structure Registry</p>
+                              {activeDepartments.map((dept: string) => (
+                                <div
+                                  key={dept}
+                                  className="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                                  onClick={() => {
+                                    const current = field.value;
+                                    const next = current.includes(dept)
+                                      ? current.filter((v) => v !== dept)
+                                      : [...current, dept];
+                                    field.onChange(next);
+                                  }}
+                                >
+                                  <Checkbox
+                                    checked={field.value.includes(dept)}
+                                    onCheckedChange={() => {}} // Handled by div click
+                                    className="rounded-md border-primary/20"
+                                  />
+                                  <label className="text-sm font-bold text-slate-700 cursor-pointer flex-1">
+                                    {dept}
+                                  </label>
+                                  {field.value.includes(dept) && <Check className="h-4 w-4 text-primary" />}
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

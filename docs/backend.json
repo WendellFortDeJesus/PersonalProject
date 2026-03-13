@@ -44,7 +44,18 @@
       "type": "object",
       "description": "Global settings for departments, purposes, and limits.",
       "properties": {
-        "departments": { "type": "array", "items": { "type": "string" } },
+        "departments": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "code": { "type": "string" },
+              "isActive": { "type": "boolean" }
+            }
+          }
+        },
         "purposes": { 
           "type": "array", 
           "items": { 

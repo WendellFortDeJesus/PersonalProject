@@ -17,7 +17,10 @@ import {
   AlertCircle, 
   Bell, 
   Image as ImageIcon,
-  Loader2
+  Loader2,
+  ToggleLeft,
+  ToggleRight,
+  Upload
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +28,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { Badge } from '@/components/ui/badge';
 
 export default function SystemSettingsPage() {
   const db = useFirestore();
@@ -36,7 +40,8 @@ export default function SystemSettingsPage() {
   }, [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
 
-  const [newDept, setNewDept] = useState('');
+  const [newDeptName, setNewDeptName] = useState('');
+  const [newDeptCode, setNewDeptCode] = useState('');
   const [newPurposeLabel, setNewPurposeLabel] = useState('');
   const [themeUrl, setThemeUrl] = useState('');
 
@@ -61,15 +66,40 @@ export default function SystemSettingsPage() {
   };
 
   const addDepartment = () => {
-    if (newDept && !settings?.departments?.includes(newDept)) {
-      const updatedDepts = [newDept, ...(settings?.departments || [])];
-      handleSaveSettings({ departments: updatedDepts });
-      setNewDept('');
+    if (newDeptName && newDeptCode) {
+      const id = newDeptCode.toLowerCase().replace(/\s+/g, '_');
+      const newDept = {
+        id,
+        name: newDeptName,
+        code: newDeptCode,
+        isActive: true
+      };
+      
+      const currentDepts = settings?.departments || [];
+      if (currentDepts.some((d: any) => d.id === id)) {
+        toast({
+          variant: "destructive",
+          title: "Duplicate Code",
+          description: "This department code already exists.",
+        });
+        return;
+      }
+
+      handleSaveSettings({ departments: [newDept, ...currentDepts] });
+      setNewDeptName('');
+      setNewDeptCode('');
     }
   };
 
-  const removeDepartment = (dept: string) => {
-    const updatedDepts = settings?.departments?.filter((d: string) => d !== dept);
+  const toggleDeptStatus = (id: string) => {
+    const updatedDepts = settings?.departments?.map((d: any) => 
+      d.id === id ? { ...d, isActive: !d.isActive } : d
+    );
+    handleSaveSettings({ departments: updatedDepts });
+  };
+
+  const removeDepartment = (id: string) => {
+    const updatedDepts = settings?.departments?.filter((d: any) => d.id !== id);
     handleSaveSettings({ departments: updatedDepts });
   };
 
@@ -109,8 +139,8 @@ export default function SystemSettingsPage() {
       </div>
 
       <Tabs defaultValue="foundational" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 max-w-[1000px] mb-8 h-12 bg-slate-100 p-1 rounded-2xl">
-          <TabsTrigger value="foundational" className="rounded-xl font-bold">College Registry</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 max-w-[1200px] mb-8 h-12 bg-slate-100 p-1 rounded-2xl">
+          <TabsTrigger value="foundational" className="rounded-xl font-bold">Academic Structure</TabsTrigger>
           <TabsTrigger value="purposes" className="rounded-xl font-bold">Visit Purposes</TabsTrigger>
           <TabsTrigger value="appearance" className="rounded-xl font-bold">Library Theme</TabsTrigger>
           <TabsTrigger value="exports" className="rounded-xl font-bold">Export Config</TabsTrigger>
@@ -119,27 +149,53 @@ export default function SystemSettingsPage() {
 
         <TabsContent value="foundational" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="lg:col-span-1 border-none shadow-sm rounded-3xl h-fit">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold">Register New College</CardTitle>
-                <CardDescription>Add a new academic or office unit</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Unit Name</Label>
-                  <Input 
-                    placeholder="e.g. College of Science" 
-                    className="rounded-xl h-12"
-                    value={newDept}
-                    onChange={(e) => setNewDept(e.target.value)}
-                  />
-                </div>
-                <Button onClick={addDepartment} className="w-full h-12 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to Registry
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="lg:col-span-1 space-y-6">
+              <Card className="border-none shadow-sm rounded-3xl h-fit">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-bold">Add New Department</CardTitle>
+                  <CardDescription>Register a new academic unit</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Full Unit Name</Label>
+                    <Input 
+                      placeholder="e.g. College of Science" 
+                      className="rounded-xl h-11"
+                      value={newDeptName}
+                      onChange={(e) => setNewDeptName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Short Code</Label>
+                    <Input 
+                      placeholder="e.g. CAS" 
+                      className="rounded-xl h-11"
+                      value={newDeptCode}
+                      onChange={(e) => setNewDeptCode(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={addDepartment} className="w-full h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Register Unit
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-sm rounded-3xl bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    Bulk Structure Import
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-xs text-muted-foreground">Upload a CSV file containing Name and Code columns to update the structure at once.</p>
+                  <Button variant="outline" className="w-full h-10 border-dashed border-primary/30 text-primary">
+                    Select CSV File
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
 
             <Card className="lg:col-span-2 border-none shadow-sm rounded-3xl overflow-hidden">
               <CardHeader className="bg-slate-50/50 pb-6">
@@ -148,33 +204,53 @@ export default function SystemSettingsPage() {
                     <Building2 className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-bold">Departmental Management</CardTitle>
+                    <CardTitle className="text-xl font-bold">Academic Registry Management</CardTitle>
                     <CardDescription>Current listing of all registered university units</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto">
-                  {settings?.departments?.map((dept: string, i: number) => (
-                    <div key={i} className="flex items-center justify-between p-4 group hover:bg-slate-50/50 transition-colors">
+                <div className="divide-y divide-slate-50 max-h-[600px] overflow-y-auto">
+                  {settings?.departments?.map((dept: any, i: number) => (
+                    <div key={dept.id} className={`flex items-center justify-between p-5 group hover:bg-slate-50/50 transition-colors ${!dept.isActive ? 'opacity-50' : ''}`}>
                       <div className="flex items-center gap-4">
-                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                          {i + 1}
+                        <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
+                          {dept.code}
                         </div>
-                        <span className="font-bold text-slate-700">{dept}</span>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700">{dept.name}</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            {dept.isActive ? 'Status: Visible' : 'Status: Deactivated'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={`h-9 rounded-xl font-bold text-xs gap-2 ${dept.isActive ? 'text-green-600 hover:text-green-700 hover:bg-green-50' : 'text-slate-400 hover:text-slate-500 hover:bg-slate-100'}`}
+                          onClick={() => toggleDeptStatus(dept.id)}
+                        >
+                          {dept.isActive ? <ToggleRight className="h-5 w-5" /> : <ToggleLeft className="h-5 w-5" />}
+                          {dept.isActive ? 'ACTIVE' : 'INACTIVE'}
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-9 w-9 rounded-xl text-slate-400 hover:text-destructive hover:bg-red-50"
-                          onClick={() => removeDepartment(dept)}
+                          className="h-9 w-9 rounded-xl text-slate-300 hover:text-destructive hover:bg-red-50"
+                          onClick={() => removeDepartment(dept.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   ))}
+                  {(!settings?.departments || settings.departments.length === 0) && (
+                    <div className="p-20 text-center space-y-2">
+                      <Building2 className="h-12 w-12 text-slate-200 mx-auto" />
+                      <p className="text-slate-400 font-bold">No academic units registered.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

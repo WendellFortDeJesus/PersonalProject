@@ -1,4 +1,3 @@
-
 export type UserStatus = 'active' | 'blocked';
 
 export interface Patron {
@@ -9,6 +8,7 @@ export interface Patron {
   role: 'Student' | 'Faculty' | 'Staff' | 'Visitor';
   departments: string[];
   age: number;
+  gender: string;
   isBlocked: boolean;
   lastVisit?: string;
   createdAt: string;
@@ -22,6 +22,7 @@ export interface Visit {
   patronName: string;
   patronDepartments: string[];
   patronAge: number;
+  patronGender: string;
   purpose: string;
   timestamp: string;
   status: 'granted' | 'blocked';
@@ -36,24 +37,22 @@ export const PURPOSES = [
 ];
 
 export const DEPARTMENTS = [
-  'College of Accountancy: BS in Accountancy, BS in Accounting Information System',
-  'College of Agriculture: BS in Agriculture',
-  'College of Arts and Sciences: BA in Economics, BA in Political Science, BS in Biology, BS in Psychology, Bachelor of Public Administration',
-  'College of Business Administration: BSBA in Financial Management, Human Resource Development Management, Legal Management, Marketing Management, Entrepreneurship, and Real Estate Management',
-  'College of Communication: BA in Communication, BA in Broadcasting, BA in Journalism',
-  'College of Education: Bachelor of Elementary Education (with specializations in Early Childhood, Special Education), Bachelor of Secondary Education (majors in English, Filipino, Math, Social Studies, Science, MAPEH)',
-  'College of Engineering and Architecture: BS in Civil, Electrical, Electronics, Industrial, and Mechanical Engineering; BS in Architecture',
-  'College of Informatics and Computing Studies: BS in Computer Science, BS in Information Technology, BS in Information Systems, BS in Entertainment and Multimedia Computing',
-  'College of Medical Technology: BS in Medical Technology',
-  'College of Medicine: Doctor of Medicine',
-  'College of Midwifery: Diploma in Midwifery',
-  'College of Music: Bachelor of Music (majors in Music Education, Voice, etc.)',
-  'College of Nursing: BS in Nursing',
-  'College of Physical Therapy: BS in Physical Therapy',
-  'College of Respiratory Therapy: BS in Respiratory Therapy',
-  'School of International Relations: BS in Foreign Service',
-  'College of Law: Juris Doctor',
-  'College of Criminology: BS in Criminology',
-  'Administrative Staff / Faculty',
-  'External Guest / Visitor'
+  'College of Accountancy',
+  'College of Agriculture',
+  'College of Arts and Sciences',
+  'College of Business Administration',
+  'College of Communication',
+  'College of Criminology',
+  'College of Education',
+  'College of Engineering and Technology/Architecture',
+  'College of Informatics and Computing Studies',
+  'College of Law',
+  'College of Medicine',
+  'College of Nursing',
+  'College of Medical Technology',
+  'College of Midwifery',
+  'College of Physical Therapy/Respiratory Therapy',
+  'College of Music',
+  'School of International Relations',
+  'School of Graduate Studies'
 ];

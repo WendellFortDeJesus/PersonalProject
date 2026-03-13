@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -216,7 +215,7 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <Input type="date" className="h-10 bg-white/10 border-white/20 text-white text-[10px] font-bold" />
                 <Button className="w-full h-11 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest">
-                  Generate PDF Log
+                  Generate Daily PDF
                 </Button>
               </div>
             </div>

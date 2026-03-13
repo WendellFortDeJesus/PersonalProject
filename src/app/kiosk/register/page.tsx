@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -264,7 +263,7 @@ function RegistrationContent() {
                     control={form.control}
                     name="department"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="md:col-span-2">
                         <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Department</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>

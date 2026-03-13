@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,9 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
 import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react';
 import { useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import placeholderData from '@/app/lib/placeholder-images.json';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -32,6 +35,8 @@ function RegistrationContent() {
   const email = searchParams.get('email') || "";
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
+
+  const welcomeImage = placeholderData.placeholderImages.find(img => img.id === 'registration-welcome');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,7 +61,7 @@ function RegistrationContent() {
         departments: values.departments,
         age: values.age,
         gender: values.gender,
-        role: "Visitor", // Default for kiosk registration
+        role: "Visitor",
         isBlocked: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -103,8 +108,20 @@ function RegistrationContent() {
         </Button>
 
         <Card className="shadow-2xl border-none rounded-[2.5rem] bg-white overflow-hidden">
-          <div className="h-3 bg-primary w-full" />
-          <CardHeader className="text-center pt-10">
+          {welcomeImage && (
+            <div className="relative h-48 w-full">
+              <Image 
+                src={welcomeImage.imageUrl} 
+                alt={welcomeImage.description}
+                fill
+                className="object-cover"
+                data-ai-hint={welcomeImage.imageHint}
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
+            </div>
+          )}
+          <CardHeader className="text-center pt-8">
             <div className="flex justify-center mb-4">
               <div className="p-3 bg-primary/10 rounded-2xl">
                 <UserPlus className="h-8 w-8 text-primary" />
@@ -115,7 +132,7 @@ function RegistrationContent() {
               Create your library profile to continue. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-10">
+          <CardContent className="p-10 pt-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

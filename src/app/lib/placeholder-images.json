@@ -12,6 +12,12 @@
       "description": "Admin User Portrait",
       "imageUrl": "https://picsum.photos/seed/admin/150/150",
       "imageHint": "professional portrait"
+    },
+    {
+      "id": "registration-welcome",
+      "description": "University Library Entrance",
+      "imageUrl": "https://picsum.photos/seed/welcome/800/400",
+      "imageHint": "library entrance"
     }
   ]
 }

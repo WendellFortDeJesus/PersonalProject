@@ -15,88 +15,124 @@ import {
   SidebarInset,
   SidebarTrigger
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, FileBarChart, Settings, LogOut, Library, Bell } from 'lucide-react';
+import { LayoutDashboard, Users, FileBarChart, Settings, LogOut, Library, Bell, ShieldCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const auth = useAuth();
+  const router = useRouter();
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
     { label: 'Access Management', icon: Users, href: '/admin/users' },
-    { label: 'Reports', icon: FileBarChart, href: '/admin/reports' },
+    { label: 'Analytics & Reports', icon: FileBarChart, href: '/admin/reports' },
     { label: 'System Settings', icon: Settings, href: '/admin/settings' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/admin/login');
+  };
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <Sidebar variant="inset" collapsible="icon">
-          <SidebarHeader className="p-4">
+        <Sidebar variant="inset" collapsible="icon" className="border-r-0">
+          <SidebarHeader className="p-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-lg">
+              <div className="p-2.5 bg-primary rounded-xl shadow-lg shadow-primary/20">
                 <Library className="h-6 w-6 text-white" />
               </div>
-              <span className="font-headline font-bold text-primary group-data-[collapsible=icon]:hidden">PatronPoint</span>
+              <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+                <span className="font-headline font-black text-primary text-xl tracking-tighter">PatronPoint</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1">Enterprise Suite</span>
+              </div>
             </div>
           </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu className="px-2">
+          <SidebarContent className="px-3">
+            <SidebarMenu className="gap-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton 
                     asChild 
                     isActive={pathname === item.href}
                     tooltip={item.label}
-                    className="h-11 rounded-lg"
+                    className={`h-12 rounded-xl transition-all duration-200 ${
+                      pathname === item.href 
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary hover:text-white' 
+                      : 'hover:bg-slate-100'
+                    }`}
                   >
                     <Link href={item.href}>
-                      <item.icon className="h-5 w-5" />
-                      <span className="font-medium">{item.label}</span>
+                      <item.icon className={`h-5 w-5 ${pathname === item.href ? 'text-white' : 'text-slate-500'}`} />
+                      <span className="font-bold">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarContent>
-          <SidebarFooter className="p-4">
-            <SidebarMenuButton className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
-              <LogOut className="h-5 w-5" />
-              <Link href="/">Sign Out</Link>
-            </SidebarMenuButton>
+          <SidebarFooter className="p-6">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={handleSignOut}
+                  className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 h-12 rounded-xl transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-bold">Sign Out</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
 
-        <SidebarInset className="bg-slate-50">
-          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-white px-6">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div className="h-6 w-px bg-slate-200" />
-              <h2 className="text-lg font-bold text-slate-800">
-                {menuItems.find(item => pathname === item.href)?.label || 'Admin Panel'}
-              </h2>
+        <SidebarInset className="bg-slate-50/50">
+          <header className="flex h-20 shrink-0 items-center justify-between gap-2 border-b bg-white/80 backdrop-blur-md px-8 sticky top-0 z-50">
+            <div className="flex items-center gap-6">
+              <SidebarTrigger className="h-10 w-10 hover:bg-slate-100 rounded-xl" />
+              <div className="h-8 w-px bg-slate-200" />
+              <div className="flex flex-col">
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                  {menuItems.find(item => pathname === item.href)?.label || 'Admin Control'}
+                </h2>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Online</span>
+                </div>
+              </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative text-slate-500">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
-              </Button>
-              <div className="flex items-center gap-3 pl-2">
-                <div className="hidden md:block text-right">
-                  <p className="text-sm font-bold text-slate-800">Admin Staff</p>
-                  <p className="text-xs text-slate-500">Systems Manager</p>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-primary rounded-xl hover:bg-primary/5 transition-colors">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
+                </Button>
+                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary rounded-xl hover:bg-primary/5 transition-colors">
+                  <ShieldCheck className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="h-8 w-px bg-slate-200" />
+              <div className="flex items-center gap-4 pl-2">
+                <div className="hidden md:flex flex-col items-end">
+                  <p className="text-sm font-black text-slate-900 leading-none">Admin Staff</p>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">Systems Manager</p>
                 </div>
-                <Avatar className="h-9 w-9 border-2 border-primary/20">
+                <Avatar className="h-11 w-11 border-2 border-primary/10 shadow-sm">
                   <AvatarImage src="https://picsum.photos/seed/admin/150/150" />
-                  <AvatarFallback>AD</AvatarFallback>
+                  <AvatarFallback className="bg-primary/5 text-primary font-black">AD</AvatarFallback>
                 </Avatar>
               </div>
             </div>
           </header>
           
-          <main className="p-6 overflow-y-auto">
+          <main className="p-8 overflow-y-auto">
             {children}
           </main>
         </SidebarInset>

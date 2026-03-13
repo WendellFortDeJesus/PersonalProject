@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -21,7 +20,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, isWithinInterval, startOfDay, endOfDay, subDays, eachDayOfInterval, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { 
@@ -32,13 +30,11 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Download, FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [includeLogs, setIncludeLogs] = useState(true);
-  const [includeCharts, setIncludeCharts] = useState(true);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: subDays(new Date(), 30),
     to: new Date()
@@ -157,17 +153,16 @@ export default function ReportsPage() {
           
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-20 rounded-xl font-black gap-4 px-6 border-slate-200 justify-start w-full transition-all hover:bg-slate-50 hover:border-primary/20">
+              <Button variant="outline" className="h-24 rounded-xl font-black gap-4 px-6 border-slate-200 justify-start w-full transition-all hover:bg-slate-50 hover:border-primary/20">
                 <div className="flex items-center justify-center p-2.5 bg-primary/5 rounded-lg text-primary">
                   <CalendarIcon className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col items-start gap-1">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tight text-slate-400">
-                    <span>{analytics?.summary.fromStr}</span>
-                    <ArrowRight className="h-3 w-3" />
-                    <span>{analytics?.summary.toStr}</span>
+                  <div className="flex flex-col text-[10px] font-black uppercase tracking-tight text-slate-400 text-left">
+                    <span className="flex items-center gap-1">FROM: <span className="text-primary">{analytics?.summary.fromStr}</span></span>
+                    <span className="flex items-center gap-1">TO: <span className="text-primary">{analytics?.summary.toStr}</span></span>
                   </div>
-                  <span className="text-xs font-bold text-primary uppercase tracking-tighter">Modify Active Range</span>
+                  <span className="text-[9px] font-bold text-accent uppercase tracking-tighter mt-1">Modify Active Range</span>
                 </div>
               </Button>
             </PopoverTrigger>
@@ -190,7 +185,7 @@ export default function ReportsPage() {
               <Badge variant="secondary" className="bg-primary/10 text-primary text-[8px] font-black uppercase">{analytics?.mostActiveDeptPercent}% Share</Badge>
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-black text-primary uppercase leading-tight tracking-tight">{analytics?.mostActiveDept}</h3>
+              <h3 className="text-xl font-black text-primary uppercase leading-tight tracking-tight">{analytics?.mostActiveDept}</h3>
               <div className="flex gap-8 mt-4 pt-4 border-t border-slate-100">
                 <div className="space-y-1">
                   <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
@@ -258,16 +253,7 @@ export default function ReportsPage() {
       <Card className="p-10 bg-slate-900 border-none rounded-[2rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-4">
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Institutional Generation Center</h2>
-          <div className="flex flex-wrap gap-8">
-            <div className="flex items-center space-x-3">
-              <Checkbox id="logs" checked={includeLogs} onCheckedChange={(v) => setIncludeLogs(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
-              <label htmlFor="logs" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Master Log Table</label>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Checkbox id="charts" checked={includeCharts} onCheckedChange={(v) => setIncludeCharts(!!v)} className="border-white/20 data-[state=checked]:bg-primary" />
-              <label htmlFor="charts" className="text-[10px] font-black text-white uppercase tracking-widest cursor-pointer">Include Intelligence Charts</label>
-            </div>
-          </div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generate formatted PDF audits for the library board</p>
         </div>
         <div className="flex flex-wrap gap-4">
           <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all hover:scale-[1.02]">
@@ -275,7 +261,6 @@ export default function ReportsPage() {
             Preview Registry
           </Button>
           <Button onClick={handlePrint} className="h-16 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg gap-3">
-            <Download className="h-5 w-5" />
             Download PDF
           </Button>
         </div>
@@ -315,39 +300,37 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {includeCharts && (
-                <div className="space-y-12 mb-12">
-                  <div className="h-56 border-t pt-8">
-                    <div className="flex items-center gap-2 mb-6">
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                      <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Engagement Trend Summary</p>
-                    </div>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={analytics?.trendData}>
-                        <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="date" hide />
-                      </LineChart>
-                    </ResponsiveContainer>
+              <div className="space-y-12 mb-12">
+                <div className="h-56 border-t pt-8">
+                  <div className="flex items-center gap-2 mb-6">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Engagement Trend Summary</p>
                   </div>
-                  <div className="h-64 border-t pt-8">
-                    <p className="text-[10px] font-black text-slate-900 uppercase mb-6 tracking-widest text-center">Visit Intent Distribution</p>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={analytics?.purposeData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                          {analytics?.purposeData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
-                          ))}
-                        </Pie>
-                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={analytics?.trendData}>
+                      <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="date" hide />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
-              )}
+                <div className="h-64 border-t pt-8">
+                  <p className="text-[10px] font-black text-slate-900 uppercase mb-6 tracking-widest text-center">Visit Intent Distribution</p>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={analytics?.purposeData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                        {analytics?.purposeData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % 5]} />
+                        ))}
+                      </Pie>
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{fontSize: '8px', fontWeight: 800, textTransform: 'uppercase'}} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
 
               <div className="p-10 bg-slate-50 rounded-2xl border border-slate-100 mb-12">
-                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Most Active Department (Detailed)</p>
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-4">Most Active Department (Detailed Analysis)</p>
                 <div className="flex flex-col gap-4">
                   <h3 className="text-2xl font-black text-slate-900 uppercase leading-tight">{analytics?.mostActiveDept}</h3>
                   <div className="flex justify-between items-end pt-4 border-t border-slate-200/50">
@@ -361,40 +344,30 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-6 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${analytics?.mostActiveDeptPercent}%` }} />
-                </div>
               </div>
 
-              {includeLogs && (
-                <div className="border-t pt-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Patron Identity Registry</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">{analytics?.filteredVisits.length} Records Verified</p>
-                  </div>
-                  <table className="w-full text-left text-[8px] border-collapse">
-                    <thead className="bg-slate-900 text-white">
-                      <tr>
-                        <th className="p-3 uppercase font-black tracking-widest">Time</th>
-                        <th className="p-3 uppercase font-black tracking-widest">Patron Name</th>
-                        <th className="p-3 uppercase font-black tracking-widest">Department</th>
-                        <th className="p-3 uppercase font-black tracking-widest text-center">Purpose</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {analytics?.filteredVisits.slice(0, 100).map((v) => (
-                        <tr key={v.id}>
-                          <td className="p-3 font-mono text-slate-500">{format(new Date(v.timestamp), 'HH:mm')}</td>
-                          <td className="p-3 font-black text-slate-900 uppercase">{v.patronName}</td>
-                          <td className="p-3 uppercase font-bold text-slate-600">{v.patronDepartments?.[0]}</td>
-                          <td className="p-3 uppercase font-bold text-primary text-center">{v.purpose}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <p className="text-[7px] text-slate-400 italic mt-6">* Official Library Record - Page 1 of 1</p>
+              <div className="border-t pt-8">
+                <div className="flex justify-between items-center mb-6">
+                  <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Patron Identity Registry</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase">{analytics?.filteredVisits.length} Records Verified</p>
                 </div>
-              )}
+                <table className="w-full text-left text-[8px] border-collapse">
+                  <thead className="bg-slate-900 text-white">
+                    <tr>
+                      <th className="p-3 uppercase font-black tracking-widest">Patron Name</th>
+                      <th className="p-3 uppercase font-black tracking-widest">Department</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {analytics?.filteredVisits.slice(0, 100).map((v) => (
+                      <tr key={v.id}>
+                        <td className="p-3 font-black text-slate-900 uppercase">{v.patronName}</td>
+                        <td className="p-3 uppercase font-bold text-slate-600">{v.patronDepartments?.join(', ')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           <DialogFooter className="p-6 bg-slate-50 border-t no-print">

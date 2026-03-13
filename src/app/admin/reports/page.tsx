@@ -15,7 +15,10 @@ import {
   Printer,
   FileCheck,
   TrendingUp,
-  Award
+  Award,
+  BarChart3,
+  PieChart as PieIcon,
+  Users
 } from 'lucide-react';
 import { 
   Bar, 
@@ -123,9 +126,11 @@ export default function ReportsPage() {
     const ageMap: Record<string, number> = { '18-20': 0, '21-23': 0, '24-26': 0, '27+': 0 };
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
+    
+    // Hourly distribution (8 AM to 6 PM)
     const hourlyMap: Record<string, number> = Array.from({ length: 11 }, (_, i) => ({ 
       time: `${8 + i}:00`, 
-      visits: 0 
+      count: 0 
     })).reduce((acc, curr) => ({ ...acc, [curr.time]: 0 }), {});
 
     filteredVisits.forEach(v => {
@@ -145,7 +150,8 @@ export default function ReportsPage() {
       const purpose = v.purpose || 'Other';
       purposeMap[purpose] = (purposeMap[purpose] || 0) + 1;
 
-      const hour = new Date(v.timestamp).getHours();
+      const dateObj = new Date(v.timestamp);
+      const hour = dateObj.getHours();
       if (hour >= 8 && hour <= 18) {
         const timeKey = `${hour}:00`;
         if (hourlyMap[timeKey] !== undefined) {
@@ -157,33 +163,33 @@ export default function ReportsPage() {
     const genderData = Object.entries(genderMap).map(([name, value]) => ({ name, value }));
     const ageData = Object.entries(ageMap).map(([group, count]) => ({ group, count }));
     
-    // College ROI Ranking
-    const deptData = Object.entries(deptMap)
-      .map(([name, visits]) => {
+    // College Distribution Data
+    const deptDistributionData = Object.entries(deptMap)
+      .map(([name, count]) => {
         const deptConfig = config.departments?.find((d: any) => d.name === name);
         return { 
           name, 
-          visits, 
+          count, 
           color: deptConfig?.color || '#355872',
           code: deptConfig?.code || 'UNIV'
         };
       })
-      .sort((a, b) => b.visits - a.visits);
+      .sort((a, b) => b.count - a.count);
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
-    const peakHoursData = Object.entries(hourlyMap).map(([time, visits]) => ({ time, visits }));
+    const trafficFlowData = Object.entries(hourlyMap).map(([time, count]) => ({ time, count }));
 
     // Executive Summary Metrics
     const busiestDay = filteredVisits.length > 0 ? 
       format(new Date(filteredVisits[0].timestamp), 'EEEE') : 'N/A';
-    const topCollege = deptData[0]?.name || 'N/A';
+    const topCollege = deptDistributionData[0]?.name || 'N/A';
 
     return { 
       genderData, 
       ageData, 
-      deptData, 
+      deptDistributionData, 
       purposeData, 
-      peakHoursData, 
+      trafficFlowData, 
       total: filteredVisits.length,
       filteredVisits,
       summary: {
@@ -237,30 +243,30 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 print:hidden">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black text-primary tracking-tight">Library Analytics</h1>
-          <p className="text-slate-500 font-medium">Departmental ROI and demographic segmentation</p>
+          <h1 className="text-4xl font-black text-primary tracking-tight uppercase">Library Intelligence</h1>
+          <p className="text-slate-500 font-medium">Facility utilization, temporal trends, and demographic ROI</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Button 
             variant={showFilters ? "default" : "outline"} 
             onClick={() => setShowFilters(!showFilters)}
-            className="rounded-2xl h-14 gap-2 px-6"
+            className="rounded-2xl h-14 gap-2 px-6 shadow-sm"
           >
             <Filter className="h-5 w-5" />
-            {showFilters ? "Hide Control Panel" : "Custom Analytics Panel"}
+            {showFilters ? "Close Filters" : "Analytics Filter Panel"}
           </Button>
           
           <Button onClick={handleExport} className="rounded-2xl gap-3 bg-primary h-14 px-8 shadow-xl shadow-primary/20">
             <Download className="h-5 w-5" />
-            Generate Report
+            Generate PDF Report
           </Button>
         </div>
       </div>
 
       {/* Filter Panel */}
       {showFilters && (
-        <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white animate-in slide-in-from-top-4 duration-300 print:hidden">
+        <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white animate-in slide-in-from-top-4 duration-300 print:hidden mb-8">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -268,19 +274,19 @@ export default function ReportsPage() {
                   <Filter className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold">Report Segmentation Panel</CardTitle>
-                  <CardDescription>Target specific populations for your facility utilization analysis</CardDescription>
+                  <CardTitle className="text-xl font-bold">Segmentation & Control</CardTitle>
+                  <CardDescription>Filter the intelligence dashboard by demographic or organizational dependencies</CardDescription>
                 </div>
               </div>
               <Button variant="ghost" onClick={resetFilters} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
-                <X className="h-4 w-4 mr-2" /> Reset Metrics
+                <X className="h-4 w-4 mr-2" /> Reset Analytics
               </Button>
             </div>
           </CardHeader>
           <CardContent className="p-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               <div className="space-y-4">
-                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Date Dependencies</Label>
+                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Time Interval</Label>
                 <div className="flex flex-col gap-3">
                   <Popover>
                     <PopoverTrigger asChild>
@@ -293,7 +299,7 @@ export default function ReportsPage() {
                             format(dateRange.from, "LLL dd, y")
                           )
                         ) : (
-                          <span>Select Interval</span>
+                          <span>Select Dates</span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -308,7 +314,7 @@ export default function ReportsPage() {
                     </PopoverContent>
                   </Popover>
                   <div className="grid grid-cols-3 gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => handleQuickDate('day')} className="text-[10px] font-black h-9 rounded-lg">DAY</Button>
+                    <Button variant="secondary" size="sm" onClick={() => handleQuickDate('day')} className="text-[10px] font-black h-9 rounded-lg">TODAY</Button>
                     <Button variant="secondary" size="sm" onClick={() => handleQuickDate('week')} className="text-[10px] font-black h-9 rounded-lg">WEEK</Button>
                     <Button variant="secondary" size="sm" onClick={() => handleQuickDate('month')} className="text-[10px] font-black h-9 rounded-lg">MONTH</Button>
                   </div>
@@ -316,7 +322,7 @@ export default function ReportsPage() {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Target Academic Units</Label>
+                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Academic Units</Label>
                 <div className="max-h-[180px] overflow-y-auto space-y-2.5 pr-3 custom-scrollbar">
                   {config?.departments?.map((dept: any) => (
                     <div key={dept.id} className="flex items-center space-x-3 group">
@@ -341,7 +347,7 @@ export default function ReportsPage() {
 
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Demographics</Label>
+                  <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Demographic Filter</Label>
                   <div className="flex flex-wrap gap-2">
                     {GENDERS.map((g) => (
                       <Badge 
@@ -379,7 +385,7 @@ export default function ReportsPage() {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Visit Purpose</Label>
+                <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Visit Intent</Label>
                 <div className="max-h-[180px] overflow-y-auto space-y-2.5 pr-3 custom-scrollbar">
                   {(config?.purposes || PURPOSES).map((p: any) => (
                     <div key={p.id} className="flex items-center space-x-3 group">
@@ -406,151 +412,178 @@ export default function ReportsPage() {
         </Card>
       )}
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="bg-slate-50/30 p-8">
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl font-black text-primary flex items-center gap-3">
-                  <TrendingUp className="h-6 w-6" />
-                  Utilization Pulse
-                </CardTitle>
-                <CardDescription className="text-base">Real-time age clustering of target population</CardDescription>
-              </div>
-              <div className="flex flex-col items-end">
-                <Badge className="bg-primary text-white px-5 py-2 text-sm font-black rounded-2xl">
-                  {analytics?.total} DATA POINTS
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-10">
-            <div className="h-[400px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics?.ageData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="group" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: '900', fill: '#64748b'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#94a3b8'}} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', padding: '20px' }}
-                    cursor={{fill: '#f8fafc'}}
-                  />
-                  <Bar dataKey="count" name="Visits" fill="#355872" radius={[12, 12, 0, 0]} barSize={80} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-8 text-center">
-            <CardTitle className="text-2xl font-black text-primary">Gender Split</CardTitle>
-            <CardDescription className="text-base">Demographic ratio of filtered entries</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center h-full pb-16">
-            <div className="h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={analytics?.genderData}
-                    innerRadius={90}
-                    outerRadius={120}
-                    paddingAngle={10}
-                    dataKey="value"
-                  >
-                    {analytics?.genderData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Analytics Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Departmental Distribution - Power Users */}
         <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+          <CardHeader className="p-8">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-primary/10 rounded-[1.5rem]">
+                <BarChart3 className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-primary">Departmental Distribution</CardTitle>
+                <CardDescription className="text-base">Volume breakdown by Academic Unit (Power Users)</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 pt-0 h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics?.deptDistributionData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fontSize: 12, fontWeight: '900', fill: '#334155'}} 
+                  width={150}
+                />
+                <Tooltip 
+                  cursor={{fill: '#f8fafc'}}
+                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={32}>
+                  {analytics?.deptDistributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Visitor Purpose - Intent Analytics */}
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+          <CardHeader className="p-8">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-accent/20 rounded-[1.5rem]">
+                <PieIcon className="h-7 w-7 text-accent-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-primary">Visitor Intent Breakdown</CardTitle>
+                <CardDescription className="text-base">Breakdown of facility usage reasons (Intent Analytics)</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 pt-0 h-[400px] flex flex-col items-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={analytics?.purposeData}
+                  innerRadius={80}
+                  outerRadius={120}
+                  paddingAngle={8}
+                  dataKey="value"
+                >
+                  {analytics?.purposeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none' }} />
+                <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Peak Traffic Flow - Temporal Analytics */}
+        <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
           <CardHeader className="p-8">
             <div className="flex items-center gap-4">
               <div className="p-4 bg-primary/10 rounded-[1.5rem]">
                 <Clock className="h-7 w-7 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-black text-primary">Facility Traffic Patterns</CardTitle>
-                <CardDescription className="text-base">Hourly utilization during operational window</CardDescription>
+                <CardTitle className="text-2xl font-black text-primary">Peak Traffic Flow</CardTitle>
+                <CardDescription className="text-base">Hourly utilization spikes during operational windows (Temporal Analytics)</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-10 pt-0">
-            <div className="h-[300px] w-full mt-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analytics?.peakHoursData}>
-                  <defs>
-                    <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#355872" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#355872" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 'bold'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-                  <Tooltip contentStyle={{ borderRadius: '24px', border: 'none', padding: '15px' }} />
-                  <Area type="monotone" dataKey="visits" stroke="#355872" strokeWidth={5} fillOpacity={1} fill="url(#colorVisits)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-          <CardHeader className="p-8">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-accent/20 rounded-[1.5rem]">
-                <Award className="h-7 w-7 text-accent-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-black text-primary">Departmental ROI Ranking</CardTitle>
-                <CardDescription className="text-base">Utilization leaderboards by academic unit</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-10 pt-0">
-            <div className="space-y-8 mt-6 max-h-[380px] overflow-y-auto pr-4 custom-scrollbar">
-              {analytics?.deptData.map((dept, i) => (
-                <div key={i} className="flex items-center justify-between group">
-                  <div className="flex flex-col flex-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: dept.color }} />
-                        <span className="font-black text-slate-800 text-lg uppercase tracking-tight">{dept.name}</span>
-                      </div>
-                      <Badge variant="secondary" className="font-black px-3 py-1 text-primary">{dept.visits} VISITS</Badge>
-                    </div>
-                    <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                      <div 
-                        className="h-full rounded-full transition-all duration-1000 ease-out shadow-sm" 
-                        style={{ 
-                          width: `${analytics.total > 0 ? (dept.visits / analytics.total) * 100 : 0}%`,
-                          backgroundColor: dept.color 
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="ml-6 h-12 w-12 rounded-3xl bg-slate-50 flex items-center justify-center text-sm font-black text-slate-300 border border-slate-100">
-                    #{i + 1}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <CardContent className="p-10 pt-0 h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics?.trafficFlowData}>
+                <defs>
+                  <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#355872" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#355872" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fontSize: 12, fontWeight: 'bold', fill: '#64748b'}} 
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fontSize: 12, fill: '#94a3b8'}} 
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="#355872" 
+                  strokeWidth={6} 
+                  fillOpacity={1} 
+                  fill="url(#colorTraffic)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Report Preview Modal */}
+      {/* Demographic Highlights */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+          <CardHeader className="p-8">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-slate-100 rounded-[1.5rem]">
+                <Users className="h-7 w-7 text-slate-500" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-primary">Age Cluster Analysis</CardTitle>
+                <CardDescription className="text-base">Distribution of age groups among library visitors</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8 h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics?.ageData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="group" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 'black'}} />
+                <YAxis hide />
+                <Tooltip />
+                <Bar dataKey="count" fill="#7AAACE" radius={[8, 8, 0, 0]} barSize={60} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Key Metrics Snapshot */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-primary text-white flex flex-col justify-center items-center p-8 text-center space-y-4">
+            <p className="text-xs font-black uppercase tracking-[0.3em] opacity-60">Verified Records</p>
+            <h3 className="text-7xl font-black">{analytics?.total}</h3>
+            <p className="text-sm font-bold border-t border-white/20 pt-4 w-full">TOTAL FOOT TRAFFIC</p>
+          </Card>
+          
+          <Card className="border-none shadow-sm rounded-[2.5rem] bg-white flex flex-col justify-center items-center p-8 text-center space-y-4 border border-slate-100">
+            <TrendingUp className="h-10 w-10 text-green-500" />
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Primary ROI Source</p>
+            <h3 className="text-2xl font-black text-primary truncate w-full px-2">{analytics?.summary.topCollege}</h3>
+            <p className="text-sm font-bold border-t border-slate-100 pt-4 w-full text-slate-500 uppercase">Top Academic Unit</p>
+          </Card>
+        </div>
+      </div>
+
+      {/* Report Preview Modal (Existing Professional PDF Mockup) */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-[1100px] h-[95vh] flex flex-col p-0 overflow-hidden border-none rounded-[3rem] shadow-2xl">
           <div className="p-8 bg-slate-900 text-white flex items-center justify-between shrink-0">
@@ -625,10 +658,10 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Data Table */}
-              <div className="mb-20 flex-1">
-                <h3 className="text-xl font-black text-slate-900 border-b-4 border-slate-900 pb-3 mb-8 uppercase tracking-[0.2em]">Activity Ledger (Sample)</h3>
-                <div className="overflow-hidden rounded-2xl border-2 border-slate-900 shadow-sm">
+              {/* Activity Table */}
+              <div className="mb-20">
+                <h3 className="text-xl font-black text-slate-900 border-b-4 border-slate-900 pb-3 mb-8 uppercase tracking-[0.2em]">Activity Ledger</h3>
+                <div className="overflow-hidden rounded-2xl border-2 border-slate-900">
                   <table className="w-full text-left text-[11px] border-collapse">
                     <thead>
                       <tr className="bg-slate-900 text-white font-black uppercase tracking-widest">
@@ -638,35 +671,26 @@ export default function ReportsPage() {
                         <th className="p-4 text-right">Validated Time</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y-2 divide-slate-100">
+                    <tbody className="divide-y divide-slate-100">
                       {analytics?.filteredVisits.slice(0, 20).map((visit) => (
-                        <tr key={visit.id} className="hover:bg-slate-50 transition-colors">
+                        <tr key={visit.id}>
                           <td className="p-4 font-black text-slate-900 border-r border-slate-100">
                             {visit.patronName}
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">{visit.schoolId}</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">{visit.schoolId}</p>
                           </td>
                           <td className="p-4 font-bold text-slate-600 italic border-r border-slate-100">
-                            <div className="flex flex-wrap gap-1">
-                              {visit.patronDepartments?.map((d: string, idx: number) => (
-                                <span key={idx} className="bg-slate-100 px-2 py-0.5 rounded text-[9px]">{d}</span>
-                              ))}
-                            </div>
+                            {visit.patronDepartments?.join(', ')}
                           </td>
-                          <td className="p-4 border-r border-slate-100">
-                            <span className="font-black text-primary uppercase text-[9px]">{visit.purpose}</span>
+                          <td className="p-4 border-r border-slate-100 font-black text-primary uppercase text-[9px]">
+                            {visit.purpose}
                           </td>
                           <td className="p-4 text-right font-mono font-black text-slate-400">
-                            {format(new Date(visit.timestamp), 'MM/dd HH:mm:ss')}
+                            {format(new Date(visit.timestamp), 'MM/dd HH:mm')}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {analytics && analytics.filteredVisits.length > 20 && (
-                    <div className="p-6 bg-slate-900 text-white text-center text-[10px] font-black uppercase tracking-[0.3em]">
-                      Total Records: {analytics.filteredVisits.length} | Page 1 of 1
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -676,12 +700,10 @@ export default function ReportsPage() {
                   <div className="text-center space-y-4">
                     <div className="h-[2px] w-full bg-slate-900" />
                     <p className="text-xs font-black uppercase text-slate-900 tracking-widest">System Record Officer</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Verified Digital Signature Applied</p>
                   </div>
                   <div className="text-center space-y-4">
                     <div className="h-[2px] w-full bg-slate-900" />
                     <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Chief Librarian / Registrar</p>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Official University Endorsement</p>
                   </div>
                 </div>
 

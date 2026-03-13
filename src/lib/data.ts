@@ -66,6 +66,3 @@ export const GENDERS = [
   'Non-binary',
   'Prefer not to say'
 ];
-
-export const MOCK_PATRONS: Patron[] = [];
-export const MOCK_VISITS: Visit[] = [];

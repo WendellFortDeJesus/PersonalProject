@@ -124,7 +124,7 @@ export default function DashboardPage() {
             <div className="flex flex-col truncate">
               <span className="text-xs font-black text-slate-900 uppercase truncate">{stats.newest?.patronName || '---'}</span>
               <span className="text-[8px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">
-                {stats.newest?.authMethod === 'Email' ? stats.newest?.patronEmail : stats.newest?.schoolId || '---'}
+                {stats.newest?.authMethod === 'SSO Login' ? stats.newest?.patronEmail : stats.newest?.schoolId || '---'}
               </span>
             </div>
           </div>
@@ -166,13 +166,13 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-6 py-4 align-middle">
                         <div className="flex items-center gap-2">
-                          {visit.authMethod === 'Email' ? (
+                          {visit.authMethod === 'SSO Login' ? (
                             <Smartphone className="h-3.5 w-3.5 text-blue-500" />
                           ) : (
                             <ContactRound className="h-3.5 w-3.5 text-primary" />
                           )}
                           <span className="text-[9px] font-black uppercase tracking-tighter text-slate-600">
-                            {visit.authMethod || 'RFID'}
+                            {visit.authMethod || 'School ID Login'}
                           </span>
                         </div>
                       </td>
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                             {visit.patronName}
                           </span>
                           <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-tighter">
-                            {visit.authMethod === 'Email' ? visit.patronEmail : visit.schoolId}
+                            {visit.authMethod === 'SSO Login' ? visit.patronEmail : visit.schoolId}
                           </span>
                         </div>
                       </td>

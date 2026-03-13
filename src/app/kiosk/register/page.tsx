@@ -36,7 +36,7 @@ function RegistrationContent() {
   const searchParams = useSearchParams();
   const schoolId = searchParams.get('schoolId') || "";
   const email = searchParams.get('email') || "";
-  const authMethod = searchParams.get('authMethod') || (schoolId ? 'RFID' : 'Email');
+  const authMethod = searchParams.get('authMethod') || (schoolId ? 'School ID Login' : 'SSO Login');
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
 

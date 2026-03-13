@@ -17,7 +17,7 @@ function PurposeSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patronId = searchParams.get('patronId');
-  const authMethod = searchParams.get('authMethod') || 'RFID';
+  const authMethod = searchParams.get('authMethod') || 'School ID Login';
   const [selected, setSelected] = useState<string | null>(null);
   const db = useFirestore();
   const { toast } = useToast();

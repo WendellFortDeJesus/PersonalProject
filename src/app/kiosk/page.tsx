@@ -60,7 +60,7 @@ export default function KioskAuthPage() {
 
     try {
       const patronsRef = collection(db, 'patrons');
-      const authMethod = activeTab === 'rfid' ? 'RFID' : 'Email';
+      const authMethod = activeTab === 'rfid' ? 'School ID Login' : 'SSO Login';
       const field = activeTab === 'rfid' ? 'schoolId' : 'email';
       const value = activeTab === 'rfid' ? rfid : email;
 

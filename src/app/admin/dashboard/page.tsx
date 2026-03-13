@@ -1,20 +1,7 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Users, 
-  Clock,
-  UserCheck,
-  Activity,
-  UserX,
-  AlertTriangle,
-  Search,
-  Building2,
-  TrendingUp,
-  Target
-} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -98,9 +85,6 @@ export default function DashboardPage() {
         <Card className="border-none bg-destructive text-destructive-foreground shadow-2xl shadow-destructive/20 animate-pulse overflow-hidden rounded-[2rem]">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl">
-                <AlertTriangle className="h-6 w-6" />
-              </div>
               <div className="space-y-0.5">
                 <p className="font-black uppercase tracking-[0.2em] text-sm">Critical Capacity Reached</p>
                 <p className="text-xs opacity-80 font-bold">Facility has reached the safety threshold of {capacityLimit} visitors.</p>
@@ -121,13 +105,9 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em]">Facility Traffic</p>
                 <h3 className="text-5xl font-black">{totalLoginsToday}</h3>
-                <div className="text-xs font-bold text-white/70 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                <div className="text-xs font-bold text-white/70">
                   +12% from yesterday
                 </div>
-              </div>
-              <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-md group-hover:scale-110 transition-transform">
-                <Users className="h-6 w-6 text-white" />
               </div>
             </div>
           </CardContent>
@@ -140,9 +120,6 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Daily Goal</p>
                 <h3 className="text-5xl font-black text-primary">{Math.round(goalProgress)}%</h3>
                 <Progress value={goalProgress} className="h-2 w-32 bg-slate-100" />
-              </div>
-              <div className="p-4 bg-primary/5 rounded-3xl group-hover:scale-110 transition-transform">
-                <Target className="h-6 w-6 text-primary" />
               </div>
             </div>
           </CardContent>
@@ -159,9 +136,6 @@ export default function DashboardPage() {
                 </div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Push connection active</p>
               </div>
-              <div className="p-4 bg-green-50 rounded-3xl group-hover:scale-110 transition-transform">
-                <Activity className="h-6 w-6 text-green-600" />
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -173,9 +147,6 @@ export default function DashboardPage() {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Server Clock</p>
                 <h3 className="text-2xl font-black text-primary">{safeFormat(new Date(), 'HH:mm:ss')}</h3>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{safeFormat(new Date(), 'MMM dd, yyyy')}</p>
-              </div>
-              <div className="p-4 bg-accent/20 rounded-3xl group-hover:scale-110 transition-transform">
-                <Clock className="h-6 w-6 text-accent-foreground" />
               </div>
             </div>
           </CardContent>
@@ -191,17 +162,15 @@ export default function DashboardPage() {
         
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
-            <Search className="absolute left-4 top-4 h-4 w-4 text-slate-400" />
             <Input 
               placeholder="Search active visitor..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus-visible:ring-primary shadow-inner"
+              className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus-visible:ring-primary shadow-inner"
             />
           </div>
           <Select value={deptFilter} onValueChange={setDeptFilter}>
             <SelectTrigger className="w-56 h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold text-slate-600">
-              <Building2 className="h-4 w-4 mr-2 text-primary/60" />
               <SelectValue placeholder="All Academic Units" />
             </SelectTrigger>
             <SelectContent>
@@ -263,8 +232,7 @@ export default function DashboardPage() {
                 </div>
                 
                 <div className="flex flex-col items-end gap-3 pr-4">
-                  <div className="flex items-center gap-3 text-primary font-black text-2xl">
-                    <Clock className="h-6 w-6 text-accent-foreground" />
+                  <div className="text-primary font-black text-2xl">
                     {safeFormat(visit.timestamp, 'h:mm:ss a')}
                   </div>
                   <div className="flex flex-col items-end">
@@ -273,7 +241,6 @@ export default function DashboardPage() {
                     </span>
                     {visit.status === 'blocked' && (
                       <span className="text-[10px] font-black text-red-500 mt-2 flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg">
-                        <UserX className="h-4 w-4" />
                         DENY ENTRY IMMEDIATELY
                       </span>
                     )}
@@ -287,9 +254,6 @@ export default function DashboardPage() {
 
       {visits.length === 0 && !isDataLoading && (
         <div className="py-40 text-center space-y-6 bg-white rounded-[3rem] shadow-sm border border-dashed">
-          <div className="bg-slate-50 p-12 rounded-full w-fit mx-auto shadow-inner">
-            <Users className="h-20 w-20 text-slate-200" />
-          </div>
           <div className="space-y-2">
             <p className="text-slate-400 font-black text-2xl uppercase tracking-tighter">Quiet Environment</p>
             <p className="text-slate-300 font-bold text-sm tracking-widest uppercase">No live traffic detected matching criteria</p>

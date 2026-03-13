@@ -1,26 +1,7 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  Download, 
-  Calendar as CalendarIcon, 
-  FileText,
-  Clock,
-  Filter,
-  X,
-  Printer,
-  FileCheck,
-  BarChart3,
-  PieChart as PieIcon,
-  Users,
-  Target,
-  TrendingUp,
-  Activity,
-  ArrowRight,
-  Building2
-} from 'lucide-react';
 import { 
   Bar, 
   BarChart, 
@@ -198,14 +179,12 @@ export default function ReportsPage() {
           <Button 
             variant={showFilters ? "default" : "outline"} 
             onClick={() => setShowFilters(!showFilters)}
-            className="rounded-2xl h-14 gap-2 px-6 shadow-sm border-slate-100 font-bold"
+            className="rounded-2xl h-14 px-6 shadow-sm border-slate-100 font-bold uppercase text-xs tracking-widest"
           >
-            <Filter className="h-5 w-5" />
             Control Panel
           </Button>
           
-          <Button onClick={() => setIsPreviewOpen(true)} className="rounded-2xl gap-3 bg-primary h-14 px-8 shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs">
-            <Download className="h-5 w-5" />
+          <Button onClick={() => setIsPreviewOpen(true)} className="rounded-2xl bg-primary h-14 px-8 shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs">
             Generate PDF Report
           </Button>
         </div>
@@ -215,12 +194,9 @@ export default function ReportsPage() {
         <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white animate-in slide-in-from-top-4 duration-300">
           <CardHeader className="bg-slate-50 border-b border-slate-100 p-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-2xl"><Filter className="h-5 w-5 text-primary" /></div>
-                <CardTitle className="text-xl font-black">Refine Segmentation</CardTitle>
-              </div>
+              <CardTitle className="text-xl font-black">Refine Segmentation</CardTitle>
               <Button variant="ghost" onClick={resetFilters} className="text-primary font-black uppercase tracking-widest text-[10px]">
-                <X className="h-4 w-4 mr-2" /> Reset Analytics
+                Reset Analytics
               </Button>
             </div>
           </CardHeader>
@@ -231,7 +207,6 @@ export default function ReportsPage() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-bold rounded-2xl h-14 border-slate-100 bg-slate-50">
-                      <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
                       {dateRange.from ? format(dateRange.from, "LLL dd, y") : "Select Range"}
                     </Button>
                   </PopoverTrigger>
@@ -264,9 +239,6 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 group hover:bg-primary transition-colors">
           <div className="space-y-4">
-            <div className="p-4 bg-primary/5 group-hover:bg-white/10 rounded-3xl w-fit">
-              <Users className="h-6 w-6 text-primary group-hover:text-white" />
-            </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 group-hover:text-white/50 uppercase tracking-[0.3em]">Total Visitors</p>
               <h3 className="text-4xl font-black text-slate-900 group-hover:text-white">{analytics?.total}</h3>
@@ -276,9 +248,6 @@ export default function ReportsPage() {
         
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 group hover:bg-primary transition-colors">
           <div className="space-y-4">
-            <div className="p-4 bg-primary/5 group-hover:bg-white/10 rounded-3xl w-fit">
-              <Building2 className="h-6 w-6 text-primary group-hover:text-white" />
-            </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 group-hover:text-white/50 uppercase tracking-[0.3em]">Top College</p>
               <h3 className="text-2xl font-black text-slate-900 group-hover:text-white truncate">{analytics?.summary.topCollege}</h3>
@@ -288,9 +257,6 @@ export default function ReportsPage() {
 
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 group hover:bg-primary transition-colors">
           <div className="space-y-4">
-            <div className="p-4 bg-primary/5 group-hover:bg-white/10 rounded-3xl w-fit">
-              <Clock className="h-6 w-6 text-primary group-hover:text-white" />
-            </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 group-hover:text-white/50 uppercase tracking-[0.3em]">Peak Hour</p>
               <h3 className="text-4xl font-black text-slate-900 group-hover:text-white">{analytics?.summary.peakHour}</h3>
@@ -300,9 +266,6 @@ export default function ReportsPage() {
 
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white p-8 group hover:bg-primary transition-colors">
           <div className="space-y-4">
-            <div className="p-4 bg-primary/5 group-hover:bg-white/10 rounded-3xl w-fit">
-              <Target className="h-6 w-6 text-primary group-hover:text-white" />
-            </div>
             <div>
               <p className="text-[10px] font-black text-slate-400 group-hover:text-white/50 uppercase tracking-[0.3em]">Unique Users</p>
               <h3 className="text-4xl font-black text-slate-900 group-hover:text-white">{analytics?.uniquePatrons}</h3>
@@ -321,8 +284,7 @@ export default function ReportsPage() {
                 <CardTitle className="text-2xl font-black text-primary uppercase tracking-tighter">Utilization Flow</CardTitle>
                 <CardDescription className="font-bold">Hourly traffic distribution across the facility</CardDescription>
               </div>
-              <div className="flex items-center gap-2 text-green-500 font-black">
-                <TrendingUp className="h-5 w-5" />
+              <div className="text-green-500 font-black">
                 <span>+5% Utilization</span>
               </div>
             </div>
@@ -406,27 +368,24 @@ export default function ReportsPage() {
         <DialogContent className="max-w-[1100px] h-[95vh] flex flex-col p-0 overflow-hidden border-none rounded-[3rem] shadow-2xl">
           <div className="p-8 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div className="space-y-1">
-              <DialogTitle className="text-2xl font-black flex items-center gap-3"><FileCheck className="h-8 w-8 text-green-400" /> OFFICIAL SYSTEM REPORT</DialogTitle>
+              <DialogTitle className="text-2xl font-black">OFFICIAL SYSTEM REPORT</DialogTitle>
               <DialogDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{config?.reportHeaderTitle || "UNIVERSITY FACILITY UTILIZATION RECORD"}</DialogDescription>
             </div>
             <div className="flex gap-4">
               <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white font-black uppercase tracking-widest text-[10px]" onClick={() => window.print()}>
-                <Printer className="h-4 w-4 mr-2" /> Print PDF
+                Print PDF
               </Button>
-              <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="text-white">
-                <X className="h-5 w-5" />
+              <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="text-white font-bold uppercase text-xs tracking-widest">
+                Close
               </Button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto bg-slate-200/50 p-16">
             <div id="print-area" className="bg-white shadow-2xl mx-auto max-w-[850px] min-h-[1100px] p-20 flex flex-col rounded-[2rem]">
               <div className="flex items-center justify-between border-b-[6px] border-slate-900 pb-10 mb-16">
-                <div className="flex items-center gap-6">
-                  {config?.universityLogoUrl && <img src={config.universityLogoUrl} className="h-20 w-auto" alt="Logo" />}
-                  <div>
-                    <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">NEU Central Library</h1>
-                    <p className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] pt-1">{config?.reportHeaderTitle || "OFFICE OF THE CHIEF LIBRARIAN"}</p>
-                  </div>
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">NEU Central Library</h1>
+                  <p className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] pt-1">{config?.reportHeaderTitle || "OFFICE OF THE CHIEF LIBRARIAN"}</p>
                 </div>
                 <div className="text-right text-[10px] font-black text-slate-400">REF: LIB-{format(new Date(), 'yyyyMMdd')}<br/>TS: {format(new Date(), 'HH:mm:ss')}</div>
               </div>
@@ -444,8 +403,8 @@ export default function ReportsPage() {
               </div>
 
               <div className="space-y-8 mb-16">
-                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight border-b-2 border-slate-100 pb-2 flex items-center gap-2">
-                   <TrendingUp className="h-5 w-5 text-primary" /> Traffic Analysis
+                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight border-b-2 border-slate-100 pb-2">
+                   Traffic Analysis
                  </h3>
                  <div className="h-48 w-full bg-slate-50 rounded-3xl flex items-center justify-center border border-dashed border-slate-200">
                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Chart Visualization Embedded in Export</p>

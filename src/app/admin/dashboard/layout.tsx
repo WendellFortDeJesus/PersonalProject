@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -15,7 +14,6 @@ import {
   SidebarInset,
   SidebarTrigger
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, FileBarChart, Settings, LogOut, Library, Bell, ShieldCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/firebase';
@@ -28,10 +26,10 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   const router = useRouter();
 
   const menuItems = [
-    { label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
-    { label: 'Access Management', icon: Users, href: '/admin/users' },
-    { label: 'Analytics & Reports', icon: FileBarChart, href: '/admin/reports' },
-    { label: 'System Settings', icon: Settings, href: '/admin/settings' },
+    { label: 'Dashboard', href: '/admin/dashboard' },
+    { label: 'Access Management', href: '/admin/users' },
+    { label: 'Analytics & Reports', href: '/admin/reports' },
+    { label: 'System Settings', href: '/admin/settings' },
   ];
 
   const handleSignOut = async () => {
@@ -45,9 +43,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         <Sidebar variant="inset" collapsible="icon" className="border-r-0">
           <SidebarHeader className="p-6">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-primary rounded-xl shadow-lg shadow-primary/20">
-                <Library className="h-6 w-6 text-white" />
-              </div>
               <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="font-headline font-black text-primary text-xl tracking-tighter">PatronPoint</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1">Enterprise Suite</span>
@@ -69,7 +64,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                     }`}
                   >
                     <Link href={item.href}>
-                      <item.icon className={`h-5 w-5 ${pathname === item.href ? 'text-white' : 'text-slate-500'}`} />
                       <span className="font-bold">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -84,7 +78,6 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                   onClick={handleSignOut}
                   className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 h-12 rounded-xl transition-colors"
                 >
-                  <LogOut className="h-5 w-5" />
                   <span className="font-bold">Sign Out</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -110,12 +103,12 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-primary rounded-xl hover:bg-primary/5 transition-colors">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
+                <Button variant="ghost" size="sm" className="relative text-slate-400 hover:text-primary rounded-xl hover:bg-primary/5 transition-colors font-bold uppercase text-[10px] tracking-widest">
+                  Alerts
+                  <span className="ml-2 h-2 w-2 bg-red-500 rounded-full" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary rounded-xl hover:bg-primary/5 transition-colors">
-                  <ShieldCheck className="h-5 w-5" />
+                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-primary rounded-xl hover:bg-primary/5 transition-colors font-bold uppercase text-[10px] tracking-widest">
+                  Secure
                 </Button>
               </div>
               <div className="h-8 w-px bg-slate-200" />

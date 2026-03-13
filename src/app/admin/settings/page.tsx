@@ -1,29 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Plus, 
-  Building2, 
-  ClipboardCheck, 
-  Trash2, 
-  Palette, 
-  Timer, 
-  BarChart, 
-  UserX, 
-  Search, 
-  Archive, 
-  CheckCircle2, 
-  Upload, 
-  Sun, 
-  Moon, 
-  Bell, 
-  Loader2,
-  UserCheck
-} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -192,7 +172,7 @@ export default function SystemSettingsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
-        <p className="text-slate-400 font-bold">Syncing Command Center...</p>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Syncing Command Center...</p>
       </div>
     );
   }
@@ -207,7 +187,7 @@ export default function SystemSettingsPage() {
         <div className="p-4 bg-primary/5 rounded-2xl flex items-center gap-4">
           <div className="text-right">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Status</p>
-            <p className="text-sm font-bold text-green-600">FULLY SYNCED</p>
+            <p className="text-sm font-bold text-green-600 uppercase tracking-widest">Synced</p>
           </div>
           <div className="h-10 w-10 bg-green-500 rounded-full animate-pulse border-4 border-white shadow-sm" />
         </div>
@@ -215,20 +195,20 @@ export default function SystemSettingsPage() {
 
       <Tabs defaultValue="academic" className="w-full">
         <TabsList className="grid w-full grid-cols-5 h-14 bg-slate-100 p-1.5 rounded-2xl mb-8">
-          <TabsTrigger value="academic" className="rounded-xl font-bold flex gap-2">
-            <Building2 className="h-4 w-4" /> Academic Units
+          <TabsTrigger value="academic" className="rounded-xl font-bold uppercase text-[10px] tracking-widest">
+            Units
           </TabsTrigger>
-          <TabsTrigger value="terminal" className="rounded-xl font-bold flex gap-2">
-            <Timer className="h-4 w-4" /> Check-in Config
+          <TabsTrigger value="terminal" className="rounded-xl font-bold uppercase text-[10px] tracking-widest">
+            Kiosk
           </TabsTrigger>
-          <TabsTrigger value="branding" className="rounded-xl font-bold flex gap-2">
-            <Palette className="h-4 w-4" /> Theme & Branding
+          <TabsTrigger value="branding" className="rounded-xl font-bold uppercase text-[10px] tracking-widest">
+            Branding
           </TabsTrigger>
-          <TabsTrigger value="reports" className="rounded-xl font-bold flex gap-2">
-            <BarChart className="h-4 w-4" /> Report Settings
+          <TabsTrigger value="reports" className="rounded-xl font-bold uppercase text-[10px] tracking-widest">
+            Reports
           </TabsTrigger>
-          <TabsTrigger value="access" className="rounded-xl font-bold flex gap-2">
-            <UserX className="h-4 w-4" /> Access Control
+          <TabsTrigger value="access" className="rounded-xl font-bold uppercase text-[10px] tracking-widest">
+            Security
           </TabsTrigger>
         </TabsList>
 
@@ -274,12 +254,12 @@ export default function SystemSettingsPage() {
                     ))}
                   </div>
                 </div>
-                <Button onClick={addDepartment} className="w-full rounded-xl bg-slate-900 h-11">
-                  <Plus className="h-4 w-4 mr-2" /> Add Unit
+                <Button onClick={addDepartment} className="w-full rounded-xl bg-slate-900 h-11 font-bold uppercase tracking-widest text-[10px]">
+                  Add Unit
                 </Button>
                 <div className="pt-4 border-t">
-                  <Button variant="outline" className="w-full rounded-xl border-dashed h-11">
-                    <Upload className="h-4 w-4 mr-2" /> Bulk Import (CSV)
+                  <Button variant="outline" className="w-full rounded-xl border-dashed h-11 font-bold uppercase tracking-widest text-[10px]">
+                    Bulk Import
                   </Button>
                 </div>
               </CardContent>
@@ -311,10 +291,9 @@ export default function SystemSettingsPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="rounded-xl text-slate-400 hover:text-primary"
+                        className="rounded-xl text-slate-400 hover:text-primary font-bold uppercase tracking-widest text-[10px]"
                         onClick={() => toggleDeptStatus(dept.id)}
                       >
-                        {dept.isActive ? <Archive className="h-4 w-4 mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                         {dept.isActive ? "Archive" : "Reactivate"}
                       </Button>
                     </div>
@@ -383,8 +362,8 @@ export default function SystemSettingsPage() {
                     onChange={(e) => setNewPurposeLabel(e.target.value)}
                     className="w-32 rounded-xl h-9 text-xs"
                   />
-                  <Button size="sm" onClick={addPurpose} className="rounded-xl h-9">
-                    <Plus className="h-4 w-4" />
+                  <Button size="sm" onClick={addPurpose} className="rounded-xl h-9 font-bold">
+                    +
                   </Button>
                 </div>
               </CardHeader>
@@ -392,20 +371,17 @@ export default function SystemSettingsPage() {
                 <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
                   {settings?.purposes?.map((p: any) => (
                     <div key={p.id} className="flex items-center justify-between p-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-100 rounded-lg"><ClipboardCheck className="h-4 w-4 text-slate-400" /></div>
-                        <span className="font-bold text-slate-700">{p.label}</span>
-                      </div>
+                      <span className="font-bold text-slate-700">{p.label}</span>
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-slate-300 hover:text-red-500"
+                        size="sm" 
+                        className="h-8 text-slate-300 hover:text-red-500 font-bold uppercase tracking-widest text-[9px]"
                         onClick={() => {
                           const updated = settings?.purposes?.filter((purpose: any) => purpose.id !== p.id);
                           handleSaveSettings({ purposes: updated });
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        Remove
                       </Button>
                     </div>
                   ))}
@@ -432,7 +408,7 @@ export default function SystemSettingsPage() {
                       onChange={(e) => setThemeUrl(e.target.value)}
                       className="rounded-xl"
                     />
-                    <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="rounded-xl">Update</Button>
+                    <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Update</Button>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -444,7 +420,7 @@ export default function SystemSettingsPage() {
                       onChange={(e) => setLogoUrl(e.target.value)}
                       className="rounded-xl"
                     />
-                    <Button onClick={() => handleSaveSettings({ universityLogoUrl: logoUrl })} className="rounded-xl">Update</Button>
+                    <Button onClick={() => handleSaveSettings({ universityLogoUrl: logoUrl })} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Update</Button>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -472,11 +448,11 @@ export default function SystemSettingsPage() {
                   >
                     <div className="flex items-center space-x-2 bg-slate-50 p-4 rounded-xl flex-1 cursor-pointer">
                       <RadioGroupItem value="white" id="white" />
-                      <Label htmlFor="white" className="flex items-center gap-2 font-bold cursor-pointer"><Sun className="h-4 w-4" /> White</Label>
+                      <Label htmlFor="white" className="flex items-center gap-2 font-bold cursor-pointer">White</Label>
                     </div>
                     <div className="flex items-center space-x-2 bg-slate-50 p-4 rounded-xl flex-1 cursor-pointer">
                       <RadioGroupItem value="black" id="black" />
-                      <Label htmlFor="black" className="flex items-center gap-2 font-bold cursor-pointer"><Moon className="h-4 w-4" /> Black</Label>
+                      <Label htmlFor="black" className="flex items-center gap-2 font-bold cursor-pointer">Black</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -517,11 +493,11 @@ export default function SystemSettingsPage() {
                     >
                       <div className="flex items-center space-x-2 bg-slate-50 p-4 rounded-xl flex-1 cursor-pointer">
                         <RadioGroupItem value="bar" id="bar-chart" />
-                        <Label htmlFor="bar-chart" className="flex items-center gap-2 font-bold cursor-pointer"><BarChart className="h-4 w-4" /> Bar Chart</Label>
+                        <Label htmlFor="bar-chart" className="flex items-center gap-2 font-bold cursor-pointer">Bar Chart</Label>
                       </div>
                       <div className="flex items-center space-x-2 bg-slate-50 p-4 rounded-xl flex-1 cursor-pointer">
                         <RadioGroupItem value="pie" id="pie-chart" />
-                        <Label htmlFor="pie-chart" className="flex items-center gap-2 font-bold cursor-pointer"><PieIcon className="h-4 w-4" /> Pie Chart</Label>
+                        <Label htmlFor="pie-chart" className="flex items-center gap-2 font-bold cursor-pointer">Pie Chart</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -562,16 +538,13 @@ export default function SystemSettingsPage() {
                         className="rounded-xl h-14 text-2xl font-black w-32"
                       />
                       <div className="p-4 bg-green-50 rounded-2xl border border-green-100 flex-1">
-                        <p className="text-xs text-green-700 font-medium">Used to calculate "Goal Percentage" in weekly intelligence reports.</p>
+                        <p className="text-xs text-green-700 font-medium">Used to calculate Goal Reach in formal records.</p>
                       </div>
                     </div>
                   </div>
                   <div className="pt-4 border-t">
                     <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl">
-                      <div className="flex items-center gap-3">
-                        <Bell className="h-5 w-5 text-primary" />
-                        <span className="font-bold text-slate-700">Auto-Email Weekly Reports</span>
-                      </div>
+                      <span className="font-bold text-slate-700">Auto-Email Weekly Reports</span>
                       <Switch />
                     </div>
                   </div>
@@ -596,8 +569,8 @@ export default function SystemSettingsPage() {
                       onChange={(e) => setNewBlockReason(e.target.value)}
                       className="w-32 rounded-xl h-9 text-xs"
                     />
-                    <Button size="sm" onClick={addBlockReason} className="rounded-xl h-9">
-                      <Plus className="h-4 w-4" />
+                    <Button size="sm" onClick={addBlockReason} className="rounded-xl h-9 font-bold">
+                      +
                     </Button>
                   </div>
                 </div>
@@ -609,14 +582,14 @@ export default function SystemSettingsPage() {
                       <span className="font-bold text-slate-700">{r}</span>
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-slate-300 hover:text-red-500"
+                        size="sm" 
+                        className="h-8 text-slate-300 hover:text-red-500 font-bold uppercase tracking-widest text-[9px]"
                         onClick={() => {
                           const updated = settings?.blockReasons?.filter((reason: string) => reason !== r);
                           handleSaveSettings({ blockReasons: updated });
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        Delete
                       </Button>
                     </div>
                   ))}
@@ -631,16 +604,15 @@ export default function SystemSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                   <Input 
                     placeholder="Enter School ID..." 
                     value={blockSearch}
                     onChange={(e) => setBlockSearch(e.target.value)}
                     onKeyUp={(e) => e.key === 'Enter' && searchPatron()}
-                    className="pl-10 h-12 rounded-xl"
+                    className="h-12 rounded-xl pr-24"
                   />
                   <Button 
-                    className="absolute right-1.5 top-1.5 h-9 rounded-lg" 
+                    className="absolute right-1.5 top-1.5 h-9 rounded-lg font-bold uppercase tracking-widest text-[10px]" 
                     size="sm"
                     onClick={searchPatron}
                   >Search</Button>
@@ -661,11 +633,10 @@ export default function SystemSettingsPage() {
                       <Button 
                         variant={p.isBlocked ? "outline" : "destructive"} 
                         size="sm" 
-                        className="rounded-xl h-9"
+                        className="rounded-xl h-9 font-bold uppercase text-[9px] tracking-widest"
                         onClick={() => toggleBlockPatron(p)}
                       >
-                        {p.isBlocked ? <UserCheck className="h-4 w-4 mr-2" /> : <UserX className="h-4 w-4 mr-2" />}
-                        {p.isBlocked ? "Unblock" : "Block User"}
+                        {p.isBlocked ? "Unblock" : "Block"}
                       </Button>
                     </div>
                   ))}
@@ -681,5 +652,24 @@ export default function SystemSettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function Loader2(props: any) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
   );
 }

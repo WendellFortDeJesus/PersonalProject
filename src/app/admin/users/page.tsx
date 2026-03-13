@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -11,14 +10,6 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { 
-  Search, 
-  Edit3, 
-  UserX, 
-  UserCheck, 
-  Loader2,
-  Filter
-} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -129,16 +120,14 @@ export default function VisitorManagementPage() {
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
             placeholder="Search by School ID or Name..." 
-            className="pl-10 h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-primary shadow-sm"
+            className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-primary shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-11 rounded-xl gap-2 border-slate-200">
-          <Filter className="h-4 w-4" />
+        <Button variant="outline" className="h-11 rounded-xl font-bold uppercase tracking-widest text-[10px] border-slate-200">
           Filter Options
         </Button>
       </div>
@@ -208,22 +197,22 @@ export default function VisitorManagementPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-slate-400 hover:text-primary"
+                        size="sm" 
+                        className="text-slate-400 hover:text-primary font-bold uppercase text-[10px] tracking-widest"
                         onClick={() => {
                           setEditingPatron(patron);
                           setIsEditDialogOpen(true);
                         }}
                       >
-                        <Edit3 className="h-4 w-4" />
+                        Edit
                       </Button>
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className={`h-8 w-8 ${patron.isBlocked ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50'}`}
+                        size="sm" 
+                        className={`font-bold uppercase text-[10px] tracking-widest ${patron.isBlocked ? 'text-green-600' : 'text-red-600'}`}
                         onClick={() => handleToggleBlock(patron)}
                       >
-                        {patron.isBlocked ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
+                        {patron.isBlocked ? 'Unblock' : 'Block'}
                       </Button>
                     </div>
                   </TableCell>
@@ -241,9 +230,6 @@ export default function VisitorManagementPage() {
 
           {(!filteredPatrons || filteredPatrons.length === 0) && !isLoading && (
             <div className="p-20 text-center space-y-4">
-              <div className="bg-slate-50 p-6 rounded-full w-fit mx-auto border border-slate-100">
-                <Search className="h-12 w-12 text-slate-200 mx-auto" />
-              </div>
               <p className="text-slate-400 font-bold text-lg">No results found matching "{searchTerm}"</p>
             </div>
           )}
@@ -311,12 +297,31 @@ export default function VisitorManagementPage() {
               </div>
             </div>
             <DialogFooter className="p-8 bg-slate-50 flex-col sm:flex-row gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button type="submit" className="bg-primary rounded-xl px-8 shadow-lg font-bold">Apply System Correction</Button>
+              <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)} className="rounded-xl font-bold uppercase text-[10px] tracking-widest">Cancel</Button>
+              <Button type="submit" className="bg-primary rounded-xl px-8 shadow-lg font-bold uppercase text-[10px] tracking-widest">Apply System Correction</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function Loader2(props: any) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
   );
 }

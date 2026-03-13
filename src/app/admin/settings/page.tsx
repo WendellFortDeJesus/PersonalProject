@@ -14,7 +14,18 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { Search, Save, Image as ImageIcon, Globe, Database } from 'lucide-react';
+import { 
+  Search, 
+  Save, 
+  Settings2, 
+  Globe, 
+  Database, 
+  Layout, 
+  ShieldCheck, 
+  ArrowRight,
+  Plus
+} from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function SystemSettingsPage() {
   const db = useFirestore();
@@ -30,6 +41,7 @@ export default function SystemSettingsPage() {
   const [newDeptCode, setNewDeptCode] = useState('');
   const [themeUrl, setThemeUrl] = useState('');
   const [opacity, setOpacity] = useState(70);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (settings) {
@@ -50,116 +62,177 @@ export default function SystemSettingsPage() {
     });
   };
 
-  if (isLoading) return <div className="p-32 text-center font-black text-primary/40 uppercase tracking-widest animate-pulse">Establishing Command Suite...</div>;
+  const filteredDepts = settings?.departments?.filter((d: any) => 
+    d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    d.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) return <div className="p-32 text-center font-black text-primary/40 uppercase tracking-widest animate-pulse">Initializing Command Center...</div>;
 
   return (
-    <div className="space-y-8 pb-12 animate-fade-in fluid-container">
-      <div className="bento-tile flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">System Command Suite</h1>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure global schema and visual variables</p>
+    <div className="space-y-8 pb-16 animate-fade-in fluid-container">
+      {/* Header Panel */}
+      <div className="bento-tile flex items-center justify-between h-32 bg-slate-900 border-none shadow-2xl">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black text-white uppercase tracking-tighter">System Engine Room</h1>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Global schema logic and aesthetic synchronization</p>
         </div>
-        <Badge className="h-9 px-6 rounded-xl bg-green-50 text-green-600 border-green-100 font-black uppercase text-[9px] tracking-widest">Core Synchronized</Badge>
+        <div className="flex items-center gap-6">
+          <Badge className="h-10 px-6 rounded-2xl bg-primary/20 text-primary border-primary/20 font-black uppercase text-[10px] tracking-widest">
+            Core Synchronized
+          </Badge>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        {/* Left Pane: Department Manager */}
-        <div className="lg:col-span-4 bento-tile flex flex-col h-[700px] p-0 overflow-hidden">
-          <div className="p-8 bg-slate-50/50 border-b space-y-4">
-            <h2 className="text-lg font-black text-primary uppercase tracking-tighter">Academic Registry</h2>
-            <div className="space-y-4 pt-2">
-              <Input placeholder="Full Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-11 rounded-xl" />
-              <Input placeholder="Code (e.g. CICS)" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-11 rounded-xl" />
-              <Button onClick={() => {}} className="w-full h-11 rounded-xl bg-primary font-black uppercase text-[10px] tracking-widest gap-2">
-                <Database className="h-3 w-3" />
-                Add to Registry
-              </Button>
+        {/* Section A: Academic Infrastructure (Left Pane) */}
+        <div className="lg:col-span-4 bento-tile flex flex-col h-[800px] p-0 overflow-hidden shadow-2xl">
+          <div className="p-10 bg-slate-50 border-b space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Academic Registry</h2>
+              <Database className="h-5 w-5 text-slate-300" />
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <Input placeholder="College Identity Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold uppercase text-xs" />
+                <div className="flex gap-4">
+                  <Input placeholder="Short Code (e.g. CICS)" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-mono font-bold" />
+                  <Button onClick={() => {}} className="h-14 px-8 rounded-2xl bg-primary shadow-lg"><Plus className="h-5 w-5" /></Button>
+                </div>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                <Input 
+                  placeholder="Filter Registry..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-12 pl-12 rounded-2xl bg-white border-slate-100 text-[11px] font-bold uppercase"
+                />
+              </div>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-            {settings?.departments?.map((dept: any) => (
-              <div key={dept.id} className="p-5 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className="h-9 w-9 rounded-xl flex items-center justify-center text-[10px] font-black text-white" style={{ backgroundColor: dept.color }}>{dept.code}</div>
-                  <span className="text-xs font-black text-slate-700 uppercase">{dept.name}</span>
-                </div>
-                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-red-500 font-black uppercase text-[9px]">Remove</Button>
-              </div>
-            ))}
+          
+          <div className="flex-1 overflow-y-auto">
+            <Table>
+              <TableHeader className="bg-white sticky top-0 z-10">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-10 h-14 font-black uppercase text-[10px] tracking-widest text-slate-400">Identity</TableHead>
+                  <TableHead className="h-14 font-black uppercase text-[10px] tracking-widest text-slate-400 text-right pr-10">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredDepts?.map((dept: any) => (
+                  <TableRow key={dept.id} className="zebra-row group">
+                    <TableCell className="pl-10 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-[10px] font-black text-white shadow-lg" style={{ backgroundColor: dept.color || '#006837' }}>{dept.code}</div>
+                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-tighter leading-tight max-w-[180px]">{dept.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right pr-10">
+                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-500 font-black uppercase text-[9px] tracking-widest">
+                        Archive
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
 
-        {/* Center Pane: Terminal Customization */}
-        <div className="lg:col-span-5 bento-tile flex flex-col h-[700px]">
-          <h2 className="text-lg font-black text-primary uppercase tracking-tighter mb-6 flex items-center gap-3">
-            <ImageIcon className="h-5 w-5 text-primary/40" />
-            Terminal Customization
-          </h2>
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Background Asset URL</Label>
-              <div className="flex gap-2">
-                <Input value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} className="h-12 rounded-xl" />
-                <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="bg-primary px-8 rounded-xl"><Save className="h-4 w-4" /></Button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Overlay Density</Label>
-                <span className="text-xs font-mono font-bold text-primary">{opacity}%</span>
-              </div>
-              <Slider value={[opacity]} max={100} min={10} step={1} onValueChange={(val) => { setOpacity(val[0]); handleSaveSettings({ overlayOpacity: val[0] / 100 }); }} />
-            </div>
-
-            <div className="pt-8 border-t space-y-6">
-              <h3 className="text-xs font-black uppercase text-slate-400 tracking-widest">Live Twin Preview</h3>
-              <div className="relative aspect-video rounded-[2rem] overflow-hidden border-2 border-slate-100 shadow-inner group">
-                <img src={themeUrl} className="object-cover w-full h-full" alt="Preview" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div 
-                    className="w-48 h-32 rounded-3xl shadow-2xl border border-white/30"
-                    style={{ backgroundColor: `rgba(255, 255, 255, ${opacity/100})`, backdropFilter: 'blur(10px)' }}
-                  />
-                </div>
-              </div>
-            </div>
+        {/* Section B: Terminal Logic & Branding (Center Pane) */}
+        <div className="lg:col-span-5 bento-tile flex flex-col h-[800px] shadow-2xl">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Terminal Customization</h2>
+            <Layout className="h-5 w-5 text-slate-300" />
           </div>
-        </div>
-
-        {/* Right Pane: Global Variables */}
-        <div className="lg:col-span-3 bento-tile flex flex-col h-[700px] bg-slate-50 border-none shadow-inner">
-          <h2 className="text-lg font-black text-primary uppercase tracking-tighter mb-8 flex items-center gap-3">
-            <Globe className="h-5 w-5 text-primary/40" />
-            Global Controls
-          </h2>
+          
           <div className="space-y-10">
             <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schema Validation</h3>
+              <Label className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Background Asset Pipeline</Label>
+              <div className="flex gap-3">
+                <Input value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold" />
+                <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="bg-primary h-14 px-10 rounded-2xl shadow-xl transition-all active:scale-95">
+                  <Save className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <Label className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Overlay Density Matrix</Label>
+                <span className="text-sm font-mono font-bold text-primary bg-primary/10 px-4 py-1 rounded-full">{opacity}%</span>
+              </div>
+              <Slider 
+                value={[opacity]} max={100} min={10} step={1} 
+                onValueChange={(val) => { setOpacity(val[0]); handleSaveSettings({ overlayOpacity: val[0] / 100 }); }} 
+              />
+            </div>
+
+            <div className="pt-10 border-t space-y-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Live Terminal Preview</h3>
+                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-[0.2em] border-primary/20 text-primary">Dynamic Twin</Badge>
+              </div>
+              <div className="relative aspect-video rounded-[3rem] overflow-hidden border-[6px] border-slate-100 shadow-2xl group transition-transform hover:scale-[1.02]">
+                <img src={themeUrl} className="object-cover w-full h-full" alt="Terminal Preview" />
+                <div className="absolute inset-0 flex items-center justify-center p-12">
+                  <div 
+                    className="w-full h-full rounded-[2.5rem] shadow-2xl border border-white/40 flex flex-col items-center justify-center gap-4"
+                    style={{ backgroundColor: `rgba(255, 255, 255, ${opacity/100})`, backdropFilter: 'blur(16px)' }}
+                  >
+                     <div className="h-12 w-32 bg-primary/10 rounded-2xl animate-pulse" />
+                     <div className="h-6 w-48 bg-slate-200/50 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section C: System Audit & Access (Right Pane) */}
+        <div className="lg:col-span-3 bento-tile flex flex-col h-[800px] bg-slate-50 border-none shadow-inner p-10">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">System Variables</h2>
+            <ShieldCheck className="h-5 w-5 text-slate-400" />
+          </div>
+
+          <div className="space-y-12">
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-4 border-slate-200">Schema Validation</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm">
-                  <span className="text-xs font-bold text-slate-600">Enforce Age Input</span>
+                <div className="flex items-center justify-between p-6 bg-white rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-primary/20">
+                  <span className="text-[11px] font-black text-slate-700 uppercase">Enforce Age Index</span>
                   <Switch checked={settings?.requireAge} onCheckedChange={(val) => handleSaveSettings({ requireAge: val })} />
                 </div>
-                <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm">
-                  <span className="text-xs font-bold text-slate-600">Require Gender</span>
+                <div className="flex items-center justify-between p-6 bg-white rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-primary/20">
+                  <span className="text-[11px] font-black text-slate-700 uppercase">Require Gender Identity</span>
                   <Switch checked={settings?.requireGender} onCheckedChange={(val) => handleSaveSettings({ requireGender: val })} />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Variables</h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Engagement Target</Label>
-                  <Input type="number" value={settings?.dailyEngagementTarget || 50} onChange={(e) => handleSaveSettings({ dailyEngagementTarget: parseInt(e.target.value) })} className="h-12 rounded-xl bg-white border-none font-mono" />
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b pb-4 border-slate-200">Institutional Targets</h3>
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Daily Engagement Target</Label>
+                  <Input type="number" value={settings?.dailyEngagementTarget || 50} onChange={(e) => handleSaveSettings({ dailyEngagementTarget: parseInt(e.target.value) })} className="h-14 rounded-2xl bg-white border-none font-mono font-bold text-lg shadow-inner text-primary" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400">Timeout (Sec)</Label>
-                  <Input type="number" value={settings?.timeoutSeconds || 3} onChange={(e) => handleSaveSettings({ timeoutSeconds: parseInt(e.target.value) })} className="h-12 rounded-xl bg-white border-none font-mono" />
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">System Timeout (Seconds)</Label>
+                  <Input type="number" value={settings?.timeoutSeconds || 3} onChange={(e) => handleSaveSettings({ timeoutSeconds: parseInt(e.target.value) })} className="h-14 rounded-2xl bg-white border-none font-mono font-bold text-lg shadow-inner text-primary" />
                 </div>
               </div>
+            </div>
+
+            <div className="mt-auto pt-10 border-t border-slate-200">
+               <Button variant="ghost" className="w-full h-16 rounded-2xl bg-white border border-slate-200 font-black uppercase text-[10px] tracking-widest text-primary gap-3 shadow-sm hover:bg-slate-50 transition-all">
+                Access Audit Logs
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

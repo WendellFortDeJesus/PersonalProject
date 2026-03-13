@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,16 +21,21 @@ import {
   ToggleLeft,
   ToggleRight,
   Upload,
-  Palette
+  Palette,
+  Sun,
+  Moon,
+  Sliders
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const COLOR_PRESETS = [
   { name: 'Blue', value: '#355872' },
@@ -58,6 +63,14 @@ export default function SystemSettingsPage() {
   const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0].value);
   const [newPurposeLabel, setNewPurposeLabel] = useState('');
   const [themeUrl, setThemeUrl] = useState('');
+  const [opacity, setOpacity] = useState(70);
+
+  useEffect(() => {
+    if (settings) {
+      setThemeUrl(settings.themeImageUrl || '');
+      setOpacity((settings.overlayOpacity || 0.7) * 100);
+    }
+  }, [settings]);
 
   const handleSaveSettings = async (updates: any) => {
     if (!settingsRef) return;
@@ -148,7 +161,7 @@ export default function SystemSettingsPage() {
     <div className="space-y-8 animate-fade-in pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-headline font-bold text-primary">Admin System Console</h1>
+          <h1 className="text-3xl font-headline font-bold text-primary uppercase tracking-tighter">Admin System Console</h1>
           <p className="text-slate-500 font-medium">Organizational structures and reporting preferences</p>
         </div>
       </div>
@@ -157,7 +170,7 @@ export default function SystemSettingsPage() {
         <TabsList className="grid w-full grid-cols-5 max-w-[1200px] mb-8 h-12 bg-slate-100 p-1 rounded-2xl">
           <TabsTrigger value="foundational" className="rounded-xl font-bold">Academic Structure</TabsTrigger>
           <TabsTrigger value="purposes" className="rounded-xl font-bold">Visit Purposes</TabsTrigger>
-          <TabsTrigger value="appearance" className="rounded-xl font-bold">Library Theme</TabsTrigger>
+          <TabsTrigger value="appearance" className="rounded-xl font-bold">Theme & Branding</TabsTrigger>
           <TabsTrigger value="exports" className="rounded-xl font-bold">Export Config</TabsTrigger>
           <TabsTrigger value="alerts" className="rounded-xl font-bold">Threshold Alerts</TabsTrigger>
         </TabsList>
@@ -346,50 +359,129 @@ export default function SystemSettingsPage() {
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden max-w-2xl">
-            <CardHeader className="bg-slate-50/50 pb-8">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-2xl">
-                  <ImageIcon className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold">Library Theme Image</CardTitle>
-                  <CardDescription>Set the background for all visitor terminals</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-10 space-y-6">
-              <div className="space-y-2">
-                <Label>Dynamic Background URL</Label>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="https://images.unsplash.com/..." 
-                    className="h-12 rounded-xl"
-                    value={themeUrl || settings?.themeImageUrl || ''}
-                    onChange={(e) => setThemeUrl(e.target.value)}
-                  />
-                  <Button 
-                    onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })}
-                    className="h-12 rounded-xl"
-                  >
-                    Update Theme
-                  </Button>
-                </div>
-                <p className="text-xs text-slate-400 mt-2">
-                  Use high-resolution images for the best look on large displays.
-                </p>
-              </div>
-              
-              {settings?.themeImageUrl && (
-                <div className="relative h-48 w-full rounded-2xl overflow-hidden border-2 border-slate-100 shadow-inner">
-                  <img src={settings.themeImageUrl} alt="Theme Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                    <span className="text-white font-bold text-sm bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">Active Terminal Background</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="bg-slate-50/50 pb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary/10 rounded-2xl">
+                    <ImageIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-bold">Terminal Theme Editor</CardTitle>
+                    <CardDescription>Customize the layered aesthetic of visitor kiosks</CardDescription>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="p-10 space-y-10">
+                <div className="space-y-4">
+                  <Label className="text-base font-bold text-slate-700">Library Background Layer</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="https://images.unsplash.com/..." 
+                      className="h-12 rounded-xl"
+                      value={themeUrl}
+                      onChange={(e) => setThemeUrl(e.target.value)}
+                    />
+                    <Button 
+                      onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })}
+                      className="h-12 rounded-xl px-6"
+                    >
+                      Update Image
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-400">Recommended: 1920x1080px academic imagery.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-base font-bold text-slate-700">Glass Overlay Opacity</Label>
+                    <Badge variant="secondary" className="font-black">{opacity}%</Badge>
+                  </div>
+                  <Slider 
+                    value={[opacity]} 
+                    max={100} 
+                    min={10}
+                    step={1} 
+                    onValueChange={(val) => {
+                      setOpacity(val[0]);
+                      handleSaveSettings({ overlayOpacity: val[0] / 100 });
+                    }}
+                  />
+                  <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <Sliders className="h-4 w-4 text-slate-400" />
+                    <p className="text-xs text-slate-500 italic">Adjust for optimal legibility based on background brightness.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-bold text-slate-700">Welcome Text Appearance</Label>
+                  <RadioGroup 
+                    value={settings?.welcomeTextColor || 'white'} 
+                    onValueChange={(val) => handleSaveSettings({ welcomeTextColor: val })}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2 bg-slate-100 p-4 rounded-2xl flex-1 cursor-pointer hover:bg-slate-200 transition-colors">
+                      <RadioGroupItem value="white" id="white" />
+                      <Label htmlFor="white" className="flex items-center gap-2 cursor-pointer font-bold">
+                        <Sun className="h-4 w-4" /> Bright (White)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-slate-100 p-4 rounded-2xl flex-1 cursor-pointer hover:bg-slate-200 transition-colors">
+                      <RadioGroupItem value="black" id="black" />
+                      <Label htmlFor="black" className="flex items-center gap-2 cursor-pointer font-bold">
+                        <Moon className="h-4 w-4" /> Dark (Black)
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-slate-900">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-sm font-black text-white/40 uppercase tracking-[0.2em]">Kiosk Live Preview</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="relative aspect-video rounded-3xl overflow-hidden border-8 border-slate-800 shadow-2xl">
+                  {/* Background Layer Preview */}
+                  <div className="absolute inset-0">
+                    <img src={settings?.themeImageUrl || themeUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
+                  </div>
+                  
+                  {/* Foreground Layer Preview */}
+                  <div className="relative z-10 h-full flex flex-col items-center justify-center p-6 text-center">
+                    <h2 
+                      className={cn(
+                        "text-2xl font-black mb-4 transition-colors",
+                        settings?.welcomeTextColor === 'black' ? 'text-black' : 'text-white'
+                      )}
+                    >
+                      NEU Library Terminal
+                    </h2>
+                    <div 
+                      className="w-3/4 p-6 rounded-3xl border border-white/20 shadow-xl"
+                      style={{ backgroundColor: `rgba(255, 255, 255, ${opacity / 100})`, backdropFilter: 'blur(12px)' }}
+                    >
+                      <div className="h-3 w-1/2 bg-slate-400/20 rounded-full mb-3" />
+                      <div className="h-8 w-full bg-primary/20 rounded-xl" />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex items-center justify-center gap-4 text-white/40">
+                  <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <LayoutTemplate className="h-3 w-3" />
+                    Responsive Layered Design
+                  </span>
+                  <div className="h-1 w-1 rounded-full bg-white/20" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <ImageIcon className="h-3 w-3" />
+                    Adaptive Assets
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="exports" className="space-y-6">

@@ -10,6 +10,7 @@ import { useState, Suspense } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 function PurposeSelectionContent() {
   const router = useRouter();
@@ -66,6 +67,8 @@ function PurposeSelectionContent() {
   };
 
   const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
+  const overlayOpacity = settings?.overlayOpacity ?? 0.7;
+  const textColor = settings?.welcomeTextColor === 'black' ? 'text-black' : 'text-white';
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
@@ -78,10 +81,13 @@ function PurposeSelectionContent() {
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-primary/20 backdrop-blur-md" />
+        <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
       </div>
 
-      <div className="relative z-10 w-full max-w-4xl space-y-8 animate-fade-in bg-white/40 backdrop-blur-xl p-12 rounded-[3.5rem] border border-white/30 shadow-2xl">
+      <div 
+        className="relative z-10 w-full max-w-4xl space-y-8 animate-fade-in p-12 rounded-[3.5rem] border border-white/30 shadow-2xl"
+        style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
+      >
         <div className="absolute top-8 left-12">
           <div className="flex items-center gap-2">
             <Icons.Library className="h-6 w-6 text-primary" />
@@ -90,7 +96,7 @@ function PurposeSelectionContent() {
         </div>
 
         <div className="text-center space-y-2 pt-8">
-          <h1 className="text-5xl font-headline font-bold text-primary tracking-tight">Fast-Track Check-in</h1>
+          <h1 className={cn("text-5xl font-headline font-bold tracking-tight", textColor)}>Fast-Track Check-in</h1>
           <p className="text-xl text-slate-700 font-medium">Select today's primary purpose of visit</p>
         </div>
 

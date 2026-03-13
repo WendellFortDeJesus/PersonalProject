@@ -14,6 +14,7 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc, addDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
@@ -117,6 +118,8 @@ export default function KioskAuthPage() {
   };
 
   const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
+  const overlayOpacity = settings?.overlayOpacity ?? 0.7;
+  const textColor = settings?.welcomeTextColor === 'black' ? 'text-black' : 'text-white';
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
@@ -136,13 +139,16 @@ export default function KioskAuthPage() {
         <Button 
           variant="ghost" 
           onClick={() => router.push('/')}
-          className="group text-white hover:bg-white/10 mb-2"
+          className={cn("group mb-2 hover:bg-white/10", textColor)}
         >
           <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Cancel Check-in
         </Button>
 
-        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white/70 backdrop-blur-xl border border-white/30">
+        <Card 
+          className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30"
+          style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
+        >
           <div className="absolute top-8 left-10">
             <div className="flex items-center gap-2">
               <Library className="h-6 w-6 text-primary" />

@@ -110,6 +110,8 @@ function RegistrationContent() {
   };
 
   const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
+  const overlayOpacity = settings?.overlayOpacity ?? 0.7;
+  const textColor = settings?.welcomeTextColor === 'black' ? 'text-black' : 'text-white';
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
@@ -129,13 +131,16 @@ function RegistrationContent() {
         <Button 
           variant="ghost" 
           onClick={() => router.push('/kiosk')}
-          className="text-white hover:bg-white/10"
+          className={cn("hover:bg-white/10", textColor)}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Terminal
         </Button>
 
-        <Card className="shadow-2xl border-none rounded-[2.5rem] bg-white/70 backdrop-blur-xl border border-white/30 overflow-hidden">
+        <Card 
+          className="shadow-2xl border-none rounded-[2.5rem] border border-white/30 overflow-hidden"
+          style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
+        >
           {/* NEU Logo Header */}
           <div className="absolute top-6 left-8">
             <div className="flex items-center gap-2">

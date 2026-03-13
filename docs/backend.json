@@ -71,7 +71,9 @@
         "capacityLimit": { "type": "number" },
         "reportFormat": { "type": "string", "enum": ["pdf", "excel"] },
         "useLetterhead": { "type": "boolean" },
-        "themeImageUrl": { "type": "string", "description": "Background image for the kiosk terminals." }
+        "themeImageUrl": { "type": "string", "description": "Background image for the kiosk terminals." },
+        "overlayOpacity": { "type": "number", "description": "Transparency of the kiosk forms (0 to 1)." },
+        "welcomeTextColor": { "type": "string", "enum": ["white", "black"], "description": "Color of the main heading text in the kiosk." }
       }
     }
   },

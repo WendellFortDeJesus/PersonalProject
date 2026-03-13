@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -24,7 +25,7 @@ const createFormSchema = (requireAge: boolean, requireGender: boolean) => {
     name: z.string().min(2, "Name is too short"),
     department: z.string().min(1, "Select your college department"),
     age: requireAge 
-      ? z.string().transform((v) => parseInt(v, 10)).pipe(z.number().min(1, "Valid age required"))
+      ? z.string().min(1, "Age is required").refine((val) => !isNaN(parseInt(val)), "Age must be a number")
       : z.string().optional(),
     gender: requireGender 
       ? z.string().min(1, "Select gender")
@@ -45,7 +46,7 @@ function RegistrationContent() {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
   }, [db]);
-  const { data: settings } = useDoc(settingsRef);
+  const { data: settings, isLoading: isSettingsLoading } = useDoc(settingsRef);
 
   const requireAge = settings?.requireAge ?? true;
   const requireGender = settings?.requireGender ?? true;
@@ -57,13 +58,19 @@ function RegistrationContent() {
     defaultValues: {
       name: '',
       department: '',
-      age: '' as any,
+      age: '',
       gender: '',
       purposeId: '',
     },
   });
 
-  // Filter for active departments
+  // Re-validate when settings load to ensure schema matches requirements
+  useEffect(() => {
+    if (!isSettingsLoading) {
+      form.trigger();
+    }
+  }, [isSettingsLoading, form]);
+
   const activeDepartments = useMemo(() => {
     if (!settings?.departments || settings.departments.length === 0) return DEPARTMENTS;
     return settings.departments
@@ -118,6 +125,17 @@ function RegistrationContent() {
   const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
   const overlayOpacity = settings?.overlayOpacity ?? 0.7;
   const textColor = settings?.welcomeTextColor === 'black' ? 'text-black' : 'text-white';
+
+  if (isSettingsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-white mx-auto" />
+          <p className="text-white font-bold uppercase tracking-widest text-xs">Synchronizing Terminal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">

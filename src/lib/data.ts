@@ -66,6 +66,5 @@ export const GENDERS = [
   'Prefer not to say'
 ];
 
-// Mock data removed for live system migration.
 export const MOCK_PATRONS: Patron[] = [];
 export const MOCK_VISITS: Visit[] = [];

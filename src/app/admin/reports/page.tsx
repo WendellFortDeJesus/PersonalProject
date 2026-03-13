@@ -66,9 +66,6 @@ export default function ReportsPage() {
   const analytics = useMemo(() => {
     if (!rawVisits || !selectedDate || !rawPatrons) return null;
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
     const filteredVisits = rawVisits.filter(v => {
       const visitDate = new Date(v.timestamp);
       return isSameDay(visitDate, selectedDate);
@@ -78,11 +75,11 @@ export default function ReportsPage() {
     
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
-    const heatMapData: number[][] = Array(7).fill(0).map(() => Array(12).fill(0)); // 7 days, 8am-8pm
+    const heatMapData: number[][] = Array(7).fill(0).map(() => Array(12).fill(0));
 
     rawVisits.forEach(v => {
       const vDate = new Date(v.timestamp);
-      const day = vDate.getDay(); // 0-6
+      const day = vDate.getDay();
       const hour = getHours(vDate);
       if (hour >= 8 && hour < 20) {
         heatMapData[day][hour - 8]++;
@@ -106,12 +103,17 @@ export default function ReportsPage() {
     const totalVisitsCount = rawVisits.length;
     const peakOccupancy = Math.min(Math.round((activePresence / (config?.capacityLimit || 200)) * 100), 100);
 
+    const mostEngagedDept = deptRankingData[0];
+    const totalRegistryHits = deptRankingData.reduce((acc, d) => acc + d.count, 0);
+    const trafficShare = mostEngagedDept ? Math.round((mostEngagedDept.count / totalRegistryHits) * 100) : 0;
+
     return { 
       deptRankingData, 
       purposeData, 
       heatMapData,
       activePresence,
-      mostEngagedDept: deptRankingData[0],
+      mostEngagedDept,
+      trafficShare,
       peakOccupancy,
       registrySize: rawPatrons.length,
       totalToday: filteredVisits.length,
@@ -152,7 +154,6 @@ export default function ReportsPage() {
         </Popover>
       </header>
 
-      {/* KPI Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5 bg-white border rounded-xl flex flex-col justify-between shadow-sm">
           <div className="flex justify-between items-start">
@@ -165,25 +166,23 @@ export default function ReportsPage() {
           </div>
         </Card>
 
-        <Card className="p-5 bg-white border rounded-xl flex flex-col justify-between shadow-sm">
+        <Card className="p-5 bg-white border rounded-xl flex flex-col justify-between shadow-sm col-span-1 lg:col-span-2">
           <div className="flex justify-between items-start">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Most Engaged Dept</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Most Engaged Department (Detailed)</p>
             <ShieldCheck className="h-4 w-4 text-primary/40" />
           </div>
           <div className="mt-2">
-            <h3 className="text-xs font-black text-primary uppercase truncate leading-tight">{analytics?.mostEngagedDept?.name || 'N/A'}</h3>
-            <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">{analytics?.mostEngagedDept?.count || 0} Total Registry Hits</p>
-          </div>
-        </Card>
-
-        <Card className="p-5 bg-white border rounded-xl flex flex-col justify-between shadow-sm">
-          <div className="flex justify-between items-start">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Peak Occupancy</p>
-            <TrendingUp className="h-4 w-4 text-primary/40" />
-          </div>
-          <div className="mt-2">
-            <h3 className="text-3xl font-mono font-bold text-slate-900 leading-none">{analytics?.peakOccupancy}%</h3>
-            <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">System Load Limit</p>
+            <h3 className="text-lg font-black text-primary uppercase leading-tight truncate">{analytics?.mostEngagedDept?.name || 'N/A'}</h3>
+            <div className="flex gap-4 mt-2">
+              <div className="space-y-0.5">
+                <p className="text-[10px] font-mono font-bold text-slate-900">{analytics?.mostEngagedDept?.count || 0}</p>
+                <p className="text-[7px] font-black text-slate-400 uppercase">Registry Hits</p>
+              </div>
+              <div className="space-y-0.5 border-l pl-4">
+                <p className="text-[10px] font-mono font-bold text-slate-900">{analytics?.trafficShare}%</p>
+                <p className="text-[7px] font-black text-slate-400 uppercase">Traffic Share</p>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -199,13 +198,12 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      {/* Chart Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-8 bg-white border rounded-xl flex flex-col shadow-sm">
           <div className="p-6 border-b flex justify-between items-center">
             <div className="space-y-1">
               <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Weekly Intensity Heatmap</h2>
-              <p className="text-[8px] font-bold text-slate-400 uppercase">Hourly Utilization Density (8:00 AM - 8:00 PM)</p>
+              <p className="text-[8px] font-bold text-slate-400 uppercase">Hourly Utilization Density</p>
             </div>
             <Info className="h-4 w-4 text-slate-300" />
           </div>
@@ -223,18 +221,10 @@ export default function ReportsPage() {
                       <div 
                         key={hrIdx} 
                         className="rounded-[2px] border border-slate-50"
-                        title={`${val} visits at ${hrIdx + 8}:00`}
-                        style={{ 
-                          backgroundColor: val === 0 ? '#F1F5F9' : `rgba(0, 104, 55, ${Math.min(val / 10, 1)})` 
-                        }}
+                        style={{ backgroundColor: val === 0 ? '#F1F5F9' : `rgba(0, 104, 55, ${Math.min(val / 10, 1)})` }}
                       />
                     ))}
                   </div>
-                ))}
-              </div>
-              <div className="col-start-2 grid grid-cols-12 gap-1 mt-1">
-                {['8a', '', '10a', '', '12p', '', '2p', '', '4p', '', '6p', '8p'].map((t, i) => (
-                  <span key={i} className="text-[7px] font-bold text-slate-400 uppercase text-center">{t}</span>
                 ))}
               </div>
             </div>
@@ -244,7 +234,7 @@ export default function ReportsPage() {
         <div className="lg:col-span-4 bg-white border rounded-xl flex flex-col shadow-sm">
           <div className="p-6 border-b">
             <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Visit Intent</h2>
-            <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Strategic Resource Demand</p>
+            <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Resource Demand</p>
           </div>
           <div className="flex-1 min-h-[300px] p-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -254,57 +244,22 @@ export default function ReportsPage() {
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{borderRadius: '8px', border: 'none', fontSize: '10px', fontWeight: '800'}} />
-                <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{fontSize: '9px', fontWeight: 800, textTransform: 'uppercase', paddingTop: '10px'}} />
+                <Tooltip />
+                <Legend iconType="circle" wrapperStyle={{fontSize: '9px', fontWeight: 800}} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Horizontal Bar Chart (Ranking) */}
-      <Card className="bg-white border rounded-xl shadow-sm">
-        <div className="p-6 border-b">
-          <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Departmental Ranking</h2>
-          <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Engagement Volume by College</p>
-        </div>
-        <div className="p-6 h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={analytics?.deptRankingData} layout="vertical" margin={{ left: 100 }}>
-              <XAxis type="number" hide />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{fontSize: 9, fontWeight: 800, fill: '#64748B', width: 100}} 
-              />
-              <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border: 'none', fontSize: '10px', fontWeight: '800'}} />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]}>
-                {analytics?.deptRankingData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-
-      {/* Generation Center */}
       <Card className="p-8 bg-primary rounded-xl border-none shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Institutional Report Hub</h2>
-          <p className="text-[9px] font-black text-primary-foreground/60 uppercase tracking-widest">Generate professional strategic audits</p>
+          <h2 className="text-xl font-black text-white uppercase tracking-tighter">Report Generation</h2>
+          <p className="text-[9px] font-black text-primary-foreground/60 uppercase tracking-widest">Generate high-fidelity institutional audits</p>
         </div>
-        <div className="flex gap-4">
-          <Button onClick={() => setIsPreviewOpen(true)} className="h-11 px-8 bg-white/10 hover:bg-white/20 text-white rounded-lg font-black uppercase text-[10px] tracking-widest transition-all">
-            Preview Audit
-          </Button>
-          <Button onClick={handlePrint} className="h-11 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black uppercase text-[10px] tracking-widest shadow-md flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
-        </div>
+        <Button onClick={() => setIsPreviewOpen(true)} className="h-11 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black uppercase text-[10px] tracking-widest shadow-md">
+          Preview Audit
+        </Button>
       </Card>
 
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -315,62 +270,76 @@ export default function ReportsPage() {
                 <DialogTitle className="text-lg font-black uppercase tracking-tighter">Administrative Audit Preview</DialogTitle>
                 <DialogDescription className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">Accreditation Verification Record</DialogDescription>
               </div>
-              <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black uppercase text-[10px] tracking-widest px-8 h-10 flex items-center gap-2">
-                <Download className="h-4 w-4" />
+              <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black uppercase text-[10px] tracking-widest px-8 h-10">
+                <Download className="h-4 w-4 mr-2" />
                 Save PDF
               </Button>
             </div>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto bg-slate-50 p-10 report-print-container">
             <div className="bg-white shadow-sm mx-auto p-12 rounded-xl border border-slate-200 min-h-[1000px]">
-              {/* Report Header */}
               <div className="flex justify-between items-end border-b-2 border-slate-900 pb-6 mb-8">
                 <div>
-                  <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">NEU Central Library</h1>
-                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Institutional Audit Record</p>
+                  <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Institutional Audit Record</h1>
+                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Facility Engagement Statistics</p>
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-black text-slate-900">{analytics?.totalToday}</p>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total Visitors: {analytics?.dateStr}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Visitors Logged: {analytics?.dateStr}</p>
                 </div>
               </div>
 
-              {/* Executive Summary */}
               <div className="mb-8 p-6 bg-slate-50 rounded-lg border">
                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 border-b pb-1">Executive Summary</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Strategic data analysis for <strong>{analytics?.dateStr}</strong> identifies <strong>{analytics?.mostEngagedDept?.name}</strong> as the primary institutional engagement driver, contributing significantly to a total of <strong>{analytics?.totalToday}</strong> verified entries. Facility utilization peaked at <strong>{analytics?.peakOccupancy}%</strong> capacity, with a strong emphasis on academic resource usage including <strong>Research</strong> and <strong>Assignments</strong>.
+                  On <strong>{analytics?.dateStr}</strong>, the library facility recorded a total of <strong>{analytics?.totalToday}</strong> unique visitor hits. 
+                  The <strong>{analytics?.mostEngagedDept?.name}</strong> emerged as the primary institutional lead, 
+                  contributing to <strong>{analytics?.trafficShare}%</strong> of the total registered traffic.
                 </p>
               </div>
 
-              {/* Departmental Comparison */}
+              {/* Section: Visit Intent Analytics */}
               <div className="mb-10">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 border-b pb-1">Departmental Comparison Table</h3>
-                <table className="w-full text-left text-[9px] border-collapse high-density-table">
-                  <thead>
-                    <tr className="bg-slate-50">
-                      <th className="p-3 border font-black text-slate-400 uppercase">College / Department</th>
-                      <th className="p-3 border font-black text-slate-400 uppercase text-center">Engagement Score (Total Hits)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {analytics?.deptRankingData.map((dept, i) => (
-                      <tr key={i} className="hover:bg-slate-50/50">
-                        <td className="p-3 border font-black text-slate-900 uppercase">{dept.name}</td>
-                        <td className="p-3 border text-center font-mono font-bold text-primary">{dept.count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 border-b pb-1">Strategic Resource Demand (Visit Intent)</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {analytics?.purposeData.map((p, i) => (
+                    <div key={i} className="flex justify-between items-center p-3 bg-slate-50 border rounded-lg">
+                      <span className="text-[9px] font-black text-slate-700 uppercase">{p.name}</span>
+                      <span className="text-[10px] font-mono font-bold text-primary">{p.value} Hits</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Student Registry */}
+              {/* Section: Most Active Department (Full Details) */}
+              <div className="mb-10">
+                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 border-b pb-1">Institutional Lead Analysis</h3>
+                <div className="p-6 border rounded-lg bg-primary/5">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-[8px] font-black text-primary/60 uppercase tracking-widest mb-1">Top Performing Academic Unit</p>
+                      <h4 className="text-xl font-black text-primary uppercase leading-tight">{analytics?.mostEngagedDept?.name}</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-8 border-t pt-4">
+                      <div>
+                        <p className="text-[20px] font-mono font-bold text-slate-900">{analytics?.mostEngagedDept?.count}</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Registry Hits</p>
+                      </div>
+                      <div>
+                        <p className="text-[20px] font-mono font-bold text-slate-900">{analytics?.trafficShare}%</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Facility Impact</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4 border-b pb-1">Visitor Identity Registry</h3>
                 <table className="w-full text-left text-[9px] border-collapse high-density-table">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="p-3 border uppercase font-black tracking-widest text-slate-400">Student Identity</th>
+                      <th className="p-3 border uppercase font-black tracking-widest text-slate-400">Visitor Identity</th>
                       <th className="p-3 border uppercase font-black tracking-widest text-slate-400">Department</th>
                     </tr>
                   </thead>
@@ -387,11 +356,11 @@ export default function ReportsPage() {
             </div>
           </div>
           <DialogFooter className="p-6 bg-slate-50 border-t no-print">
-            <Button onClick={() => setIsPreviewOpen(false)} variant="ghost" className="rounded-lg font-black uppercase text-[9px] tracking-widest px-8">
+            <Button onClick={() => setIsPreviewOpen(false)} variant="ghost" className="rounded-lg font-black uppercase text-[9px] tracking-widest">
               Close
             </Button>
-            <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg px-10 font-black uppercase text-[9px] tracking-widest h-10 flex items-center gap-2">
-              <Download className="h-3.5 w-3.5" />
+            <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-black uppercase text-[9px] tracking-widest h-10 px-10">
+              <Download className="h-3.5 w-3.5 mr-2" />
               Download Audit
             </Button>
           </DialogFooter>

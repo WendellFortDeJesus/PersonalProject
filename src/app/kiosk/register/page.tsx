@@ -36,6 +36,7 @@ function RegistrationContent() {
   const searchParams = useSearchParams();
   const schoolId = searchParams.get('schoolId') || "";
   const email = searchParams.get('email') || "";
+  const authMethod = searchParams.get('authMethod') || (schoolId ? 'RFID' : 'Email');
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
 
@@ -102,6 +103,8 @@ function RegistrationContent() {
       const visitData = {
         patronId: patronDoc.id,
         schoolId,
+        patronEmail: email,
+        authMethod,
         patronName: values.name.toUpperCase(),
         patronGender: values.gender,
         patronDepartments: [values.department],

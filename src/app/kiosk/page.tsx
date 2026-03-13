@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -61,6 +60,7 @@ export default function KioskAuthPage() {
 
     try {
       const patronsRef = collection(db, 'patrons');
+      const authMethod = activeTab === 'rfid' ? 'RFID' : 'Email';
       const field = activeTab === 'rfid' ? 'schoolId' : 'email';
       const value = activeTab === 'rfid' ? rfid : email;
 
@@ -76,13 +76,13 @@ export default function KioskAuthPage() {
       if (querySnapshot.empty) {
         setIsLoading(false);
         if (activeTab === 'rfid' && rfid.length >= 3) {
-          router.push(`/kiosk/register?schoolId=${encodeURIComponent(rfid)}`);
+          router.push(`/kiosk/register?schoolId=${encodeURIComponent(rfid)}&authMethod=${authMethod}`);
           return;
         }
         
         const isEmailValid = activeTab === 'email' && email.toLowerCase().endsWith('@neu.edu.ph');
         if (isEmailValid) {
-          router.push(`/kiosk/register?email=${encodeURIComponent(email)}`);
+          router.push(`/kiosk/register?email=${encodeURIComponent(email)}&authMethod=${authMethod}`);
           return;
         }
 
@@ -100,7 +100,7 @@ export default function KioskAuthPage() {
       if (patronData.isBlocked) {
         router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
       } else {
-        router.push(`/kiosk/purpose?patronId=${patronDoc.id}`);
+        router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=${authMethod}`);
       }
     } catch (err) {
       console.error(err);

@@ -17,6 +17,7 @@ function PurposeSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patronId = searchParams.get('patronId');
+  const authMethod = searchParams.get('authMethod') || 'RFID';
   const [selected, setSelected] = useState<string | null>(null);
   const db = useFirestore();
   const { toast } = useToast();
@@ -52,6 +53,8 @@ function PurposeSelectionContent() {
       const visitData = {
         patronId,
         schoolId: patronData.schoolId,
+        patronEmail: patronData.email,
+        authMethod: authMethod,
         patronName: patronData.name.toUpperCase(),
         patronDepartments: patronData.departments,
         patronAge: patronData.age,

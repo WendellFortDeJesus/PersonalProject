@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { Smartphone, ContactRound } from 'lucide-react';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -67,7 +68,8 @@ export default function DashboardPage() {
     if (!visits) return [];
     return visits.filter(v => 
       v.patronName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.schoolId?.toLowerCase().includes(searchTerm.toLowerCase())
+      v.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.patronEmail?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [visits, searchTerm]);
 
@@ -99,7 +101,7 @@ export default function DashboardPage() {
         
         <div className="flex-1 max-w-2xl w-full">
           <Input 
-            placeholder="Search Master Index (Name, ID, or Dept)..." 
+            placeholder="Search Master Index (Name, ID, or Email)..." 
             className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs uppercase tracking-tight"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -121,7 +123,9 @@ export default function DashboardPage() {
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Newest Entry</p>
             <div className="flex flex-col truncate">
               <span className="text-xs font-black text-slate-900 uppercase truncate">{stats.newest?.patronName || '---'}</span>
-              <span className="text-[8px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">{stats.newest?.schoolId || '---'}</span>
+              <span className="text-[8px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">
+                {stats.newest?.authMethod === 'Email' ? stats.newest?.patronEmail : stats.newest?.schoolId || '---'}
+              </span>
             </div>
           </div>
 
@@ -137,7 +141,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
-          <div className="lg:col-span-9 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm">
+          <div className="lg:col-span-12 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm">
             <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
               <h2 className="text-[10px] font-black text-primary uppercase tracking-widest">Master Visitor Log</h2>
               <Badge variant="outline" className="h-7 px-4 text-[8px] font-black uppercase tracking-widest">Library Audit</Badge>
@@ -147,8 +151,8 @@ export default function DashboardPage() {
                 <thead>
                   <tr className="bg-white border-b">
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time In</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">School ID</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Student Name</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Access Method</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Patron Identity</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Dept</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Demographics</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Purpose</th>
@@ -160,13 +164,27 @@ export default function DashboardPage() {
                       <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase">
                         {format(new Date(visit.timestamp), 'HH:mm')}
                       </td>
-                      <td className="px-6 py-4 font-mono text-[11px] font-bold text-primary uppercase tracking-tighter">
-                        {visit.schoolId}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {visit.authMethod === 'Email' ? (
+                            <Smartphone className="h-3.5 w-3.5 text-blue-500" />
+                          ) : (
+                            <ContactRound className="h-3.5 w-3.5 text-primary" />
+                          )}
+                          <span className="text-[9px] font-black uppercase tracking-tighter text-slate-600">
+                            {visit.authMethod || 'RFID'}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={cn("text-xs font-black uppercase tracking-tight", visit.status === 'blocked' ? 'text-red-700' : 'text-slate-900')}>
-                          {visit.patronName}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className={cn("text-xs font-black uppercase tracking-tight", visit.status === 'blocked' ? 'text-red-700' : 'text-slate-900')}>
+                            {visit.patronName}
+                          </span>
+                          <span className="text-[9px] font-mono font-bold text-slate-400 uppercase mt-0.5 tracking-tighter">
+                            {visit.authMethod === 'Email' ? visit.patronEmail : visit.schoolId}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200">
@@ -187,35 +205,38 @@ export default function DashboardPage() {
               </table>
             </div>
           </div>
+        </div>
 
-          <aside className="lg:col-span-3 space-y-6">
-            <div className="bg-white border rounded-2xl p-6 space-y-6">
-              <h2 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-4">Today's Distribution</h2>
-              <div className="space-y-4">
-                {stats.distribution.map((dept, i) => (
-                  <div key={i} className="flex flex-col gap-1.5">
-                    <div className="flex justify-between items-center text-[9px] font-bold uppercase">
-                      <span className="text-slate-600 truncate max-w-[150px]">{dept.name}</span>
-                      <span className="text-primary font-mono">{stats.totalToday > 0 ? Math.round((dept.count / stats.totalToday) * 100) : 0}%</span>
-                    </div>
-                    <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${stats.totalToday > 0 ? (dept.count / stats.totalToday) * 100 : 0}%` }} />
-                    </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
+          <aside className="lg:col-span-4 bg-white border rounded-2xl p-6 space-y-6">
+            <h2 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-4">Today's Distribution</h2>
+            <div className="space-y-4">
+              {stats.distribution.map((dept, i) => (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className="flex justify-between items-center text-[9px] font-bold uppercase">
+                    <span className="text-slate-600 truncate max-w-[150px]">{dept.name}</span>
+                    <span className="text-primary font-mono">{stats.totalToday > 0 ? Math.round((dept.count / stats.totalToday) * 100) : 0}%</span>
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="bg-slate-900 border-none rounded-2xl p-6 space-y-4 shadow-xl">
-              <h2 className="text-[10px] font-black text-white uppercase tracking-widest">Quick Report</h2>
-              <div className="space-y-3">
-                <Input type="date" className="h-10 bg-white/10 border-white/20 text-white text-[10px] font-bold" />
-                <Button className="w-full h-11 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest">
-                  Generate Daily PDF
-                </Button>
-              </div>
+                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${stats.totalToday > 0 ? (dept.count / stats.totalToday) * 100 : 0}%` }} />
+                  </div>
+                </div>
+              ))}
             </div>
           </aside>
+          
+          <div className="lg:col-span-8 bg-slate-900 border-none rounded-2xl p-8 space-y-4 shadow-xl flex items-center justify-between gap-8">
+            <div className="space-y-2">
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Report Center</h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generate current operational audit</p>
+            </div>
+            <div className="flex gap-3">
+              <Input type="date" className="h-11 bg-white/10 border-white/20 text-white text-[10px] font-bold w-40" />
+              <Button className="h-11 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
+                Export Daily PDF
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

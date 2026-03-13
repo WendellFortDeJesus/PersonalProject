@@ -34,7 +34,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Calendar as CalendarIcon, ArrowRight } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -133,7 +133,9 @@ export default function ReportsPage() {
       peakHour,
       filteredVisits,
       summary: {
-        dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`
+        dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`,
+        fromStr: format(dateRange.from || new Date(), 'MMM dd, yyyy'),
+        toStr: format(dateRange.to || new Date(), 'MMM dd, yyyy')
       }
     };
   }, [rawVisits, dateRange]);
@@ -190,19 +192,31 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <div className="lg:col-span-4 bg-white border rounded-2xl p-8 shadow-sm flex flex-col justify-center space-y-6">
           <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Temporal Filter</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Temporal Context</p>
             <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Reporting Range</h2>
           </div>
+          
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-14 rounded-xl font-black gap-3 px-6 border-slate-200 justify-start w-full text-xs uppercase tracking-tight">
-                {analytics?.summary.dateRangeStr}
+              <Button variant="outline" className="h-20 rounded-xl font-black gap-4 px-6 border-slate-200 justify-start w-full transition-all hover:bg-slate-50 hover:border-primary/20">
+                <div className="flex items-center justify-center p-2.5 bg-primary/5 rounded-lg text-primary">
+                  <CalendarIcon className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-tight text-slate-400">
+                    <span>{analytics?.summary.fromStr}</span>
+                    <ArrowRight className="h-3 w-3" />
+                    <span>{analytics?.summary.toStr}</span>
+                  </div>
+                  <span className="text-xs font-bold text-primary uppercase tracking-tighter">Modify Active Range</span>
+                </div>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden shadow-2xl" align="start">
               <Calendar mode="range" selected={{ from: dateRange.from, to: dateRange.to }} onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })} />
             </PopoverContent>
           </Popover>
+
           <div className="pt-4 border-t flex items-center justify-between">
             <span className="text-[10px] font-black text-slate-400 uppercase">System Status</span>
             <span className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
@@ -434,7 +448,7 @@ export default function ReportsPage() {
                         <th className="p-3 uppercase font-black tracking-widest">Name</th>
                         <th className="p-3 uppercase font-black tracking-widest">ID/Email</th>
                         <th className="p-3 uppercase font-black tracking-widest">Department</th>
-                        <th className="p-3 uppercase font-black tracking-widest">Purpose</th>
+                        <th className="p-3 uppercase font-black tracking-widest text-center">Purpose</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">

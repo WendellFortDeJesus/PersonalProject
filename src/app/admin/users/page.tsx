@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Table, 
@@ -13,21 +12,17 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { 
-  Search, 
-  Filter, 
   MoreHorizontal, 
-  UserPlus, 
   ShieldCheck, 
   UserX,
   UserCheck,
-  Ban,
   Clock,
   Activity,
   User as UserIcon,
   Info,
   Calendar
 } from 'lucide-react';
-import { MOCK_PATRONS, MOCK_VISITS, Patron, Visit, PURPOSES } from '@/lib/data';
+import { MOCK_PATRONS, MOCK_VISITS, Patron, Visit } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   DropdownMenu, 
@@ -43,7 +38,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Dialog, 
   DialogContent, 
-  DialogDescription, 
   DialogHeader, 
   DialogTitle, 
   DialogTrigger 
@@ -51,11 +45,14 @@ import {
 import { format } from 'date-fns';
 
 export default function VisitorManagementPage() {
+  const [mounted, setMounted] = useState(false);
   const [patrons, setPatrons] = useState<Patron[]>(MOCK_PATRONS);
-  const [visits, setVisits] = useState<Visit[]>(MOCK_VISITS);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPatron, setSelectedPatron] = useState<Patron | null>(null);
+  const [visits] = useState<Visit[]>(MOCK_VISITS);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleStatus = (id: string) => {
     setPatrons(patrons.map(p => {
@@ -72,12 +69,6 @@ export default function VisitorManagementPage() {
     }));
   };
 
-  const filteredPatrons = patrons.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.schoolId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const isNew = (createdAt: string) => {
     const createdDate = new Date(createdAt);
     const now = new Date();
@@ -89,17 +80,18 @@ export default function VisitorManagementPage() {
     return visits.filter(v => v.patronId === patronId);
   };
 
+  const safeFormat = (date: string | Date, formatStr: string) => {
+    if (!mounted) return "...";
+    return format(new Date(date), formatStr);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary">Visitor Management</h1>
-          <p className="text-muted-foreground">Monitor live traffic and manage the patron database</p>
+          <p className="text-muted-foreground">Monitoring logs for {patrons.length} registered visitors</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 gap-2 rounded-xl shadow-lg h-12 px-6">
-          <UserPlus className="h-5 w-5" />
-          Add New Patron
-        </Button>
       </div>
 
       <Tabs defaultValue="monitor" className="w-full">
@@ -120,7 +112,7 @@ export default function VisitorManagementPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-lg font-bold">Real-time Traffic Feed</CardTitle>
-                  <CardDescription>Recently checked-in visitors</CardDescription>
+                  <CardDescription>Busiest logs based on current system activity</CardDescription>
                 </div>
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-100 font-bold px-3 py-1">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2" />
@@ -136,7 +128,7 @@ export default function VisitorManagementPage() {
                     <TableHead className="font-bold text-slate-700">TIME IN</TableHead>
                     <TableHead className="font-bold text-slate-700">PURPOSE</TableHead>
                     <TableHead className="font-bold text-slate-700">COLLEGE / DEPT</TableHead>
-                    <TableHead className="text-right pr-6 font-bold text-slate-700">QUICK ACTION</TableHead>
+                    <TableHead className="text-right pr-6 font-bold text-slate-700">ACTION</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -159,7 +151,7 @@ export default function VisitorManagementPage() {
                         <TableCell>
                           <div className="flex items-center gap-2 text-slate-600 font-medium">
                             <Clock className="h-3.5 w-3.5 text-slate-400" />
-                            {format(new Date(visit.timestamp), 'h:mm a')}
+                            {safeFormat(visit.timestamp, 'h:mm a')}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -183,7 +175,7 @@ export default function VisitorManagementPage() {
                             onClick={() => toggleStatus(visit.patronId)}
                             className={`rounded-lg font-bold text-xs h-8 ${patron?.isBlocked ? 'text-green-600' : 'text-destructive hover:bg-red-50'}`}
                           >
-                            {patron?.isBlocked ? 'Restore Access' : 'Quick Block'}
+                            {patron?.isBlocked ? 'Unblock' : 'Block'}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -198,23 +190,8 @@ export default function VisitorManagementPage() {
         <TabsContent value="directory" className="space-y-6">
           <Card className="border-none shadow-sm overflow-hidden rounded-2xl">
             <CardHeader className="bg-white border-b border-slate-50 pb-6 pt-6">
-              <div className="flex flex-col md:flex-row gap-4 justify-between">
-                <div className="relative w-full md:w-[450px]">
-                  <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search Patron by Name, Email, or ID..." 
-                    className="pl-12 border-slate-100 rounded-xl h-11 bg-slate-50/50 focus-visible:ring-primary shadow-inner"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" className="gap-2 rounded-xl border-slate-200 font-bold">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                  </Button>
-                </div>
-              </div>
+              <CardTitle className="text-lg font-bold">System Visitor Directory</CardTitle>
+              <CardDescription>Complete list of all visitors currently in the PatronPoint database</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -224,11 +201,11 @@ export default function VisitorManagementPage() {
                     <TableHead className="font-bold text-slate-700">COLLEGE / DEPT</TableHead>
                     <TableHead className="font-bold text-slate-700">STATUS</TableHead>
                     <TableHead className="font-bold text-slate-700">LAST VISIT</TableHead>
-                    <TableHead className="text-right pr-6 font-bold text-slate-700">ACTIONS</TableHead>
+                    <TableHead className="text-right pr-6 font-bold text-slate-700">DETAILS</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPatrons.map((patron) => (
+                  {patrons.map((patron) => (
                     <TableRow key={patron.id} className="hover:bg-slate-50/30 transition-colors border-slate-50">
                       <TableCell className="pl-6 py-4">
                         <div className="flex items-center gap-4">
@@ -263,7 +240,7 @@ export default function VisitorManagementPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-xs font-medium text-slate-500">
-                          {patron.lastVisit ? format(new Date(patron.lastVisit), 'MMM d, yyyy') : 'Never'}
+                          {patron.lastVisit ? safeFormat(patron.lastVisit, 'MMM d, yyyy') : 'Never'}
                         </div>
                       </TableCell>
                       <TableCell className="text-right pr-6">
@@ -275,7 +252,7 @@ export default function VisitorManagementPage() {
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
                             <div className="h-2 bg-primary w-full" />
-                            <DialogHeader className="p-8 pb-0">
+                            <div className="p-8 pb-0">
                               <div className="flex items-start gap-6">
                                 <Avatar className="h-24 w-24 border-4 border-white shadow-xl">
                                   <AvatarImage src={patron.photoUrl || `https://picsum.photos/seed/${patron.id}/200/200`} />
@@ -295,7 +272,7 @@ export default function VisitorManagementPage() {
                                   </div>
                                 </div>
                               </div>
-                            </DialogHeader>
+                            </div>
                             <div className="p-8 space-y-6">
                               <div className="grid grid-cols-3 gap-4">
                                 <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
@@ -311,7 +288,7 @@ export default function VisitorManagementPage() {
                                 <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
                                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Member Since</p>
                                   <p className="text-sm font-bold text-primary">
-                                    {format(new Date(patron.createdAt), 'MMM yyyy')}
+                                    {safeFormat(patron.createdAt, 'MMM yyyy')}
                                   </p>
                                 </div>
                               </div>
@@ -327,7 +304,7 @@ export default function VisitorManagementPage() {
                                       <div key={v.id} className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
                                         <div className="flex flex-col">
                                           <span className="text-sm font-bold text-slate-700">{v.purpose}</span>
-                                          <span className="text-[10px] text-slate-400">{format(new Date(v.timestamp), 'PPpp')}</span>
+                                          <span className="text-[10px] text-slate-400">{safeFormat(v.timestamp, 'PPpp')}</span>
                                         </div>
                                         <Badge variant="outline" className="text-[9px]">Logged</Badge>
                                       </div>
@@ -339,12 +316,11 @@ export default function VisitorManagementPage() {
                               </div>
 
                               <div className="pt-4 flex gap-3">
-                                <Button className="flex-1 rounded-xl font-bold" variant="outline">Edit Profile</Button>
                                 <Button 
                                   onClick={() => toggleStatus(patron.id)}
                                   className={`flex-1 rounded-xl font-bold ${patron.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
                                 >
-                                  {patron.isBlocked ? 'Restore Access' : 'Block Access'}
+                                  {patron.isBlocked ? 'Restore Access' : 'Revoke Privileges'}
                                 </Button>
                               </div>
                             </div>
@@ -359,13 +335,6 @@ export default function VisitorManagementPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none">
                             <DropdownMenuLabel className="text-xs font-bold text-slate-400 uppercase p-3">Management</DropdownMenuLabel>
-                            <DropdownMenuItem className="rounded-lg cursor-pointer py-3 font-medium">
-                              <Info className="w-4 h-4 mr-2" /> View Audit Log
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="rounded-lg cursor-pointer py-3 font-medium">
-                              <Activity className="w-4 h-4 mr-2" /> Session History
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-slate-100 my-1" />
                             <DropdownMenuItem 
                               onClick={() => toggleStatus(patron.id)}
                               className={`rounded-lg cursor-pointer py-3 font-bold ${

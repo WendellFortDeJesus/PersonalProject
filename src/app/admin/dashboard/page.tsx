@@ -26,6 +26,7 @@ import {
 } from 'recharts';
 import { MOCK_VISITS, PURPOSES } from '@/lib/data';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const chartData = [
   { name: 'Mon', visits: 120 },

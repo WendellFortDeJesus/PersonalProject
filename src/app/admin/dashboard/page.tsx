@@ -89,7 +89,7 @@ export default function DashboardPage() {
     <div className="space-y-0 animate-fade-in flex flex-col h-full bg-white">
       <header className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white border-b sticky top-0 z-20">
         <div className="flex items-center gap-8">
-          <div className="flex flex-col">
+          <div className="flex flex-col text-left">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">System Clock</span>
             <span className="text-xs font-mono font-bold text-primary mt-1.5">{format(currentTime, 'MMM dd, yyyy • HH:mm:ss')}</span>
           </div>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
-          <div className="lg:col-span-12 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm">
+          <div className="lg:col-span-12 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm text-left">
             <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
               <h2 className="text-[10px] font-black text-primary uppercase tracking-widest">Master Visitor Log</h2>
               <Badge variant="outline" className="h-7 px-4 text-[8px] font-black uppercase tracking-widest">Library Audit</Badge>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center align-middle">
-                        <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200 inline-block">
+                        <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200 inline-block whitespace-nowrap">
                           {visit.patronDepartments?.[0]}
                         </span>
                       </td>
@@ -205,37 +205,6 @@ export default function DashboardPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
-          <aside className="lg:col-span-4 bg-white border rounded-2xl p-6 space-y-6">
-            <h2 className="text-[10px] font-black text-primary uppercase tracking-widest border-b pb-4">Today's Distribution</h2>
-            <div className="space-y-4">
-              {stats.distribution.map((dept, i) => (
-                <div key={i} className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center text-[9px] font-bold uppercase">
-                    <span className="text-slate-600 truncate max-w-[150px]">{dept.name}</span>
-                    <span className="text-primary font-mono">{stats.totalToday > 0 ? Math.round((dept.count / stats.totalToday) * 100) : 0}%</span>
-                  </div>
-                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${stats.totalToday > 0 ? (dept.count / stats.totalToday) * 100 : 0}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </aside>
-          
-          <div className="lg:col-span-8 bg-slate-900 border-none rounded-2xl p-8 space-y-4 shadow-xl flex items-center justify-between gap-8">
-            <div className="space-y-2">
-              <h2 className="text-xl font-black text-white uppercase tracking-tighter">Report Center</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generate current operational audit</p>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={() => router.push('/admin/reports')} className="h-11 bg-primary hover:bg-primary/90 rounded-xl font-black uppercase text-[10px] tracking-widest px-8">
-                Go to Report Center
-              </Button>
             </div>
           </div>
         </div>

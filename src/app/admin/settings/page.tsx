@@ -51,6 +51,39 @@ export default function SystemSettingsPage() {
     });
   };
 
+  const handleAddDept = () => {
+    if (!newDeptName || !newDeptCode || !settingsRef) return;
+    
+    const newDept = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: newDeptName,
+      code: newDeptCode.toUpperCase(),
+      isActive: true,
+      color: '#006837'
+    };
+
+    const updatedDepts = [...(settings?.departments || []), newDept];
+    handleSaveSettings({ departments: updatedDepts });
+    setNewDeptName('');
+    setNewDeptCode('');
+    
+    toast({
+      title: "Registry Updated",
+      description: `${newDept.code} has been added to the system.`,
+    });
+  };
+
+  const handleRemoveDept = (deptId: string) => {
+    if (!settingsRef || !settings?.departments) return;
+    const updatedDepts = settings.departments.filter((d: any) => d.id !== deptId);
+    handleSaveSettings({ departments: updatedDepts });
+    
+    toast({
+      title: "Registry Updated",
+      description: "Academic unit has been removed from the registry.",
+    });
+  };
+
   const filteredDepts = settings?.departments?.filter((d: any) => 
     d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     d.code.toLowerCase().includes(searchTerm.toLowerCase())
@@ -86,7 +119,7 @@ export default function SystemSettingsPage() {
                 <Input placeholder="College Identity Name..." value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold uppercase text-xs" />
                 <div className="flex gap-4">
                   <Input placeholder="Short Code" value={newDeptCode} onChange={(e) => setNewDeptCode(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-mono font-bold" />
-                  <Button onClick={() => {}} className="h-14 px-8 rounded-2xl bg-primary shadow-lg">Add</Button>
+                  <Button onClick={handleAddDept} disabled={!newDeptName || !newDeptCode} className="h-14 px-8 rounded-2xl bg-primary shadow-lg font-black uppercase text-[10px] tracking-widest">Add</Button>
                 </div>
               </div>
               <div className="relative">
@@ -118,8 +151,13 @@ export default function SystemSettingsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-10">
-                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-500 font-black uppercase text-[9px] tracking-widest">
-                        Archive
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleRemoveDept(dept.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-500 font-black uppercase text-[9px] tracking-widest"
+                      >
+                        Remove
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -140,7 +178,7 @@ export default function SystemSettingsPage() {
               <Label className="text-[11px] font-black uppercase text-slate-400 tracking-widest">Background Asset Pipeline</Label>
               <div className="flex gap-3">
                 <Input value={themeUrl} onChange={(e) => setThemeUrl(e.target.value)} className="h-14 rounded-2xl border-slate-200 font-bold" />
-                <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="bg-primary h-14 px-10 rounded-2xl shadow-xl transition-all active:scale-95">
+                <Button onClick={() => handleSaveSettings({ themeImageUrl: themeUrl })} className="bg-primary h-14 px-10 rounded-2xl shadow-xl transition-all active:scale-95 font-black uppercase text-[10px] tracking-widest">
                   Save
                 </Button>
               </div>

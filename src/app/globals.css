@@ -1,57 +1,42 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* NEU Green Base: #006837 */
     --background: 210 20% 98%;
-    --foreground: 206 37% 15%;
+    --foreground: 152 100% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 206 37% 15%;
+    --card-foreground: 152 100% 5%;
     --popover: 0 0% 100%;
-    --popover-foreground: 206 37% 15%;
-    --primary: 206 37% 33%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 206 45% 65%;
-    --secondary-foreground: 206 37% 15%;
-    --muted: 210 20% 90%;
-    --muted-foreground: 206 20% 45%;
-    --accent: 205 100% 81%;
-    --accent-foreground: 206 37% 20%;
+    --popover-foreground: 152 100% 5%;
+    --primary: 152 100% 20%;
+    --primary-foreground: 51 100% 90%;
+    --secondary: 152 30% 90%;
+    --secondary-foreground: 152 100% 10%;
+    --muted: 152 10% 95%;
+    --muted-foreground: 152 10% 40%;
+    /* NEU Gold Base: #FFD700 */
+    --accent: 51 100% 50%;
+    --accent-foreground: 152 100% 5%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 206 30% 85%;
-    --input: 206 30% 85%;
-    --ring: 206 37% 33%;
-    --radius: 0.75rem;
-    --chart-1: 206 37% 33%;
-    --chart-2: 206 45% 65%;
-    --chart-3: 205 100% 81%;
-    --chart-4: 200 40% 50%;
-    --chart-5: 190 30% 60%;
+    --border: 152 20% 90%;
+    --input: 152 20% 90%;
+    --ring: 152 100% 20%;
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 206 37% 10%;
-    --foreground: 210 20% 98%;
-    --card: 206 37% 12%;
-    --card-foreground: 210 20% 98%;
-    --popover: 206 37% 12%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 205 100% 81%;
-    --primary-foreground: 206 37% 15%;
-    --secondary: 206 45% 45%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 206 37% 20%;
-    --muted-foreground: 206 20% 70%;
-    --accent: 206 37% 25%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 206 37% 20%;
-    --input: 206 37% 20%;
-    --ring: 205 100% 81%;
+    --background: 152 100% 5%;
+    --foreground: 51 100% 90%;
+    --card: 152 100% 7%;
+    --card-foreground: 51 100% 90%;
+    --primary: 51 100% 50%;
+    --primary-foreground: 152 100% 5%;
+    --accent: 152 40% 20%;
+    --accent-foreground: 51 100% 90%;
   }
 }
 
@@ -60,19 +45,35 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
   }
 }
 
+.glass-overlay {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+}
+
 .kiosk-btn {
-  @apply transition-transform active:scale-95 duration-200;
+  @apply transition-all active:scale-[0.97] duration-200 font-headline uppercase tracking-widest;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.stat-value {
+  @apply font-mono font-medium tabular-nums;
+}
+
+.zebra-row:nth-child(even) {
+  @apply bg-slate-50/50;
 }

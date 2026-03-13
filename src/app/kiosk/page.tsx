@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -127,8 +126,8 @@ export default function KioskAuthPage() {
   };
 
   const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
-  const overlayOpacity = settings?.overlayOpacity ?? 0.7;
-  const textColor = settings?.welcomeTextColor === 'black' ? 'text-black' : 'text-white';
+  const overlayOpacity = settings?.overlayOpacity ?? 0.85;
+  const textColor = settings?.welcomeTextColor === 'black' ? 'text-slate-900' : 'text-white';
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
@@ -140,45 +139,41 @@ export default function KioskAuthPage() {
           className="object-cover transition-opacity duration-1000"
           priority
         />
-        <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-primary/30 backdrop-blur-[2px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-xl space-y-6 animate-fade-in">
         <Button 
           variant="ghost" 
           onClick={() => router.push('/')}
-          className={cn("group mb-2 hover:bg-white/10", textColor)}
+          className={cn("group mb-2 hover:bg-white/10 font-headline uppercase tracking-[0.2em] text-[10px]", textColor)}
         >
           <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Cancel Check-in
         </Button>
 
         <Card 
-          className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30"
-          style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
+          className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30 glass-overlay"
         >
           <div className="absolute top-8 left-10">
             <div className="flex items-center gap-2">
-              <Library className="h-6 w-6 text-primary" />
-              <span className="font-headline font-bold text-primary text-sm tracking-widest">NEU LIBRARY</span>
+              <span className="font-headline font-black text-primary text-xs tracking-[0.3em] uppercase">NEU LIBRARY</span>
             </div>
           </div>
           
           <CardHeader className="text-center space-y-2 pb-2 pt-20">
-            <CardTitle className="text-4xl font-headline font-bold text-primary tracking-tight">Identity Terminal</CardTitle>
-            <CardDescription className="text-lg font-medium text-slate-700">
+            <CardTitle className="text-4xl font-headline font-black text-primary tracking-tight uppercase">Identity Terminal</CardTitle>
+            <CardDescription className="text-lg font-semibold text-slate-700 tracking-tight">
               Verify your School ID to enter
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-6">
             <Tabs defaultValue="rfid" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-10 h-16 bg-black/5 p-1.5 rounded-2xl">
-                <TabsTrigger value="rfid" className="text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all">
-                  <ContactRound className="mr-2 h-5 w-5" />
+                <TabsTrigger value="rfid" className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all font-headline uppercase tracking-widest">
                   RFID Tap
                 </TabsTrigger>
-                <TabsTrigger value="email" className="text-base font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all">
-                  <Globe className="mr-2 h-5 w-5" />
+                <TabsTrigger value="email" className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md rounded-xl transition-all font-headline uppercase tracking-widest">
                   SSO Login
                 </TabsTrigger>
               </TabsList>
@@ -189,12 +184,12 @@ export default function KioskAuthPage() {
                     <div className="relative">
                       <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
                       <div className="relative p-10 bg-white rounded-full shadow-xl">
-                        <ContactRound className="h-20 w-20 text-primary" />
+                        <ContactRound className="h-16 w-16 text-primary" />
                       </div>
                     </div>
                     <div className="mt-10 text-center space-y-2">
-                      <p className="text-2xl font-bold text-slate-800">Scanner Ready</p>
-                      <p className="text-base font-medium text-slate-500">Place your NEU School ID near the terminal</p>
+                      <p className="text-2xl font-headline font-black text-slate-800 uppercase tracking-tight">Scanner Ready</p>
+                      <p className="text-base font-semibold text-slate-500 tracking-tight">Place your NEU School ID near the terminal</p>
                     </div>
                     
                     <div className="mt-8 w-full max-w-xs px-6 opacity-0 focus-within:opacity-100 transition-opacity">
@@ -209,7 +204,7 @@ export default function KioskAuthPage() {
                       />
                     </div>
                   </div>
-                  <Button disabled={isLoading || rfid.length < 3} className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-xl transition-all active:scale-[0.98]">
+                  <Button disabled={isLoading || rfid.length < 3} className="w-full h-16 text-lg font-headline font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl shadow-xl transition-all active:scale-[0.98]">
                     {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Initiate Verification"}
                   </Button>
                 </form>
@@ -222,7 +217,7 @@ export default function KioskAuthPage() {
                       onClick={handleSSO} 
                       disabled={isLoading} 
                       variant="outline"
-                      className="w-full h-16 text-lg border-white/50 bg-white/40 hover:bg-white/60 flex items-center justify-center gap-4 rounded-2xl font-bold transition-all hover:border-primary/30 shadow-sm"
+                      className="w-full h-16 text-sm border-white/50 bg-white/40 hover:bg-white/60 flex items-center justify-center gap-4 rounded-2xl font-headline font-bold uppercase tracking-[0.2em] transition-all hover:border-primary/30 shadow-sm"
                     >
                       Sign in with NEU Email
                     </Button>
@@ -232,14 +227,14 @@ export default function KioskAuthPage() {
                     <div className="absolute inset-0 flex items-center">
                       <span className="w-full border-t border-slate-300" />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-transparent px-4 text-slate-600 font-bold tracking-widest backdrop-blur-sm">Manual Lookup</span>
+                    <div className="relative flex justify-center text-[10px] uppercase font-headline font-black tracking-[0.4em] text-slate-400">
+                      <span className="bg-transparent px-4 backdrop-blur-sm">Manual Lookup</span>
                     </div>
                   </div>
 
                   <form onSubmit={handleAuth} className="space-y-5">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-primary ml-1">Official University Email</label>
+                      <label className="text-[10px] font-headline font-black uppercase tracking-[0.3em] text-primary ml-1">Official University Email</label>
                       <div className="relative">
                         <Mail className="absolute left-5 top-5 h-5 w-5 text-muted-foreground" />
                         <Input 
@@ -248,11 +243,11 @@ export default function KioskAuthPage() {
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-16 pl-14 rounded-2xl text-lg border-white/50 bg-white/40 focus-visible:ring-primary"
+                          className="h-16 pl-14 rounded-2xl text-lg border-white/50 bg-white/40 focus-visible:ring-primary font-body"
                         />
                       </div>
                     </div>
-                    <Button disabled={isLoading} className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 rounded-2xl shadow-xl transition-all active:scale-[0.98]">
+                    <Button disabled={isLoading} className="w-full h-16 text-lg font-headline font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl shadow-xl transition-all active:scale-[0.98]">
                       {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Access System"}
                     </Button>
                   </form>

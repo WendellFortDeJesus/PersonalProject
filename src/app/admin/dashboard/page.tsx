@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -82,7 +81,7 @@ export default function DashboardPage() {
   if (isUserLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <p className="font-black text-slate-400 uppercase tracking-widest text-[10px]">Synchronizing Uplink...</p>
+        <p className="font-headline font-black text-primary/40 uppercase tracking-[0.3em] text-xs">Synchronizing System...</p>
       </div>
     );
   }
@@ -93,35 +92,38 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-none shadow-sm bg-primary text-white rounded-[2rem]">
           <CardContent className="p-8">
-            <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em] mb-4">Total Visitors Today</p>
-            <h3 className="text-5xl font-black">{stats.total}</h3>
-            <p className="text-[10px] font-bold mt-2 text-white/70 uppercase">Pulse Active</p>
+            <p className="text-[10px] font-headline font-black text-white/50 uppercase tracking-[0.3em] mb-4">Total Visitors Today</p>
+            <h3 className="text-5xl font-mono font-medium tracking-tighter">{stats.total}</h3>
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="w-1 h-1 rounded-full bg-accent animate-pulse" />
+              <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Pulse Active</p>
+            </div>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm rounded-[2rem] bg-white">
           <CardContent className="p-8">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Top Academic Unit</p>
-            <h3 className="text-xl font-black text-primary truncate uppercase">{stats.topDept}</h3>
+            <p className="text-[10px] font-headline font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Top Academic Unit</p>
+            <h3 className="text-xl font-headline font-bold text-primary truncate uppercase tracking-tight">{stats.topDept}</h3>
             <p className="text-[10px] font-bold mt-2 text-slate-400 uppercase tracking-widest">Highest Engagement</p>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm rounded-[2rem] bg-white">
           <CardContent className="p-8">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Average Patron Age</p>
-            <h3 className="text-5xl font-black text-primary">{stats.avgAge}</h3>
+            <p className="text-[10px] font-headline font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Average Patron Age</p>
+            <h3 className="text-5xl font-mono font-medium text-primary tracking-tighter">{stats.avgAge}</h3>
             <p className="text-[10px] font-bold mt-2 text-slate-400 uppercase tracking-widest">Years Old</p>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm rounded-[2rem] bg-white">
           <CardContent className="p-8">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Goal Progress</p>
+            <p className="text-[10px] font-headline font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Goal Progress</p>
             <div className="flex items-center gap-4">
-              <h3 className="text-4xl font-black text-primary">{Math.min(100, Math.round((stats.total / (config?.dailyEngagementTarget || 50)) * 100))}%</h3>
+              <h3 className="text-4xl font-mono font-medium text-primary">{Math.min(100, Math.round((stats.total / (config?.dailyEngagementTarget || 50)) * 100))}%</h3>
             </div>
-            <Progress value={(stats.total / (config?.dailyEngagementTarget || 50)) * 100} className="h-1.5 mt-4" />
+            <Progress value={(stats.total / (config?.dailyEngagementTarget || 50)) * 100} className="h-2 mt-4 bg-slate-100" />
           </CardContent>
         </Card>
       </div>
@@ -130,7 +132,7 @@ export default function DashboardPage() {
         {/* Main Analytics Hub */}
         <Card className="lg:col-span-2 border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
           <div className="p-8 border-b bg-slate-50/50">
-            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Temporal Flow Analysis</h2>
+            <h2 className="text-xl font-headline font-black text-primary uppercase tracking-tighter">Temporal Flow Analysis</h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Hourly distribution across the facility</p>
           </div>
           <CardContent className="p-8 h-[400px]">
@@ -138,17 +140,17 @@ export default function DashboardPage() {
               <AreaChart data={stats.chartData}>
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#355872" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#355872" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#006837" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#006837" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8'}} />
+                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8', fontFamily: 'Roboto Mono'}} />
+                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 700, fill: '#94a3b8', fontFamily: 'Roboto Mono'}} />
                 <Tooltip 
-                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'}}
+                  contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontFamily: 'Inter', fontWeight: 600}}
                 />
-                <Area type="monotone" dataKey="count" stroke="#355872" strokeWidth={4} fillOpacity={1} fill="url(#colorCount)" />
+                <Area type="monotone" dataKey="count" stroke="#006837" strokeWidth={4} fillOpacity={1} fill="url(#colorCount)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -157,26 +159,26 @@ export default function DashboardPage() {
         {/* Live Text Ticker */}
         <Card className="border-none shadow-sm rounded-[2.5rem] bg-white overflow-hidden">
           <div className="p-8 border-b bg-slate-50/50">
-            <h2 className="text-xl font-black text-primary uppercase tracking-tighter">Live Ticker</h2>
+            <h2 className="text-xl font-headline font-black text-primary uppercase tracking-tighter">Live Ticker</h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sequential Entry Logs</p>
           </div>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-100 max-h-[450px] overflow-y-auto">
               {rawVisits?.map((visit) => (
-                <div key={visit.id} className={cn("p-5 transition-colors", visit.status === 'blocked' ? 'bg-red-50' : 'hover:bg-slate-50')}>
+                <div key={visit.id} className={cn("p-5 transition-colors zebra-row", visit.status === 'blocked' ? 'bg-red-50' : 'hover:bg-slate-50')}>
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-black text-slate-900">{visit.patronName}</span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase font-mono">{safeFormat(visit.timestamp, 'HH:mm')}</span>
+                    <span className="text-sm font-bold text-slate-900">{visit.patronName}</span>
+                    <span className="text-[9px] font-mono font-bold text-slate-400 uppercase">{safeFormat(visit.timestamp, 'HH:mm')}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 items-center">
-                    <span className="text-[9px] font-black text-primary uppercase tracking-widest">{visit.schoolId}</span>
-                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase">{visit.purpose}</span>
+                    <span className="text-[9px] font-mono font-bold text-primary uppercase tracking-widest">{visit.schoolId}</span>
+                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-tighter">{visit.purpose}</span>
                   </div>
                 </div>
               ))}
               {(!rawVisits || rawVisits.length === 0) && !isDataLoading && (
                 <div className="p-20 text-center">
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">No Live Traffic</p>
+                  <p className="text-[10px] font-headline font-black text-slate-300 uppercase tracking-[0.2em]">No Live Traffic</p>
                 </div>
               )}
             </div>

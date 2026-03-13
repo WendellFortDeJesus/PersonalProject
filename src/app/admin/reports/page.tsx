@@ -33,7 +33,7 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { Download, FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp } from 'lucide-react';
+import { Download, FileText, Calendar as CalendarIcon, ArrowRight, TrendingUp, Users } from 'lucide-react';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -79,7 +79,6 @@ export default function ReportsPage() {
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
     const dayMap: Record<string, number> = {};
-    const hourlyMap: Record<string, number> = {};
 
     const uniquePatrons = new Set();
     const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -99,10 +98,6 @@ export default function ReportsPage() {
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
       
       dayMap[dateKey] = (dayMap[dateKey] || 0) + 1;
-      
-      const hour = vDate.getHours();
-      const timeKey = `${hour}:00`;
-      hourlyMap[timeKey] = (hourlyMap[timeKey] || 0) + 1;
     });
 
     const deptDistributionData = Object.entries(deptMap)
@@ -118,7 +113,6 @@ export default function ReportsPage() {
         })
       : [];
 
-    const peakHour = Object.entries(hourlyMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
     const activeDept = deptDistributionData[0];
     const totalCount = filteredVisits.length;
 
@@ -132,7 +126,6 @@ export default function ReportsPage() {
       mostActiveDept: activeDept ? activeDept.name : 'N/A',
       mostActiveDeptCount: activeDept ? activeDept.count : 0,
       mostActiveDeptPercent: activeDept && totalCount > 0 ? Math.round((activeDept.count / totalCount) * 100) : 0,
-      peakHour,
       filteredVisits,
       summary: {
         dateRangeStr: `${format(dateRange.from || new Date(), 'PP')} - ${format(dateRange.to || new Date(), 'PP')}`,
@@ -201,29 +194,31 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Visitors (Today)</p>
             <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.totalToday}</h3>
             <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Live Count</span>
           </Card>
 
-          <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm">
-            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Most Active Department</p>
-            <div className="mt-4 overflow-hidden">
-              <h3 className="text-lg font-black text-primary uppercase truncate leading-tight">{analytics?.mostActiveDept}</h3>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-[11px] font-mono font-black text-slate-600 uppercase">{analytics?.mostActiveDeptCount} Visits</p>
-                <p className="text-[11px] font-mono font-black text-primary uppercase">{analytics?.mostActiveDeptPercent}% Share</p>
+          <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm md:col-span-2">
+            <div className="flex justify-between items-start">
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Most Active Department</p>
+              <Badge variant="secondary" className="bg-primary/10 text-primary text-[8px] font-black uppercase">{analytics?.mostActiveDeptPercent}% Share</Badge>
+            </div>
+            <div className="mt-4">
+              <h3 className="text-2xl font-black text-primary uppercase leading-tight tracking-tight">{analytics?.mostActiveDept}</h3>
+              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase">Registry Hits</p>
+                  <p className="text-xl font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-slate-400 uppercase">Unit Ranking</p>
+                  <p className="text-xl font-mono font-bold text-primary">#1 PRIORITY</p>
+                </div>
               </div>
             </div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Unit Utilization Index</span>
-          </Card>
-
-          <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Peak Hour Today</p>
-            <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.peakHour}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Busiest Period</span>
           </Card>
 
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm">
@@ -378,7 +373,7 @@ export default function ReportsPage() {
 
               <div className="grid grid-cols-2 gap-6 mb-12">
                 <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 text-center flex flex-col items-center justify-center gap-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Visitors (Today)</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Visitors Today</p>
                   <p className="text-4xl font-mono font-bold text-slate-900">{analytics?.totalToday}</p>
                 </div>
                 <div className="p-6 bg-primary/5 rounded-xl border border-primary/20 text-center flex flex-col items-center justify-center gap-1">
@@ -386,7 +381,7 @@ export default function ReportsPage() {
                   <p className="text-lg font-black text-primary uppercase leading-tight truncate w-full">{analytics?.mostActiveDept}</p>
                   <div className="flex gap-4 mt-1">
                     <p className="text-[10px] font-mono font-black text-slate-600 uppercase">{analytics?.mostActiveDeptCount} Visits</p>
-                    <p className="text-[10px] font-mono font-black text-primary uppercase">{analytics?.mostActiveDeptPercent}% Participation</p>
+                    <p className="text-[10px] font-mono font-black text-primary uppercase">{analytics?.mostActiveDeptPercent}% Share</p>
                   </div>
                 </div>
               </div>
@@ -434,7 +429,7 @@ export default function ReportsPage() {
                         <th className="p-3 uppercase font-black tracking-widest">Time</th>
                         <th className="p-3 uppercase font-black tracking-widest">Name</th>
                         <th className="p-3 uppercase font-black tracking-widest">Department</th>
-                        <th className="p-3 uppercase font-black tracking-widest">Purpose</th>
+                        <th className="p-3 uppercase font-black tracking-widest text-center">Purpose</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -443,7 +438,7 @@ export default function ReportsPage() {
                           <td className="p-3 font-mono text-slate-500">{format(new Date(v.timestamp), 'HH:mm')}</td>
                           <td className="p-3 font-black text-slate-900 uppercase">{v.patronName}</td>
                           <td className="p-3 uppercase font-bold text-slate-600">{v.patronDepartments?.[0]?.split(':')[0]}</td>
-                          <td className="p-3 uppercase font-bold text-primary">{v.purpose}</td>
+                          <td className="p-3 uppercase font-bold text-primary text-center">{v.purpose}</td>
                         </tr>
                       ))}
                     </tbody>

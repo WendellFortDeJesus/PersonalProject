@@ -30,9 +30,9 @@ export default function DashboardPage() {
   }, []);
 
   const visitsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(200));
-  }, [db, user]);
+  }, [db]);
 
   const { data: visits, isLoading: isDataLoading } = useCollection(visitsQuery);
 
@@ -147,24 +147,24 @@ export default function DashboardPage() {
               <Badge variant="outline" className="h-7 px-4 text-[8px] font-black uppercase tracking-widest">Library Audit</Badge>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-white border-b">
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time In</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Access Method</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Patron Identity</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Dept</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Department</th>
                     <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Demographics</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Purpose</th>
+                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Purpose</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {filteredVisits.map((visit) => (
                     <tr key={visit.id} className={cn("zebra-row transition-colors", visit.status === 'blocked' && "bg-red-50")}>
-                      <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase">
+                      <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase align-middle">
                         {format(new Date(visit.timestamp), 'HH:mm')}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 align-middle">
                         <div className="flex items-center gap-2">
                           {visit.authMethod === 'Email' ? (
                             <Smartphone className="h-3.5 w-3.5 text-blue-500" />
@@ -176,26 +176,26 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
+                      <td className="px-6 py-4 align-middle">
+                        <div className="flex flex-col gap-0.5">
                           <span className={cn("text-xs font-black uppercase tracking-tight", visit.status === 'blocked' ? 'text-red-700' : 'text-slate-900')}>
                             {visit.patronName}
                           </span>
-                          <span className="text-[9px] font-mono font-bold text-slate-400 uppercase mt-0.5 tracking-tighter">
+                          <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-tighter">
                             {visit.authMethod === 'Email' ? visit.patronEmail : visit.schoolId}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200">
+                      <td className="px-6 py-4 align-middle">
+                        <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200 inline-block">
                           {visit.patronDepartments?.[0]?.split(':')[0]}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase">
+                      <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase align-middle">
                         {visit.patronAge}Y / {visit.patronGender?.charAt(0) || 'U'}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2.5 py-1 rounded-full border border-primary/10">
+                      <td className="px-6 py-4 text-center align-middle">
+                        <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 inline-block">
                           {visit.purpose}
                         </span>
                       </td>

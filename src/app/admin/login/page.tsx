@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     // Validate credentials
-    if (username === 'wendelldejesu123' && password === '12345') {
+    if (username === 'admin123' && password === '12345') {
       try {
         // Perform real Firebase sign-in to satisfy security rules
         await signInAnonymously(auth);

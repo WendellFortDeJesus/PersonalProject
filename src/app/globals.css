@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* NEU Green Base: #006837 */
+    /* NEU Green: #006837, Gold: #FFD700 */
     --background: 210 20% 98%;
     --foreground: 152 100% 5%;
     --card: 0 0% 100%;
@@ -17,7 +17,6 @@
     --secondary-foreground: 152 100% 10%;
     --muted: 152 10% 95%;
     --muted-foreground: 152 10% 40%;
-    /* NEU Gold Base: #FFD700 */
     --accent: 51 100% 50%;
     --accent-foreground: 152 100% 5%;
     --destructive: 0 84.2% 60.2%;
@@ -25,7 +24,17 @@
     --border: 152 20% 90%;
     --input: 152 20% 90%;
     --ring: 152 100% 20%;
-    --radius: 1rem;
+    --radius: 1.25rem;
+    
+    /* Sidebar specific */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 152 100% 5%;
+    --sidebar-primary: 152 100% 20%;
+    --sidebar-primary-foreground: 51 100% 90%;
+    --sidebar-accent: 152 10% 95%;
+    --sidebar-accent-foreground: 152 100% 10%;
+    --sidebar-border: 152 20% 90%;
+    --sidebar-ring: 152 100% 20%;
   }
 
   .dark {
@@ -45,10 +54,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+    @apply font-headline tracking-tight;
   }
 }
 
@@ -57,16 +66,12 @@
   backdrop-filter: blur(20px);
 }
 
-.kiosk-btn {
-  @apply transition-all active:scale-[0.97] duration-200 font-headline uppercase tracking-widest;
-}
-
 .animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -76,4 +81,12 @@
 
 .zebra-row:nth-child(even) {
   @apply bg-slate-50/50;
+}
+
+.bento-tile {
+  @apply bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8 transition-all hover:shadow-md hover:border-primary/10;
+}
+
+.data-table-container {
+  @apply w-full overflow-hidden rounded-[2.5rem] border-none shadow-sm bg-white;
 }

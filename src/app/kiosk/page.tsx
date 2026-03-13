@@ -3,40 +3,42 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ContactRound, ArrowLeft, Loader2, KeyRound } from 'lucide-react';
+import { Mail, ContactRound, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
   const [rfid, setRfid] = useState('');
+  const [activeTab, setActiveTab] = useState('rfid');
   const [isLoading, setIsLoading] = useState(false);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Keep focus on RFID input if active
+    // Keep focus on RFID input if the RFID tab is active
     const timer = setInterval(() => {
-      if (rfidInputRef.current && document.activeElement !== rfidInputRef.current) {
-        // Only refocus if the user isn't typing in the email field
+      if (activeTab === 'rfid' && rfidInputRef.current && document.activeElement !== rfidInputRef.current) {
+        rfidInputRef.current.focus();
       }
-    }, 1000);
+    }, 500);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeTab]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
+    // Simulate API call for both RFID and Email
     setTimeout(() => {
       setIsLoading(false);
       // Mock validation
-      if ((email && email.includes('@')) || (rfid.length > 5)) {
+      if ((activeTab === 'email' && email.includes('@')) || (activeTab === 'rfid' && rfid.length > 5)) {
         router.push('/kiosk/purpose');
       } else {
         toast({
@@ -76,7 +78,7 @@ export default function KioskAuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8">
-            <Tabs defaultValue="rfid" className="w-full">
+            <Tabs defaultValue="rfid" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 h-12 bg-slate-100 p-1">
                 <TabsTrigger value="rfid" className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
                   <ContactRound className="mr-2 h-4 w-4" />
@@ -126,7 +128,14 @@ export default function KioskAuthPage() {
                       variant="outline"
                       className="w-full h-16 text-lg border-2 border-slate-200 hover:bg-slate-50 flex items-center justify-center gap-3 rounded-xl"
                     >
-                      <Image src="https://images.unsplash.com/placeholder-avatars/extra-large.jpg?auto=format&fit=crop&q=60&w=40&h=40" width={24} height={24} alt="Google" className="rounded-full" />
+                      <div className="relative w-6 h-6 overflow-hidden rounded-full border">
+                         <Image 
+                          src="https://picsum.photos/seed/google/40/40" 
+                          fill
+                          alt="Google Logo" 
+                          className="object-cover"
+                        />
+                      </div>
                       Sign in with NEU Email
                     </Button>
                   </div>

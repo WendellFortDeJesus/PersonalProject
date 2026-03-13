@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,16 +16,16 @@ import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
-  departments: z.array(z.string()).min(1, "Select at least one department"),
+  departments: z.array(z.string()).min(1, "Select at least one college department"),
   age: z.string().transform((v) => parseInt(v, 10)).pipe(z.number().min(1, "Valid age required")),
   gender: z.string().min(1, "Select gender"),
   purposeId: z.string().min(1, "Select purpose of visit"),
 });
 
-export default function RegistrationPage() {
+function RegistrationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rfid = searchParams.get('rfid');
+  const schoolId = searchParams.get('schoolId');
   const email = searchParams.get('email');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,12 +42,13 @@ export default function RegistrationPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    // Simulate database save
+    // Simulate database save to Users Table
     setTimeout(() => {
       setIsLoading(false);
       const queryParams = new URLSearchParams({
         name: values.name,
         departments: JSON.stringify(values.departments),
+        purposeId: values.purposeId
       });
       router.push(`/kiosk/success?${queryParams.toString()}`);
     }, 1500);
@@ -75,7 +76,7 @@ export default function RegistrationPage() {
             </div>
             <CardTitle className="text-3xl font-headline font-bold text-primary">First-Time Registration</CardTitle>
             <CardDescription className="text-base font-medium">
-              Create your library profile to continue. {rfid ? `RFID: ${rfid}` : `Email: ${email}`}
+              Create your library profile to continue. {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10">
@@ -162,7 +163,7 @@ export default function RegistrationPage() {
                   name="departments"
                   render={() => (
                     <FormItem>
-                      <FormLabel className="text-base font-bold">College Departments</FormLabel>
+                      <FormLabel className="text-base font-bold">College / Department (Select all that apply)</FormLabel>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 bg-slate-50 p-6 rounded-2xl border border-slate-100">
                         {DEPARTMENTS.map((dept) => (
                           <FormField
@@ -212,5 +213,13 @@ export default function RegistrationPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function RegistrationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading terminal...</div>}>
+      <RegistrationContent />
+    </Suspense>
   );
 }

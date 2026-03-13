@@ -43,13 +43,13 @@ export default function UsersManagementPage() {
   const toggleStatus = (id: string) => {
     setUsers(users.map(u => {
       if (u.id === id) {
-        const newStatus = u.status === 'active' ? 'blocked' : 'active';
+        const newBlockedStatus = !u.isBlocked;
         toast({
-          title: newStatus === 'active' ? "Access Restored" : "User Blocked",
-          description: `${u.name}'s library privileges have been ${newStatus === 'active' ? 'reactivated' : 'revoked'}.`,
-          variant: newStatus === 'active' ? 'default' : 'destructive',
+          title: newBlockedStatus ? "User Blocked" : "Access Restored",
+          description: `${u.name}'s library privileges have been ${newBlockedStatus ? 'revoked' : 'reactivated'}.`,
+          variant: newBlockedStatus ? 'destructive' : 'default',
         });
-        return { ...u, status: newStatus };
+        return { ...u, isBlocked: newBlockedStatus };
       }
       return u;
     }));
@@ -58,7 +58,7 @@ export default function UsersManagementPage() {
   const filteredUsers = users.filter(u => 
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.rfid?.toLowerCase().includes(searchTerm.toLowerCase())
+    u.schoolId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -66,7 +66,7 @@ export default function UsersManagementPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-headline font-bold text-primary">Access Control</h1>
-          <p className="text-muted-foreground">Manage patron statuses and global blocklist</p>
+          <p className="text-muted-foreground">Manage patron statuses and global blocklist (Users Table)</p>
         </div>
         <Button className="bg-primary hover:bg-primary/90 gap-2 rounded-xl shadow-lg">
           <UserPlus className="h-4 w-4" />
@@ -80,7 +80,7 @@ export default function UsersManagementPage() {
             <div className="relative w-full md:w-[450px]">
               <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by Name, RFID, or University ID..." 
+                placeholder="Search by Name, Email, or School ID..." 
                 className="pl-12 border-slate-100 rounded-xl h-11 bg-slate-50/50 focus-visible:ring-primary shadow-inner"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -92,7 +92,7 @@ export default function UsersManagementPage() {
                 Filter Roles
               </Button>
               <Badge variant="outline" className="h-11 px-4 border-slate-100 text-slate-500 font-bold">
-                {users.filter(u => u.status === 'blocked').length} Blocked Users
+                {users.filter(u => u.isBlocked).length} Blocked Users
               </Badge>
             </div>
           </div>
@@ -102,8 +102,8 @@ export default function UsersManagementPage() {
             <TableHeader className="bg-slate-50/50">
               <TableRow className="border-none">
                 <TableHead className="w-[300px] pl-6 font-bold text-slate-700">PATRON IDENTITY</TableHead>
-                <TableHead className="font-bold text-slate-700">COLLEGE DEPARTMENTS</TableHead>
-                <TableHead className="font-bold text-slate-700">RFID SCANNER ID</TableHead>
+                <TableHead className="font-bold text-slate-700">COLLEGE / DEPARTMENTS</TableHead>
+                <TableHead className="font-bold text-slate-700">SCHOOL ID (RFID)</TableHead>
                 <TableHead className="font-bold text-slate-700">ACCESS STATUS</TableHead>
                 <TableHead className="text-right pr-6 font-bold text-slate-700">ACTIONS</TableHead>
               </TableRow>
@@ -119,7 +119,7 @@ export default function UsersManagementPage() {
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-800">{user.name}</span>
-                        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">{user.role}</span>
+                        <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">{user.email}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -134,21 +134,21 @@ export default function UsersManagementPage() {
                   </TableCell>
                   <TableCell>
                     <code className="text-[11px] bg-slate-100 px-3 py-1 rounded-lg text-slate-600 font-mono shadow-sm">
-                      {user.rfid || 'UNASSIGNED'}
+                      {user.schoolId}
                     </code>
                   </TableCell>
                   <TableCell>
                     <div className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      user.status === 'active' 
+                      !user.isBlocked 
                         ? 'bg-green-50 text-green-700 border border-green-100' 
                         : 'bg-red-50 text-red-700 border border-red-100'
                     }`}>
-                      {user.status === 'active' ? (
+                      {!user.isBlocked ? (
                         <ShieldCheck className="w-3 h-3 mr-1.5" />
                       ) : (
                         <Ban className="w-3 h-3 mr-1.5" />
                       )}
-                      {user.status}
+                      {user.isBlocked ? 'Blocked' : 'Active'}
                     </div>
                   </TableCell>
                   <TableCell className="text-right pr-6">
@@ -161,15 +161,15 @@ export default function UsersManagementPage() {
                       <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none">
                         <DropdownMenuLabel className="text-xs font-bold text-slate-400">PATRON MANAGEMENT</DropdownMenuLabel>
                         <DropdownMenuItem className="rounded-lg cursor-pointer py-2">View Visit Logs</DropdownMenuItem>
-                        <DropdownMenuItem className="rounded-lg cursor-pointer py-2">Edit Credentials</DropdownMenuItem>
+                        <DropdownMenuItem className="rounded-lg cursor-pointer py-2">Edit Details</DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-slate-100 my-1" />
                         <DropdownMenuItem 
                           onClick={() => toggleStatus(user.id)}
                           className={`rounded-lg cursor-pointer py-2 font-bold ${
-                            user.status === 'active' ? 'text-destructive' : 'text-green-600'
+                            !user.isBlocked ? 'text-destructive' : 'text-green-600'
                           }`}
                         >
-                          {user.status === 'active' ? (
+                          {!user.isBlocked ? (
                             <><UserX className="h-4 w-4 mr-2" /> Block Privileges</>
                           ) : (
                             <><UserCheck className="h-4 w-4 mr-2" /> Revoke Block</>
@@ -188,7 +188,7 @@ export default function UsersManagementPage() {
                 <Search className="h-8 w-8 text-slate-300" />
               </div>
               <p className="text-lg font-bold text-slate-400">No results match your query</p>
-              <p className="text-sm text-slate-400">Check for spelling or try a different ID</p>
+              <p className="text-sm text-slate-400">Check for spelling or try a different School ID</p>
             </div>
           )}
         </CardContent>

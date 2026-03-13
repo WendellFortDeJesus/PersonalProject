@@ -37,13 +37,14 @@ export default function KioskAuthPage() {
       setIsLoading(false);
       
       const patron = MOCK_PATRONS.find(p => 
-        (activeTab === 'rfid' && p.rfid === rfid) || 
+        (activeTab === 'rfid' && p.schoolId === rfid) || 
         (activeTab === 'email' && p.email === email)
       );
 
       if (!patron) {
+        // Redirect to registration for new users
         if (activeTab === 'rfid' && rfid.length >= 3) {
-          router.push(`/kiosk/register?rfid=${encodeURIComponent(rfid)}`);
+          router.push(`/kiosk/register?schoolId=${encodeURIComponent(rfid)}`);
           return;
         }
         
@@ -56,12 +57,12 @@ export default function KioskAuthPage() {
         toast({
           variant: "destructive",
           title: "Registration Required",
-          description: "This ID is not in our system. If you are an NEU student/staff, please register using the form.",
+          description: "This School ID is not in our system. If you are an NEU student/staff, please register using the form.",
         });
         return;
       }
 
-      if (patron.status === 'blocked') {
+      if (patron.isBlocked) {
         router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patron.name)}`);
       } else {
         router.push(`/kiosk/purpose?patronId=${patron.id}`);
@@ -72,8 +73,7 @@ export default function KioskAuthPage() {
   const handleSSO = () => {
     setIsLoading(true);
     setTimeout(() => {
-      setIsLoading(true);
-      // Simulate OAuth redirect or discovery
+      setIsLoading(false);
       const mockEmail = "new.user@neu.edu.ph";
       const existing = MOCK_PATRONS.find(p => p.email === mockEmail);
       if (existing) {
@@ -101,7 +101,7 @@ export default function KioskAuthPage() {
           <CardHeader className="text-center space-y-2 pb-2 pt-10">
             <CardTitle className="text-4xl font-headline font-bold text-primary tracking-tight">Identity Terminal</CardTitle>
             <CardDescription className="text-lg font-medium text-slate-500">
-              Verify your credentials to enter
+              Verify your School ID to enter
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10">
@@ -128,7 +128,7 @@ export default function KioskAuthPage() {
                     </div>
                     <div className="mt-10 text-center space-y-2">
                       <p className="text-2xl font-bold text-slate-800">Scanner Ready</p>
-                      <p className="text-base font-medium text-slate-400">Place your NEU ID near the terminal</p>
+                      <p className="text-base font-medium text-slate-400">Place your NEU School ID near the terminal</p>
                     </div>
                     
                     <div className="mt-8 w-full max-w-xs px-6 opacity-0 focus-within:opacity-100 transition-opacity">
@@ -170,7 +170,7 @@ export default function KioskAuthPage() {
                       Sign in with NEU Email
                     </Button>
                     <p className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      UNIVERSITY DOMAIN LOCK ACTIVE
+                      UNIVERSITY DOMAIN LOCK ACTIVE (@neu.edu.ph)
                     </p>
                   </div>
                   

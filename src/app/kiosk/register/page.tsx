@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { DEPARTMENTS, GENDERS, PURPOSES } from '@/lib/data';
 import { UserPlus, ArrowLeft, Loader2 } from 'lucide-react';
 
@@ -104,7 +103,7 @@ function RegistrationContent() {
                       <FormItem>
                         <FormLabel>Age</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="20" {...field} className="h-12 rounded-xl" />
+                          <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-12 rounded-xl" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -161,44 +160,24 @@ function RegistrationContent() {
                 <FormField
                   control={form.control}
                   name="departments"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-bold">College / Department (Select all that apply)</FormLabel>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        {DEPARTMENTS.map((dept) => (
-                          <FormField
-                            key={dept}
-                            control={form.control}
-                            name="departments"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={dept}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(dept)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...field.value, dept])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== dept
-                                              )
-                                            )
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-medium leading-none cursor-pointer">
-                                    {dept}
-                                  </FormLabel>
-                                </FormItem>
-                              )
-                            }}
-                          />
-                        ))}
-                      </div>
+                      <FormLabel>College / Department</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange([value])} 
+                        defaultValue={field.value?.[0]}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl">
+                            <SelectValue placeholder="Select Department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {DEPARTMENTS.map((dept) => (
+                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

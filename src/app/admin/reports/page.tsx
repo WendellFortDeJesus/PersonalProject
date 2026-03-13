@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -19,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -87,7 +86,7 @@ export default function ReportsPage() {
 
     const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
     
-    // Generate hourly trend for the selected day (e.g., business hours 8am to 8pm)
+    // Generate hourly trend for business hours 8am to 8pm
     const trendData = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(h => ({
       hour: `${h}:00`,
       count: hourMap[h] || 0
@@ -161,7 +160,7 @@ export default function ReportsPage() {
           <Card className="p-6 bg-white border rounded-2xl flex flex-col justify-between shadow-sm md:col-span-1">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Visitors</p>
             <h3 className="text-4xl font-mono font-medium text-primary mt-4">{analytics?.total}</h3>
-            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">For {analytics?.dateStr}</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-widest">Registry Hit Count</span>
           </Card>
 
           <Card className="p-6 bg-white border-primary/20 border-2 rounded-2xl flex flex-col justify-between shadow-sm md:col-span-3">
@@ -276,7 +275,7 @@ export default function ReportsPage() {
               <div className="grid grid-cols-2 gap-12 mb-12">
                 <div className="space-y-6">
                   <div className="h-48 border rounded-xl p-6 bg-slate-50/50">
-                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Hourly Engagement</p>
+                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Engagement Trend</p>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={analytics?.trendData}>
                         <Line type="monotone" dataKey="count" stroke="#006837" strokeWidth={3} dot={false} />
@@ -304,7 +303,7 @@ export default function ReportsPage() {
                   </h3>
                   <div className="space-y-4">
                     <div className="flex justify-between border-b pb-2">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Total Registry Hits</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">Registry Hits</span>
                       <span className="text-sm font-mono font-bold text-slate-900">{analytics?.mostActiveDeptCount}</span>
                     </div>
                     <div className="flex justify-between border-b pb-2">
@@ -316,7 +315,7 @@ export default function ReportsPage() {
               </div>
 
               <div className="border-t-2 border-slate-100 pt-8">
-                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6">Student/Visitor Registry</p>
+                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6">Student Registry</p>
                 <table className="w-full text-left text-[9px] border-collapse">
                   <thead className="bg-slate-50">
                     <tr>

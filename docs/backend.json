@@ -1,0 +1,336 @@
+{
+  "entities": {
+    "Department": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Department",
+      "type": "object",
+      "description": "Represents an academic college or administrative office within the university. Visitors (students, faculty, staff) are affiliated with a department.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Department entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the department (e.g., 'College of Engineering', 'Office of the Registrar')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the department."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the department record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the department record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Visitor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Visitor",
+      "type": "object",
+      "description": "Represents a person (student, faculty member, or employee) visiting the library, identified by RF-ID or university email.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Visitor entity."
+        },
+        "rfId": {
+          "type": "string",
+          "description": "The unique RF-ID (NEU School ID) used for physical check-in. This is a unique identifier."
+        },
+        "email": {
+          "type": "string",
+          "description": "The official university email address (e.g., '@neu.edu.ph') used for SSO login. This is a unique identifier.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the visitor."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the visitor."
+        },
+        "departmentId": {
+          "type": "string",
+          "description": "Reference to the Department the visitor belongs to. (Relationship: Department 1:N Visitor)"
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the visitor within the university (e.g., 'Student', 'Faculty', 'Employee')."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if the visitor's account is currently active and allowed to check-in (for access management)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the visitor record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the visitor record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "rfId",
+        "email",
+        "firstName",
+        "lastName",
+        "departmentId",
+        "role",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Purpose": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Purpose",
+      "type": "object",
+      "description": "Represents a predefined reason for a visitor's visit to the library, selected during check-in.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Purpose entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the purpose (e.g., 'Reading Books', 'Research for Thesis', 'Use of Computer')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A more detailed description of the purpose of visit."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if this purpose is currently available for selection."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the purpose record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the purpose record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CheckIn": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CheckIn",
+      "type": "object",
+      "description": "Records a single instance of a visitor checking into the library, including their purpose of visit.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CheckIn record."
+        },
+        "visitorId": {
+          "type": "string",
+          "description": "Reference to the Visitor who checked in. (Relationship: Visitor 1:N CheckIn)"
+        },
+        "purposeId": {
+          "type": "string",
+          "description": "Reference to the Purpose of the visit. (Relationship: Purpose 1:N CheckIn)"
+        },
+        "checkInTime": {
+          "type": "string",
+          "description": "Timestamp when the visitor checked into the library.",
+          "format": "date-time"
+        },
+        "checkOutTime": {
+          "type": "string",
+          "description": "Optional timestamp when the visitor checked out, if recorded. Can be null if not checked out or not tracked.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the check-in record was created in the system (could be slightly different from actual checkInTime).",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the check-in record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "visitorId",
+        "purposeId",
+        "checkInTime",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminUser",
+      "type": "object",
+      "description": "Represents a library staff member with administrative access to the PatronPoint dashboard.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AdminUser entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The unique email address used by the administrator for login (authentication handled externally).",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the administrator."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the administrator."
+        },
+        "role": {
+          "type": "string",
+          "description": "The administrative role of the user (e.g., 'Librarian', 'Manager', 'SuperAdmin'), defining their permissions."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if the administrator's account is currently active and can access the dashboard."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the administrator's record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the administrator's record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/departments/{departmentId}",
+        "definition": {
+          "entityName": "Department",
+          "schema": {
+            "$ref": "#/backend/entities/Department"
+          },
+          "description": "Stores information about university departments (e.g., 'College of Engineering', 'Office of the Registrar'). Admin-only access.",
+          "params": [
+            {
+              "name": "departmentId",
+              "description": "The unique identifier for the department."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/purposes/{purposeId}",
+        "definition": {
+          "entityName": "Purpose",
+          "schema": {
+            "$ref": "#/backend/entities/Purpose"
+          },
+          "description": "Stores predefined reasons for library visits (e.g., 'Reading Books'). Admin read/write, Kiosk read-only for active purposes.",
+          "params": [
+            {
+              "name": "purposeId",
+              "description": "The unique identifier for the purpose of visit."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/visitors/{visitorId}",
+        "definition": {
+          "entityName": "Visitor",
+          "schema": {
+            "$ref": "#/backend/entities/Visitor"
+          },
+          "description": "Stores profiles for university visitors (students, faculty, employees). Admin read/write. Kiosk reads based on RF-ID or email lookup.",
+          "params": [
+            {
+              "name": "visitorId",
+              "description": "The unique identifier for the visitor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/check_ins/{checkInId}",
+        "definition": {
+          "entityName": "CheckIn",
+          "schema": {
+            "$ref": "#/backend/entities/CheckIn"
+          },
+          "description": "Records individual visitor check-ins. Kiosk creates. Admin reads/queries for reporting. Includes denormalized 'visitorFirstName', 'visitorLastName', 'visitorDepartmentName', 'visitorRole', and 'purposeName' fields for authorization independence and efficient reporting.",
+          "params": [
+            {
+              "name": "checkInId",
+              "description": "The unique identifier for the check-in record."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admin_users/{adminUid}",
+        "definition": {
+          "entityName": "AdminUser",
+          "schema": {
+            "$ref": "#/backend/entities/AdminUser"
+          },
+          "description": "Stores administrator profiles. The document ID (`adminUid`) is set to `request.auth.uid`. Contains the 'role' field for Database Access Control (DBAC).",
+          "params": [
+            {
+              "name": "adminUid",
+              "description": "The Firebase Authentication UID of the administrator, which serves as the document ID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure is designed to adhere strictly to the core design principles, especially Authorization Independence and Database Access Control (DBAC), while ensuring scalability and debuggability. Each top-level collection represents a distinct entity with a homogeneous security posture.\n\n1.  **Departments (`/departments/{departmentId}`):** This collection stores details about university departments. Access is restricted to authenticated administrators, ensuring that only authorized personnel can manage these foundational data elements. This supports QAPs by allowing administrators to list all departments without complex filtering rules, as all documents in this collection share the same access requirements.\n\n2.  **Purposes (`/purposes/{purposeId}`):** This collection holds predefined reasons for library visits. Administrators have full read/write access. The check-in Kiosk (which can be authenticated via a service account or specific, tightly controlled rules) will have read-only access, specifically to active purposes. This segregation by access type allows for clear, simple rules and satisfies QAPs for both admin listing and Kiosk selection.\n\n3.  **Visitors (`/visitors/{visitorId}`):** This collection stores profiles for all potential visitors (students, faculty, employees). Administrators have full read/write access to manage these profiles. The check-in Kiosk will perform read operations on this collection, querying by `rfId` or `email` to identify and display visitor information. Authorization Independence is maintained as `visitorId` is a unique document ID, and lookups by `rfId` or `email` do not rely on hierarchical authorization dependencies.\n\n4.  **Check-Ins (`/check_ins/{checkInId}`):** This collection records every instance of a visitor checking into the library. The check-in Kiosk will have permissions to create new `CheckIn` documents. Administrators will have read/query access for reporting purposes. To ensure **Authorization Independence** and facilitate efficient reporting (QAPs), the `CheckIn` document **denormalizes** critical display information from `Visitor` and `Purpose` entities. Specifically, fields such as `visitorFirstName`, `visitorLastName`, `visitorDepartmentName`, `visitorRole`, and `purposeName` are copied directly into the `CheckIn` document. This eliminates the need for `get()` calls in security rules to fetch related data when an administrator queries or lists check-in records for display, making rules simpler, atomic, and improving query performance.\n\n5.  **Admin Users (`/admin_users/{adminUid}`):** This collection is crucial for **Database Access Control (DBAC)**. The document ID (`adminUid`) is directly set to the `request.auth.uid` of the authenticated administrator (obtained via Google SSO). Each `AdminUser` document contains a `role` field (e.g., 'Librarian', 'SuperAdmin'). Security rules will directly access this document using `request.auth.uid` to determine the administrator's role and thus their permissions across the application. This setup strictly adheres to DBAC, removing reliance on custom claims and achieving Authorization Independence as an admin's role can be checked with a single, self-referential `get()` call (which is permitted), making authorization robust and debuggable. SuperAdmins would have permissions to manage other `admin_users`."
+  }
+}

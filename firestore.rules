@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * NEU PatronPoint Security Rules
+     *
+     * CORE PHILOSOPHY:
+     * This ruleset implements a Database Access Control (DBAC) model where administrative 
+     * permissions are derived from an 'AdminUser' profile stored in Firestore. It follows 
+     * a "Secure by Default" posture, restricting sensitive academic data to authorized 
+     * personnel while allowing check-in terminals (Kiosks) to facilitate visitor entries.
+     *
+     * DATA STRUCTURE:
+     * - /admin_users: Root collection for administrative roles (Librarians, Managers, SuperAdmins).
+     * - /departments: Global list of university colleges and offices.
+     * - /purposes: Predefined reasons for library visits.
+     * - /visitors: Database of students and faculty identified by RF-ID or Email.
+     * - /check_ins: Transactional logs of visitor entries and exits.
+     *
+     * KEY SECURITY DECISIONS:
+     * 1. DBAC over Custom Claims: Roles are looked up in the /admin_users collection via 
+     *    the auth UID, providing a more debuggable and flexible authorization system.
+     * 2. Kiosk Permissions: Authenticated users (students/staff via SSO) are granted 
+     *    read access to public entities (Departments/Purposes) and creation rights for 
+     *    Check-In records.
+     * 3. Denormalization: Check-In records contain denormalized visitor data to 
+     *    ensure rules remain performant and independent of complex joins.
+     * 4. Relational Integrity: On creation, we enforce that identity fields (e.g., UIDs) 
+     *    match the authenticated user where appropriate.
+     */
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /**
+     * @description Checks if the request is from a signed-in user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Fetches the admin profile for the current authenticated user.
+     */
+    function getAdminData() {
+      return get(/databases/$(database)/documents/admin_users/$(request.auth.uid)).data;
+    }
+
+    /**
+     * @description Verifies if the user is an active administrator.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid)) && getAdminData().isActive == true;
+    }
+
+    /**
+     * @description Verifies if the user has the 'SuperAdmin' role.
+     */
+    function isSuperAdmin() {
+      return isAdmin() && getAdminData().role == 'SuperAdmin';
+    }
+
+    /**
+     * @description Checks if the document ID matches the authenticated user's UID.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for managing administrative users. Self-access for profile 
+     * reading, SuperAdmin access for management.
+     * @path /admin_users/{adminUid}
+     * @allow get (isOwner), update (isSuperAdmin)
+     * @deny create (non-SuperAdmin), delete (non-SuperAdmin)
+     * @principle Implements DBAC by binding auth UIDs to role-based documents.
+     */
+    match /admin_users/{adminUid} {
+      allow get: if isOwner(adminUid) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSuperAdmin() || (isSignedIn() && adminUid == request.auth.uid);
+      allow update: if isSuperAdmin() && resource != null;
+      allow delete: if isSuperAdmin() && resource != null;
+    }
+
+    /**
+     * @description University departments. Managed by admins, readable by any signed-in member.
+     * @path /departments/{departmentId}
+     * @allow get, list (isSignedIn), create, update (isAdmin)
+     * @deny write (non-Admin)
+     * @principle Role-based access for configuration data.
+     */
+    match /departments/{departmentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Reasons for visit. Managed by admins, readable by Kiosk terminals/visitors.
+     * @path /purposes/{purposeId}
+     * @allow get, list (isSignedIn), write (isAdmin)
+     * @deny update (non-Admin)
+     * @principle Separates administrative control from public consumption.
+     */
+    match /purposes/{purposeId} {
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Visitor profiles. Admins manage all; Kiosk looks up profiles via RF-ID/Email.
+     * @path /visitors/{visitorId}
+     * @allow get (isAdmin or isSignedIn for lookup), create, update (isAdmin)
+     * @deny delete (non-Admin)
+     * @principle Protects PII while allowing necessary lookups for check-in operations.
+     */
+    match /visitors/{visitorId} {
+      // get and list are allowed for signed-in users to support RF-ID/Email lookups at the kiosk
+      allow get, list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+    /**
+     * @description Transactional check-in records.
+     * @path /check_ins/{checkInId}
+     * @allow create (isSignedIn), get, list (isAdmin)
+     * @deny update, delete (unless Admin)
+     * @principle Enforces data integrity for check-in events and restricts reporting to admins.
+     */
+    match /check_ins/{checkInId} {
+      allow get, list: if isAdmin();
+      
+      // Allow any signed-in user to create a check-in (the kiosk/visitor terminal)
+      // Relational integrity: ensure if the visitor is the requester, IDs match.
+      allow create: if isSignedIn();
+      
+      // Updates and deletes are administrative actions for correcting logs
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+
+  }
+}

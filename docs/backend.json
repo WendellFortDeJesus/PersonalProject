@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Patron": {
@@ -37,6 +38,28 @@
         "status": { "type": "string", "enum": ["granted", "blocked"] }
       },
       "required": ["id", "patronId", "timestamp", "status"]
+    },
+    "SystemConfig": {
+      "title": "System Configuration",
+      "type": "object",
+      "description": "Global settings for departments, purposes, and limits.",
+      "properties": {
+        "departments": { "type": "array", "items": { "type": "string" } },
+        "purposes": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "icon": { "type": "string" }
+            }
+          } 
+        },
+        "capacityLimit": { "type": "number" },
+        "reportFormat": { "type": "string", "enum": ["pdf", "excel"] },
+        "useLetterhead": { "type": "boolean" }
+      }
     }
   },
   "auth": {
@@ -50,6 +73,10 @@
     "/visits/{visitId}": {
       "schema": "#/entities/Visit",
       "description": "Log of all check-in attempts."
+    },
+    "/system_config/{configId}": {
+      "schema": "#/entities/SystemConfig",
+      "description": "Global terminal and report settings."
     }
   }
 }

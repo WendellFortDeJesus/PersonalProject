@@ -13,8 +13,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // For prototype simplicity, we'll allow all signed-in users to access dashboard data
-    // In a real app, you'd use a more robust isAdmin() check
+    // For prototype simplicity, we allow all signed-in users (including anonymous admin sessions)
     function isStaff() {
       return isSignedIn();
     }
@@ -37,15 +36,16 @@ service cloud.firestore {
       allow delete: if isStaff();
     }
 
-    match /visit_purposes/{purposeId} {
-      allow get, list: if true;
-      allow create, update, delete: if isStaff();
-    }
-
     match /visits/{visitId} {
       allow get, list: if isStaff();
       allow create: if true; // Allow kiosk log entries
       allow update, delete: if isStaff();
+    }
+
+    // System configuration for colleges, purposes, and capacity limits
+    match /system_config/{configId} {
+      allow read: if true; // Allow kiosk to read purposes/departments even before tap
+      allow write: if isStaff();
     }
   }
 }

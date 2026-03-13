@@ -13,8 +13,7 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  Label,
-  BarChart3
+  Label
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,14 +31,13 @@ import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { 
   Calendar as CalendarIcon, 
-  Download, 
-  Users, 
-  ShieldCheck, 
   FileText,
   Printer,
-  ChevronRight,
   Activity,
-  UserCheck
+  Users,
+  ShieldCheck,
+  UserCheck,
+  Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -103,14 +101,12 @@ export default function ReportsPage() {
     const totalTodayHits = filteredVisits.length;
     const trafficShare = totalTodayHits > 0 && mostEngagedDept ? Math.round((mostEngagedDept.count / totalTodayHits) * 100) : 0;
 
-    // Hourly Breakdown for the selected day
     const hourlyData = Array.from({ length: 13 }, (_, i) => {
       const hour = i + 8; // 8 AM to 8 PM
       const count = filteredVisits.filter(v => new Date(v.timestamp).getHours() === hour).length;
       return { hour: `${hour}:00`, count };
     });
 
-    // Weekly Matrix Mockup (Logic: visits by day and time slot)
     const weekStart = startOfWeek(selectedDate);
     const matrixData = Array.from({ length: 7 }, (_, dayIdx) => {
       const currentDay = addDays(weekStart, dayIdx);
@@ -150,30 +146,6 @@ export default function ReportsPage() {
     };
   }, [rawVisits, rawPatrons, selectedDate, config]);
 
-  const handleDownloadCSV = () => {
-    if (!analytics?.filteredVisits || analytics.filteredVisits.length === 0) return;
-
-    const headers = ["Timestamp", "Patron Name", "School ID", "Department", "Purpose", "Status"];
-    const rows = analytics.filteredVisits.map(v => [
-      format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss'),
-      `"${v.patronName?.replace(/"/g, '""') || ''}"`,
-      v.schoolId || v.patronEmail || '',
-      `"${v.patronDepartments?.join(', ') || ''}"`,
-      `"${v.purpose || ''}"`,
-      v.status || ''
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `NEU_Library_Audit_${format(selectedDate!, 'yyyy-MM-dd')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -196,13 +168,13 @@ export default function ReportsPage() {
         <div className="flex gap-3">
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="h-10 rounded-xl font-black border-slate-200 text-[10px] px-6 uppercase tracking-widest bg-white shadow-sm">
+              <Button variant="outline" className="h-10 rounded-xl font-black border-slate-200 text-[10px] px-6 uppercase tracking-widest bg-white shadow-sm hover:bg-slate-50">
                 <FileText className="mr-2 h-3.5 w-3.5" />
                 Preview Strategic Audit
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-[2.5rem] border-none shadow-2xl bg-white">
-              <div className="p-12 space-y-12 report-container">
+              <div id="printable-report" className="p-12 space-y-12 report-container">
                 <header className="flex justify-between items-start border-b border-slate-100 pb-8">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -225,13 +197,13 @@ export default function ReportsPage() {
                   <div className="col-span-2 space-y-1 border-l border-slate-100 pl-8">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Most Engaged Department (Unit Lead)</p>
                     <h3 className="text-xl font-black text-primary uppercase leading-tight font-headline">{analytics?.mostEngagedDept?.fullName || 'N/A'}</h3>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase">{analytics?.mostEngagedDept?.count} Hits / {analytics?.trafficShare}% Share</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase">{analytics?.mostEngagedDept?.count || 0} Hits / {analytics?.trafficShare || 0}% Share</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-12 py-8 border-y border-slate-100">
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Resource Demand (Visit Intent)</h4>
+                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest text-center">Resource Demand (Visit Intent)</h4>
                     <div className="h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -246,7 +218,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Hourly Engagement Matrix</h4>
+                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest text-center">Hourly Engagement Matrix</h4>
                     <div className="h-[220px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics?.hourlyData}>
@@ -271,7 +243,7 @@ export default function ReportsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {analytics?.filteredVisits.slice(0, 15).map((v) => (
+                        {analytics?.filteredVisits.slice(0, 20).map((v) => (
                           <tr key={v.id}>
                             <td className="px-6 py-3 font-mono text-slate-500 font-bold">{format(new Date(v.timestamp), 'HH:mm')}</td>
                             <td className="px-6 py-3 font-black text-slate-900 uppercase tracking-tight font-headline">{v.patronName}</td>
@@ -285,7 +257,7 @@ export default function ReportsPage() {
               </div>
               <DialogFooter className="p-8 bg-slate-50 border-t flex gap-4">
                 <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest">Close Preview</Button>
-                <Button onClick={handlePrint} className="bg-primary text-white rounded-xl px-8 font-black uppercase text-[10px] tracking-widest shadow-lg">
+                <Button onClick={handlePrint} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl px-8 font-black uppercase text-[10px] tracking-widest shadow-lg">
                   <Printer className="mr-2 h-4 w-4" />
                   Print Formal Report
                 </Button>
@@ -431,17 +403,16 @@ export default function ReportsPage() {
 
       <Card className="p-8 bg-primary rounded-[2rem] border-none shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter font-headline">Data Export Center</h2>
-          <p className="text-[10px] font-black text-primary-foreground/60 uppercase tracking-widest">Strategic Verification Records for Accreditation</p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tighter font-headline">Formal Audit Generation</h2>
+          <p className="text-[10px] font-black text-primary-foreground/60 uppercase tracking-widest">Strategic Verification Records for Accreditation & Compliance</p>
         </div>
         <div className="flex gap-4">
-          <Button onClick={handleDownloadCSV} className="h-12 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl transition-transform active:scale-95">
-            <Download className="h-4 w-4 mr-3" />
-            Download CSV Report
+          <Button onClick={handlePrint} className="h-12 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl transition-transform active:scale-95">
+            <Printer className="h-4 w-4 mr-3" />
+            Download PDF Report
           </Button>
         </div>
       </Card>
     </div>
   );
 }
-

@@ -33,18 +33,24 @@ export const PURPOSES = [
   { id: 'research', label: 'Research / Thesis', icon: 'Search' },
   { id: 'computer', label: 'Use of Computer', icon: 'Monitor' },
   { id: 'assignments', label: 'Doing Assignments', icon: 'FileText' },
+  { id: 'group_study', label: 'Group Study', icon: 'Users' },
 ];
 
 export const DEPARTMENTS = [
-  'College of Engineering',
   'College of Informatics and Computing Sciences',
+  'College of Engineering',
   'College of Arts and Sciences',
   'College of Business Administration',
   'College of Education',
   'College of Nursing',
-  'Office of the Registrar',
-  'Library Administration',
-  'External Visitor'
+  'College of Law',
+  'College of Music',
+  'College of Communication',
+  'College of Criminology',
+  'School of Graduate Studies',
+  'Senior High School',
+  'Administrative Staff',
+  'External Guest'
 ];
 
 export const GENDERS = [

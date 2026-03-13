@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -66,7 +65,7 @@ function RegistrationContent() {
 
   // Filter for active departments
   const activeDepartments = useMemo(() => {
-    if (!settings?.departments) return DEPARTMENTS;
+    if (!settings?.departments || settings.departments.length === 0) return DEPARTMENTS;
     return settings.departments
       .filter((d: any) => d.isActive)
       .map((d: any) => d.name);
@@ -200,7 +199,7 @@ function RegistrationContent() {
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-bold">GenderIdentity {!requireGender && "(Optional)"}</FormLabel>
+                        <FormLabel className="text-primary font-bold">Gender {!requireGender && "(Optional)"}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12 rounded-xl bg-white/50 border-white/50">

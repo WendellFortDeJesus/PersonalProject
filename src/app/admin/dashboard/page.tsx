@@ -2,23 +2,40 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Label
+} from 'recharts';
+import { 
+  Users, 
+  Clock, 
+  Trophy, 
+  Database, 
+  Activity,
+  Circle
+} from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { Smartphone, ContactRound } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [searchTerm, setSearchTerm] = useState('');
   const db = useFirestore();
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -26,189 +43,266 @@ export default function DashboardPage() {
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  useEffect(() => {
-    setMounted(true);
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   const visitsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(200));
+    return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(500));
   }, [db]);
 
-  const { data: visits, isLoading: isDataLoading } = useCollection(visitsQuery);
+  const patronsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'patrons'));
+  }, [db]);
+
+  const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
+  const { data: patrons, isLoading: isPatronsLoading } = useCollection(patronsQuery);
 
   const stats = useMemo(() => {
-    if (!visits) return { inside: 0, newest: null, totalToday: 0, totalLogged: 0, distribution: [] };
+    if (!visits || !patrons) return null;
     
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayVisits = visits.filter(v => new Date(v.timestamp).getTime() >= todayStart.getTime());
-    
-    const inside = todayVisits.filter(v => v.status === 'granted').length; 
-    const newest = visits[0] || null;
-    const totalToday = todayVisits.length;
-    const totalLogged = visits.length;
+    // 1. Current Occupancy (Mock logic: visits in last 8 hours marked as granted)
+    const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
+    const inside = visits.filter(v => new Date(v.timestamp) > eightHoursAgo && v.status === 'granted').length;
 
-    const deptCounts: Record<string, number> = {};
-    todayVisits.forEach(v => {
+    // 2. Peak Traffic Time (Cumulative)
+    const hourlyCounts: Record<number, number> = {};
+    visits.forEach(v => {
+      const hour = new Date(v.timestamp).getHours();
+      hourlyCounts[hour] = (hourlyCounts[hour] || 0) + 1;
+    });
+    const peakHour = Object.entries(hourlyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 14;
+    const formattedPeak = `${peakHour > 12 ? Number(peakHour) - 12 : peakHour}:00 ${Number(peakHour) >= 12 ? 'PM' : 'AM'}`;
+
+    // 3. Department Leaderboard
+    const deptMap: Record<string, number> = {};
+    visits.forEach(v => {
       v.patronDepartments?.forEach((name: string) => {
-        deptCounts[name] = (deptCounts[name] || 0) + 1;
+        deptMap[name] = (deptMap[name] || 0) + 1;
       });
     });
-
-    const distribution = Object.entries(deptCounts)
-      .map(([name, count]) => ({ name, count }))
+    const deptLeaderboard = Object.entries(deptMap)
+      .map(([name, count]) => ({ 
+        name: settings?.departments?.find((d: any) => d.name === name)?.code || name,
+        fullName: name,
+        count,
+        color: settings?.departments?.find((d: any) => d.name === name)?.color || 'hsl(var(--primary))'
+      }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .slice(0, 8);
 
-    return { inside, newest, totalToday, totalLogged, distribution };
-  }, [visits]);
+    // 4. Purpose Distribution
+    const purposeMap: Record<string, number> = {};
+    visits.forEach(v => {
+      purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
+    });
+    const purposeData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
 
-  const filteredVisits = useMemo(() => {
-    if (!visits) return [];
-    return visits.filter(v => 
-      v.patronName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.patronEmail?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [visits, searchTerm]);
+    return {
+      inside,
+      formattedPeak,
+      topDept: deptLeaderboard[0]?.name || 'N/A',
+      registrySize: patrons.length,
+      deptLeaderboard,
+      purposeData,
+      recentTicker: visits.slice(0, 5)
+    };
+  }, [visits, patrons, settings]);
 
-  const isAtCapacity = stats.inside >= (settings?.capacityLimit || 200);
-
-  if (isUserLoading || !mounted) return (
+  if (!mounted || isVisitsLoading || isPatronsLoading) return (
     <div className="flex h-[60vh] items-center justify-center">
-      <div className="text-center space-y-4">
-        <p className="font-mono font-black text-primary/40 uppercase tracking-[0.4em] text-[10px] animate-pulse">Initializing Terminal Control...</p>
-      </div>
+      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.4em] text-[10px] animate-pulse">Initializing Command Center...</p>
     </div>
   );
 
+  const CHART_COLORS = ['#006837', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7'];
+
   return (
-    <div className="space-y-0 animate-fade-in flex flex-col h-full bg-white">
-      <header className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white border-b sticky top-0 z-20">
-        <div className="flex items-center gap-8">
-          <div className="flex flex-col text-left">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">System Clock</span>
-            <span className="text-xs font-mono font-bold text-primary mt-1.5">{format(currentTime, 'MMM dd, yyyy • HH:mm:ss')}</span>
+    <div className="flex flex-col h-full bg-[#F8FAFC] animate-fade-in font-body overflow-hidden">
+      {/* KPI Tiles (Top Row) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 shrink-0">
+        <Card className="p-6 border-none shadow-sm bg-white rounded-2xl flex items-center gap-5">
+          <div className="p-3 bg-primary/5 rounded-xl">
+            <Users className="h-6 w-6 text-primary" />
           </div>
-          <div className="flex items-center gap-3">
-            <div className={cn("w-2 h-2 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              {isAtCapacity ? 'Capacity Reached' : 'Terminal Online'}
-            </span>
+          <div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Current Occupancy</p>
+            <h3 className="text-3xl font-mono font-bold text-slate-900 mt-1">{stats?.inside}</h3>
           </div>
-        </div>
-        
-        <div className="flex-1 max-w-2xl w-full">
-          <Input 
-            placeholder="Search Master Index (Name, ID, or Email)..." 
-            className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs uppercase tracking-tight"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </header>
+        </Card>
 
-      <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className={cn("p-6 border rounded-2xl flex flex-col justify-between h-32 transition-colors", isAtCapacity ? "bg-red-50 border-red-200" : "bg-white")}>
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currently Inside</p>
-            <div className="flex items-baseline gap-2">
-              <h3 className={cn("text-4xl font-mono font-medium", isAtCapacity ? "text-red-700" : "text-primary")}>{stats.inside}</h3>
-              <span className="text-[8px] font-black text-slate-400 uppercase">Limit: {settings?.capacityLimit || 200}</span>
+        <Card className="p-6 border-none shadow-sm bg-white rounded-2xl flex items-center gap-5">
+          <div className="p-3 bg-blue-50 rounded-xl">
+            <Clock className="h-6 w-6 text-blue-500" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Peak Traffic Time</p>
+            <h3 className="text-2xl font-mono font-bold text-slate-900 mt-1">{stats?.formattedPeak}</h3>
+          </div>
+        </Card>
+
+        <Card className="p-6 border-none shadow-sm bg-white rounded-2xl flex items-center gap-5">
+          <div className="p-3 bg-accent/10 rounded-xl">
+            <Trophy className="h-6 w-6 text-accent" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Top Department</p>
+            <h3 className="text-2xl font-headline font-black text-primary mt-1 uppercase truncate max-w-[120px]">{stats?.topDept}</h3>
+          </div>
+        </Card>
+
+        <Card className="p-6 border-none shadow-sm bg-white rounded-2xl flex items-center gap-5">
+          <div className="p-3 bg-slate-50 rounded-xl">
+            <Database className="h-6 w-6 text-slate-400" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Registry Size</p>
+            <h3 className="text-3xl font-mono font-bold text-slate-900 mt-1">{stats?.registrySize}</h3>
+          </div>
+        </Card>
+      </div>
+
+      {/* Main Content (Bento Grid) */}
+      <div className="flex-1 px-6 pb-6 overflow-hidden flex flex-col gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[350px]">
+          {/* Departmental Leaderboard (60%) */}
+          <Card className="lg:col-span-7 p-6 border-none shadow-sm bg-white rounded-2xl flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Departmental Leaderboard</h2>
+              <Activity className="h-4 w-4 text-slate-300" />
             </div>
-          </div>
-
-          <div className="p-6 bg-white border rounded-2xl flex flex-col justify-between h-32">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Newest Entry</p>
-            <div className="flex flex-col truncate">
-              <span className="text-xs font-black text-slate-900 uppercase truncate">{stats.newest?.patronName || '---'}</span>
-              <span className="text-[8px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">
-                {stats.newest?.authMethod === 'SSO Login' ? stats.newest?.patronEmail : stats.newest?.schoolId || '---'}
-              </span>
+            <div className="flex-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={stats?.deptLeaderboard} margin={{ left: 0, right: 40 }}>
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    fontSize={10} 
+                    fontWeight={900} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    width={50}
+                    style={{ textTransform: 'uppercase', fill: '#64748b' }}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#F8FAFC' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px' }}
+                  />
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
+                    {stats?.deptLeaderboard.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </div>
+          </Card>
 
-          <div className="p-6 bg-white border rounded-2xl flex flex-col justify-between h-32">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Today</p>
-            <h3 className="text-4xl font-mono font-medium text-primary">{stats.totalToday}</h3>
-          </div>
-
-          <div className="p-6 bg-white border rounded-2xl flex flex-col justify-between h-32">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Overall Visitors Logged</p>
-            <h3 className="text-4xl font-mono font-medium text-primary">{stats.totalLogged}</h3>
-          </div>
+          {/* Purpose Circle (40%) */}
+          <Card className="lg:col-span-5 p-6 border-none shadow-sm bg-white rounded-2xl flex flex-col relative">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">Purpose Distribution</h2>
+            </div>
+            <div className="flex-1 relative min-h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie 
+                    data={stats?.purposeData} 
+                    innerRadius={65} 
+                    outerRadius={90} 
+                    paddingAngle={8} 
+                    dataKey="value"
+                  >
+                    {stats?.purposeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                    <Label 
+                      value="INTENT" 
+                      position="center" 
+                      style={{ fontSize: '10px', fontWeight: '900', fill: '#0F172A', textTransform: 'uppercase' }} 
+                    />
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {stats?.purposeData.slice(0, 4).map((p, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                  <span className="text-[8px] font-black text-slate-500 uppercase truncate tracking-tight">{p.name}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
-          <div className="lg:col-span-12 bg-white border rounded-2xl overflow-hidden flex flex-col shadow-sm text-left">
-            <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
-              <h2 className="text-[10px] font-black text-primary uppercase tracking-widest">Master Visitor Log</h2>
-              <Badge variant="outline" className="h-7 px-4 text-[8px] font-black uppercase tracking-widest">Library Audit</Badge>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-white border-b">
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time In</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Access Method</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Patron Identity</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Department</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Demographics</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Purpose</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredVisits.map((visit) => (
-                    <tr key={visit.id} className={cn("zebra-row transition-colors", visit.status === 'blocked' && "bg-red-50")}>
-                      <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase align-middle">
-                        {format(new Date(visit.timestamp), 'HH:mm')}
-                      </td>
-                      <td className="px-6 py-4 align-middle">
+        {/* Live Visitor Registry (Table) */}
+        <Card className="flex-1 border-none shadow-sm bg-white rounded-2xl overflow-hidden flex flex-col">
+          <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50/50">
+            <h2 className="text-[10px] font-black text-primary uppercase tracking-widest">Live Visitor Registry</h2>
+            <Badge variant="outline" className="h-6 text-[8px] font-black uppercase tracking-widest border-primary/20 text-primary">High Density Log</Badge>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                <tr className="border-b">
+                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Student Name</th>
+                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">School ID</th>
+                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Department</th>
+                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Visit Purpose</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {visits?.slice(0, 20).map((visit) => {
+                  const isRecent = new Date(visit.timestamp).getTime() > Date.now() - 30 * 60 * 1000;
+                  return (
+                    <tr key={visit.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
-                          {visit.authMethod === 'SSO Login' ? (
-                            <Smartphone className="h-3.5 w-3.5 text-blue-500" />
-                          ) : (
-                            <ContactRound className="h-3.5 w-3.5 text-primary" />
-                          )}
-                          <span className="text-[9px] font-black uppercase tracking-tighter text-slate-600">
-                            {visit.authMethod || 'School ID Login'}
+                          <Circle className={cn("h-1.5 w-1.5 fill-current", isRecent ? "text-green-500 animate-pulse" : "text-slate-300")} />
+                          <span className={cn("text-[8px] font-black uppercase tracking-tighter", isRecent ? "text-green-600" : "text-slate-400")}>
+                            {isRecent ? 'Active' : 'Recorded'}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 align-middle">
-                        <div className="flex flex-col gap-0.5">
-                          <span className={cn("text-xs font-black uppercase tracking-tight", visit.status === 'blocked' ? 'text-red-700' : 'text-slate-900')}>
-                            {visit.patronName}
-                          </span>
-                          <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-tighter">
-                            {visit.authMethod === 'SSO Login' ? visit.patronEmail : visit.schoolId}
-                          </span>
-                        </div>
+                      <td className="px-6 py-3">
+                        <span className="text-xs font-bold text-slate-900 uppercase tracking-tight font-headline">{visit.patronName}</span>
                       </td>
-                      <td className="px-6 py-4 text-center align-middle">
-                        <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase border border-slate-200 inline-block whitespace-nowrap">
-                          {visit.patronDepartments?.[0]}
+                      <td className="px-6 py-3">
+                        <span className="text-[10px] font-mono font-bold text-slate-400">{visit.schoolId}</span>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className="text-[9px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded uppercase border border-primary/10">
+                          {settings?.departments?.find((d: any) => d.name === visit.patronDepartments?.[0])?.code || visit.patronDepartments?.[0]}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-mono text-[10px] font-bold text-slate-400 uppercase align-middle">
-                        {visit.patronAge}Y / {visit.patronGender?.charAt(0) || 'U'}
-                      </td>
-                      <td className="px-6 py-4 text-center align-middle">
-                        <span className="text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 inline-block">
-                          {visit.purpose}
-                        </span>
+                      <td className="px-6 py-3">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{visit.purpose}</span>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </Card>
       </div>
+
+      {/* Live Identity Ticker (Footer) */}
+      <footer className="h-10 bg-primary flex items-center overflow-hidden shrink-0 shadow-lg">
+        <div className="flex animate-marquee whitespace-nowrap gap-12 px-6">
+          <span className="text-[9px] font-black text-accent uppercase tracking-[0.2em] border-r border-white/20 pr-12">Latest Entries:</span>
+          {stats?.recentTicker.map((v, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="text-[9px] font-black text-white uppercase tracking-tight">{v.patronName}</span>
+              <span className="text-[8px] font-bold text-white/50 font-mono">[{v.schoolId}]</span>
+              <span className="text-[8px] font-black text-accent uppercase tracking-tighter">({settings?.departments?.find((d: any) => d.name === v.patronDepartments?.[0])?.code || v.patronDepartments?.[0]})</span>
+              <span className="mx-6 text-white/20">|</span>
+            </div>
+          ))}
+        </div>
+      </footer>
     </div>
   );
 }

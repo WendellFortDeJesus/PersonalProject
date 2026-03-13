@@ -85,7 +85,7 @@ export default function VisitorManagementPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                         <AvatarImage src={`https://picsum.photos/seed/${visit.patronId}/100/100`} />
-                        <AvatarFallback>{visit.patronName[0]}</AvatarFallback>
+                        <AvatarFallback>{visit.patronName?.[0] || '?'}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-800">{visit.patronName}</span>
@@ -107,7 +107,7 @@ export default function VisitorManagementPage() {
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <div className="flex flex-wrap gap-1">
-                        {visit.patronDepartments.map((dept, i) => (
+                        {visit.patronDepartments?.map((dept, i) => (
                           <span key={i} className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-tighter">
                             {dept}
                           </span>
@@ -144,7 +144,7 @@ export default function VisitorManagementPage() {
               <p className="text-slate-400 font-bold text-lg">No traffic recorded yet</p>
             </div>
           )}
-        </TableBody>
+        </CardContent>
       </Card>
     </div>
   );

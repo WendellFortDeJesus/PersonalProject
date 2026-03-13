@@ -1,21 +1,25 @@
-
 "use client";
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PURPOSES } from '@/lib/data';
 import * as Icons from 'lucide-react';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 
-export default function PurposeSelectionPage() {
+function PurposeSelectionContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const patronId = searchParams.get('patronId');
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleSelect = (id: string) => {
     setSelected(id);
-    // Add a slight delay for visual feedback before navigating
+    // Simulate logging the entry
+    console.log(`Logging visit for patron ${patronId} with purpose ${id}`);
+    
+    // Slight delay for visual feedback then navigate to success
     setTimeout(() => {
-      router.push('/kiosk/success');
+      router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}`);
     }, 400);
   };
 
@@ -23,8 +27,8 @@ export default function PurposeSelectionPage() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8 animate-fade-in">
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-headline font-bold text-primary">How can we help you today?</h1>
-          <p className="text-xl text-muted-foreground">Select the primary purpose of your visit</p>
+          <h1 className="text-4xl font-headline font-bold text-primary">Fast-Track Check-in</h1>
+          <p className="text-xl text-muted-foreground">Select today's primary purpose of visit</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -58,10 +62,18 @@ export default function PurposeSelectionPage() {
             className="text-muted-foreground font-semibold"
             onClick={() => router.push('/kiosk')}
           >
-            Cancel and go back
+            Not you? Tap again
           </Button>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PurposeSelectionPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading terminal...</div>}>
+      <PurposeSelectionContent />
+    </Suspense>
   );
 }

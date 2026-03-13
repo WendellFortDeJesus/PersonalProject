@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2, Building2, User, ShieldAlert, AlertCircle } from 'lucide-react';
@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { MOCK_PATRONS } from '@/lib/data';
 import { cn } from '@/lib/utils';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const status = searchParams.get('status');
@@ -35,16 +35,16 @@ export default function SuccessPage() {
   const displayName = patron?.name || regName || blockedName || "Guest User";
   const displayDepts = patron?.departments || regDepts || ["General Access"];
 
-  // Auto-reset after 5 seconds
+  // Auto-reset after 3 seconds for high traffic
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/');
-    }, 5000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [router]);
 
   return (
-    <div className={cn("min-h-screen flex items-center justify-center p-4", isBlocked ? "bg-red-600" : "bg-primary")}>
+    <div className={cn("min-h-screen flex items-center justify-center p-4 transition-colors duration-500", isBlocked ? "bg-red-600" : "bg-primary")}>
       <div className="w-full max-w-2xl animate-fade-in">
         <Card className="shadow-2xl overflow-hidden border-none rounded-[3.5rem] bg-white">
           <div className={cn("h-4", isBlocked ? "bg-red-700" : "bg-accent")} />
@@ -71,6 +71,7 @@ export default function SuccessPage() {
                       alt="Visitor Photo"
                       fill
                       className="object-cover"
+                      priority
                       data-ai-hint="patron portrait"
                     />
                   ) : (
@@ -143,5 +144,13 @@ export default function SuccessPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-primary flex items-center justify-center">Verifying session...</div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }

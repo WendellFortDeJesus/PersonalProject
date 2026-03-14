@@ -247,7 +247,7 @@ export default function ReportsPage(props: { params: Promise<any>; searchParams:
         </Card>
         <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between border-l-4 border-primary">
           <div className="space-y-1">
-            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dept Champion</h2>
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Most students in the college department</h2>
             <p className="text-xl font-headline font-black text-primary uppercase truncate max-w-[200px] leading-none">{analytics?.topDept?.name || 'N/A'}</p>
             <p className="text-[9px] font-bold text-primary uppercase mt-2">Highest Unit Engagement</p>
           </div>

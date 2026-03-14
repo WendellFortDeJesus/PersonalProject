@@ -125,6 +125,9 @@ export default function ReportsPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0 rounded-2xl border-none shadow-2xl bg-white">
+            <DialogHeader className="sr-only">
+              <DialogTitle>PatronPoint Official Strategic Audit Preview</DialogTitle>
+            </DialogHeader>
             <div id="printable-report" className="p-16 space-y-12 report-container bg-white">
               <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
                 <div className="space-y-3">

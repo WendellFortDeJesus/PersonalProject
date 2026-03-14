@@ -35,7 +35,6 @@ import {
   Printer,
   Activity
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 export default function ReportsPage() {
@@ -56,7 +55,7 @@ export default function ReportsPage() {
   }, [db]);
   const { data: config } = useDoc(configRef);
 
-  // Defensive query: only if authenticated
+  // Consolidated query for all reports to ensure consistency and avoid multiple triggers
   const visitsQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'));
@@ -101,7 +100,7 @@ export default function ReportsPage() {
       purposeData,
       totalToday: filteredVisits.length,
       dateStr: format(selectedDate, 'PPP'),
-      filteredVisits: filteredVisits.slice(0, 50),
+      filteredVisits: filteredVisits.slice(0, 100),
       topDept: summaryData[0]
     };
   }, [rawVisits, selectedDate, config]);

@@ -22,9 +22,9 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useDoc, useUser } from '@/firebase';
-import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, startOfDay } from 'date-fns';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -41,35 +41,29 @@ export default function DashboardPage() {
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    return d.toISOString();
-  }, []);
-
-  // Defensive queries: only initiate if the user is authenticated and DB is ready
+  // Single high-performance stream for all visit data
   const visitsQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(500));
   }, [db, user, isUserLoading]);
 
-  const activeVisitsQuery = useMemoFirebase(() => {
-    if (!db || !user || isUserLoading) return null;
-    return query(collection(db, 'visits'), where('timestamp', '>=', today), where('status', '==', 'granted'));
-  }, [db, today, user, isUserLoading]);
-
   const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
-  const { data: activeVisits } = useCollection(activeVisitsQuery);
 
   const stats = useMemo(() => {
     if (!visits) return null;
     
-    const inside = activeVisits?.length || 0;
-    const todayEntries = visits.filter(v => v.timestamp >= today).length;
+    const today = startOfDay(new Date()).toISOString();
+    
+    // Client-side filtering to avoid complex composite index requirements
+    const todayVisits = visits.filter(v => v.timestamp >= today);
+    const activeVisits = todayVisits.filter(v => v.status === 'granted');
+    
+    const inside = activeVisits.length;
+    const todayEntries = todayVisits.length;
 
     let rfidCount = 0;
     let ssoCount = 0;
-    visits.forEach(v => {
+    todayVisits.forEach(v => {
       if (v.authMethod === 'School ID Login') rfidCount++;
       else if (v.authMethod === 'SSO Login') ssoCount++;
     });
@@ -82,7 +76,7 @@ export default function DashboardPage() {
     ];
 
     const activeDepts = new Set<string>();
-    activeVisits?.forEach(v => {
+    activeVisits.forEach(v => {
       v.patronDepartments?.forEach((d: string) => activeDepts.add(d));
     });
 
@@ -94,7 +88,7 @@ export default function DashboardPage() {
       authData,
       recentVisits: visits.slice(0, 20)
     };
-  }, [visits, activeVisits, today]);
+  }, [visits]);
 
   if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
     <div className="flex h-[60vh] items-center justify-center">

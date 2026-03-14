@@ -158,13 +158,13 @@ export default function KioskAuthPage() {
             Exit Terminal
           </Button>
           
-          <div className={cn("px-6 py-4 rounded-[2rem] glass-overlay border border-white/20 flex flex-col items-end gap-1 shadow-2xl")}>
+          <div className={cn("px-4 py-3 rounded-2xl glass-overlay border border-white/20 flex flex-col items-end gap-0.5 shadow-xl")}>
              <div className="flex items-center gap-2">
-               <div className={cn("w-2 h-2 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
-               <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">CURRENTLY IN THE LIBRARY</span>
+               <div className={cn("w-1.5 h-1.5 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
+               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">CURRENTLY IN THE LIBRARY</span>
              </div>
-             <div className="text-4xl font-headline font-black text-primary leading-none my-0.5">{occupancy}</div>
-             <span className="text-[8px] font-bold text-slate-600 uppercase tracking-tight">Active students on premises</span>
+             <div className="text-2xl font-headline font-black text-primary leading-none my-0.5">{occupancy}</div>
+             <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight">Active students on premises</span>
           </div>
         </div>
 

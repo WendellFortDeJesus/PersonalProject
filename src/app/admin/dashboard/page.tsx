@@ -2,14 +2,17 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Users, 
   Activity,
   Monitor,
   CreditCard,
-  ShieldAlert
+  ShieldAlert,
+  ArrowRight
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -18,6 +21,7 @@ import { format } from 'date-fns';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
 
@@ -139,7 +143,18 @@ export default function DashboardPage() {
               {stats?.flaggedCount} SUSPICIOUS ENTRIES
             </p>
           </div>
-          <ShieldAlert className="h-5 w-5 text-red-500/20" />
+          <div className="flex flex-col items-end gap-1.5">
+            <ShieldAlert className="h-4 w-4 text-red-500/20" />
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => router.push('/admin/users')}
+              className="h-7 px-2 text-[8px] font-black uppercase tracking-widest bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200"
+            >
+              Verify Registry
+              <ArrowRight className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
         </Card>
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-purple-500 h-20">

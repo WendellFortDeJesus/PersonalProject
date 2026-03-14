@@ -177,6 +177,7 @@ export default function DashboardPage() {
                   const method = visit.authMethod || (visit.schoolId ? 'RF-ID Login' : 'SSO Login');
                   const isFlagged = (method === 'SSO Login' && (!visit.patronEmail || !visit.patronEmail.includes('@'))) ||
                                   (method === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5));
+                  const isExternal = visit.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
 
                   return (
                     <tr key={visit.id} className={cn("hover:bg-slate-50/50 transition-colors group h-9", isFlagged && "bg-amber-50/50")}>
@@ -213,7 +214,12 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-0 truncate">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">{visit.patronDepartments?.[0]}</span>
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase",
+                          isExternal ? "text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded" : "text-slate-500"
+                        )}>
+                          {visit.patronDepartments?.[0]}
+                        </span>
                       </td>
                     </tr>
                   );

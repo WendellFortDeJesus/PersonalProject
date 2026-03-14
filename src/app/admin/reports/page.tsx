@@ -35,6 +35,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -305,15 +306,25 @@ export default function ReportsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {analytics?.deptData.map((dept, i) => (
-                <tr key={i} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-bold text-slate-900 uppercase">{dept.name}</td>
-                  <td className="px-4 py-3 font-mono font-bold text-slate-600 text-right">{dept.count}</td>
-                  <td className="px-4 py-3 font-mono font-bold text-primary text-right">
-                    {((dept.count / (analytics?.totalAllTime || 1)) * 100).toFixed(1)}%
-                  </td>
-                </tr>
-              ))}
+              {analytics?.deptData.map((dept, i) => {
+                const isExternal = dept.name.toUpperCase().includes('VISITOR');
+                return (
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        "font-bold uppercase",
+                        isExternal ? "text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" : "text-slate-900"
+                      )}>
+                        {dept.name}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono font-bold text-slate-600 text-right">{dept.count}</td>
+                    <td className="px-4 py-3 font-mono font-bold text-primary text-right">
+                      {((dept.count / (analytics?.totalAllTime || 1)) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

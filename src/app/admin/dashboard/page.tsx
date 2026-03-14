@@ -8,7 +8,8 @@ import {
   Users, 
   TrendingUp,
   Activity,
-  Monitor
+  Monitor,
+  CreditCard
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -54,12 +55,27 @@ export default function DashboardPage() {
     const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
     const peakHourStr = peakHour ? `${peakHour[0]}:00 - ${Number(peakHour[0])+1}:00` : 'N/A';
 
+    // Primary Auth Method Logic
+    const authCounts = activeVisits.reduce((acc: Record<string, number>, v) => {
+      const method = v.authMethod || 'Unknown';
+      acc[method] = (acc[method] || 0) + 1;
+      return acc;
+    }, {});
+
+    const topAuth = Object.entries(authCounts).sort((a, b) => b[1] - a[1])[0];
+    const primaryAuthMethod = topAuth ? topAuth[0] : 'N/A';
+    const authMethodPct = topAuth && inside > 0 
+      ? Math.round((topAuth[1] / inside) * 100) 
+      : 0;
+
     return {
       inside,
       totalRegistered,
       topDept,
       recentVisits: visits.slice(0, 50),
-      peakHourStr
+      peakHourStr,
+      primaryAuthMethod,
+      authMethodPct
     };
   }, [visits]);
 
@@ -86,12 +102,15 @@ export default function DashboardPage() {
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-accent h-20">
           <div className="space-y-0.5">
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Dept Champion</p>
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Primary Auth Method</p>
             <h3 className="text-sm font-headline font-black text-slate-900 uppercase truncate max-w-[120px] leading-none">
-              {stats?.topDept}
+              {stats?.primaryAuthMethod}
             </h3>
+            <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">
+              {stats?.authMethodPct}% OF CURRENT VISITORS
+            </p>
           </div>
-          <TrendingUp className="h-5 w-5 text-accent/20" />
+          <CreditCard className="h-5 w-5 text-accent/20" />
         </Card>
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-blue-500 h-20">

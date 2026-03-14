@@ -12,8 +12,7 @@ import {
   ResponsiveContainer,
   PieChart, 
   Pie, 
-  Cell,
-  Label
+  Cell
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -34,11 +33,10 @@ import {
   FileText,
   Printer,
   Activity,
-  Users,
-  ShieldCheck,
   Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
@@ -46,7 +44,7 @@ export default function ReportsPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -63,16 +61,10 @@ export default function ReportsPage() {
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'));
   }, [db, user]);
 
-  const patronsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(collection(db, 'patrons'));
-  }, [db, user]);
-
   const { data: rawVisits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
-  const { data: rawPatrons, isLoading: isPatronsLoading } = useCollection(patronsQuery);
 
   const analytics = useMemo(() => {
-    if (!rawVisits || !selectedDate || !rawPatrons) return null;
+    if (!rawVisits || !selectedDate) return null;
 
     const filteredVisits = rawVisits.filter(v => isSameDay(new Date(v.timestamp), selectedDate));
     
@@ -110,13 +102,13 @@ export default function ReportsPage() {
       dateStr: format(selectedDate, 'PPP'),
       filteredVisits: filteredVisits.slice(0, 50)
     };
-  }, [rawVisits, rawPatrons, selectedDate, config]);
+  }, [rawVisits, selectedDate, config]);
 
   const handlePrint = () => {
     window.print();
   };
 
-  if (isVisitsLoading || isPatronsLoading || !mounted) return (
+  if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
     <div className="p-32 text-center">
       <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Generating Strategic Audit...</p>
     </div>
@@ -157,7 +149,7 @@ export default function ReportsPage() {
                     <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Hourly Peak Performance</h3>
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analytics?.hourlyData}>
+                        <BarChart data={analytics?.hourlyData ?? []}>
                           <XAxis dataKey="hour" hide />
                           <YAxis hide />
                           <Bar dataKey="count" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
@@ -170,7 +162,7 @@ export default function ReportsPage() {
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={analytics?.purposeData} innerRadius={50} outerRadius={70} dataKey="value">
+                          <Pie data={analytics?.purposeData ?? []} innerRadius={50} outerRadius={70} dataKey="value">
                             {analytics?.purposeData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                           </Pie>
                         </PieChart>
@@ -212,7 +204,7 @@ export default function ReportsPage() {
                 <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest">Close</Button>
                 <Button onClick={handlePrint} className="bg-accent text-accent-foreground rounded-xl px-8 font-black uppercase text-[10px] tracking-widest shadow-lg">
                   <Printer className="mr-2 h-4 w-4" />
-                  Print Formal Record
+                  Download PDF Report
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -222,7 +214,7 @@ export default function ReportsPage() {
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10 rounded-xl font-black border-slate-200 text-[10px] px-6 uppercase tracking-widest bg-white shadow-sm">
                 <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                {analytics?.dateStr}
+                {analytics?.dateStr ?? 'Select Date'}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="end">
@@ -233,7 +225,6 @@ export default function ReportsPage() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Peak Performance Map (Left) */}
         <Card className="lg:col-span-12 p-6 bg-white border-none rounded-2xl shadow-sm">
           <div className="mb-6 flex justify-between items-center">
             <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Peak Performance Map (24-Hour Pulse)</h2>
@@ -241,7 +232,7 @@ export default function ReportsPage() {
           </div>
           <div className="h-[120px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics?.hourlyData}>
+              <BarChart data={analytics?.hourlyData ?? []}>
                 <XAxis dataKey="hour" hide />
                 <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                 <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
@@ -250,7 +241,6 @@ export default function ReportsPage() {
           </div>
         </Card>
 
-        {/* Institutional Summary Table */}
         <Card className="lg:col-span-12 bg-white border-none rounded-2xl shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b flex justify-between items-center">
             <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Departmental Engagement Summary</h2>

@@ -11,25 +11,25 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
+    // Patrons: Broad read for kiosk identity checks; staff can manage
     match /patrons/{patronId} {
-      // Kiosk and Admin need broad read access for identity verification
-      allow read, create: if true; 
+      allow read, create: if true;
       allow update, delete: if isSignedIn();
     }
 
+    // Visits: Broad read for admin dashboard and kiosk logging
     match /visits/{visitId} {
-      // Kiosk needs to log entries; Admin needs to monitor live occupancy
-      allow read, create: if true; 
+      allow read, create: if true;
       allow update, delete: if isSignedIn();
     }
 
+    // System Config: Branding and purposes are public; staff can write
     match /system_config/{configId} {
-      // System branding and purposes are public
-      allow read: if true; 
+      allow read: if true;
       allow write: if isSignedIn();
     }
 
-    // Catch-all for any other administrative paths
+    // Catch-all for any other administrative paths - ensure staff can always access
     match /{document=**} {
       allow read, write: if isSignedIn();
     }

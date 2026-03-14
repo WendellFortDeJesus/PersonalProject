@@ -30,7 +30,7 @@ import { format } from 'date-fns';
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -48,7 +48,7 @@ export default function DashboardPage() {
     return d.toISOString();
   }, []);
 
-  // Only initiate queries if the user is authenticated to ensure permissions are respected
+  // Only initiate queries if the user is authenticated and services are ready
   const visitsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(500));
@@ -102,9 +102,17 @@ export default function DashboardPage() {
     };
   }, [visits, activeVisits, today]);
 
-  if (!mounted || isVisitsLoading) return (
+  if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
     <div className="flex h-[60vh] items-center justify-center">
-      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.4em] text-[10px] animate-pulse">Synchronizing Data Node...</p>
+      <div className="text-center space-y-4">
+        <p className="font-mono font-black text-primary/40 uppercase tracking-[0.4em] text-[10px] animate-pulse">Authenticating Portal Hub...</p>
+      </div>
+    </div>
+  );
+
+  if (!user) return (
+    <div className="flex h-[60vh] items-center justify-center">
+      <p className="font-mono font-black text-red-500/40 uppercase tracking-[0.4em] text-[10px]">Restricted: Admin Identity Required</p>
     </div>
   );
 
@@ -115,7 +123,7 @@ export default function DashboardPage() {
         <Card className="p-4 border-none shadow-sm bg-white rounded-xl flex items-center justify-between group hover:shadow-md transition-all">
           <div className="space-y-1">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Live Occupancy</p>
-            <h3 className="text-3xl font-mono font-bold text-slate-900">{stats?.inside}</h3>
+            <h3 className="text-3xl font-mono font-bold text-slate-900">{stats?.inside ?? 0}</h3>
           </div>
           <Users className="h-6 w-6 text-primary/20 group-hover:text-primary transition-colors" />
         </Card>
@@ -123,7 +131,7 @@ export default function DashboardPage() {
         <Card className="p-4 border-none shadow-sm bg-white rounded-xl flex items-center justify-between group hover:shadow-md transition-all">
           <div className="space-y-1">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Entries Today</p>
-            <h3 className="text-3xl font-mono font-bold text-slate-900">{stats?.todayEntries}</h3>
+            <h3 className="text-3xl font-mono font-bold text-slate-900">{stats?.todayEntries ?? 0}</h3>
           </div>
           <Activity className="h-6 w-6 text-accent/30 group-hover:text-accent transition-colors" />
         </Card>
@@ -131,7 +139,7 @@ export default function DashboardPage() {
         <Card className="p-4 border-none shadow-sm bg-white rounded-xl flex items-center justify-between group hover:shadow-md transition-all">
           <div className="space-y-1">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Top Login Method</p>
-            <h3 className="text-xl font-headline font-black text-primary uppercase truncate">{stats?.topAuth}</h3>
+            <h3 className="text-xl font-headline font-black text-primary uppercase truncate">{stats?.topAuth ?? 'N/A'}</h3>
           </div>
           <LogIn className="h-6 w-6 text-blue-500/20 group-hover:text-blue-500 transition-colors" />
         </Card>
@@ -139,7 +147,7 @@ export default function DashboardPage() {
         <Card className="p-4 border-none shadow-sm bg-white rounded-xl flex items-center justify-between group hover:shadow-md transition-all">
           <div className="space-y-1">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Active Departments</p>
-            <h3 className="text-3xl font-mono font-bold text-slate-900">{stats?.activeDeptCount}</h3>
+            <h3 className="text-3xl font-mono font-bold text-slate-900">{stats?.activeDeptCount ?? 0}</h3>
           </div>
           <LayoutGrid className="h-6 w-6 text-purple-500/20 group-hover:text-purple-500 transition-colors" />
         </Card>
@@ -163,7 +171,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.authData} barGap={40} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <BarChart data={stats?.authData ?? []} barGap={40} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis 
                   dataKey="name" 

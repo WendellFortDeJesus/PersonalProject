@@ -9,7 +9,8 @@ import {
   TrendingUp,
   Activity,
   Monitor,
-  CreditCard
+  CreditCard,
+  ShieldAlert
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -33,27 +34,40 @@ export default function DashboardPage() {
   const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
 
   const stats = useMemo(() => {
-    if (!visits) return null;
+    if (!visits || visits.length === 0) return {
+      inside: 0,
+      totalRegistered: 0,
+      topDept: 'N/A',
+      recentVisits: [],
+      integrityScore: 100,
+      flaggedCount: 0,
+      primaryAuthMethod: 'N/A',
+      authMethodPct: 0
+    };
     
     const activeVisits = visits.filter(v => v.status === 'granted');
     const inside = activeVisits.length;
     const totalRegistered = visits.length;
 
     const deptCountMap: Record<string, number> = {};
+    let flaggedCount = 0;
+
     visits.forEach(v => {
+      // Dept Mapping
       v.patronDepartments?.forEach((d: string) => {
         deptCountMap[d] = (deptCountMap[d] || 0) + 1;
       });
+
+      // Integrity Logic: Flag if email missing @ or RF-ID too short
+      if (v.authMethod === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) {
+        flaggedCount++;
+      } else if (v.authMethod === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) {
+        flaggedCount++;
+      }
     });
 
+    const integrityScore = Math.max(0, Math.min(100, Number(((totalRegistered - flaggedCount) / totalRegistered * 100).toFixed(1))));
     const topDept = Object.entries(deptCountMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-
-    // Peak Hour Logic
-    const hours = visits.map(v => new Date(v.timestamp).getHours());
-    const hourCounts: Record<number, number> = {};
-    hours.forEach(h => hourCounts[h] = (hourCounts[h] || 0) + 1);
-    const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
-    const peakHourStr = peakHour ? `${peakHour[0]}:00 - ${Number(peakHour[0])+1}:00` : 'N/A';
 
     // Primary Auth Method Logic
     const authCounts = activeVisits.reduce((acc: Record<string, number>, v) => {
@@ -73,7 +87,8 @@ export default function DashboardPage() {
       totalRegistered,
       topDept,
       recentVisits: visits.slice(0, 50),
-      peakHourStr,
+      integrityScore,
+      flaggedCount,
       primaryAuthMethod,
       authMethodPct
     };
@@ -115,10 +130,15 @@ export default function DashboardPage() {
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-blue-500 h-20">
           <div className="space-y-0.5">
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Peak Traffic</p>
-            <h3 className="text-sm font-mono font-bold text-blue-600 uppercase tracking-tighter truncate leading-none">{stats?.peakHourStr}</h3>
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Data Integrity</p>
+            <h3 className="text-sm font-mono font-bold text-blue-600 uppercase tracking-tighter truncate leading-none">
+              {stats?.integrityScore}% ACCURATE
+            </h3>
+            <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">
+              {stats?.flaggedCount} FLAGGED REGISTRY DETAILS
+            </p>
           </div>
-          <Activity className="h-5 w-5 text-blue-500/20" />
+          <ShieldAlert className="h-5 w-5 text-blue-500/20" />
         </Card>
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-purple-500 h-20">
@@ -155,8 +175,11 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-slate-100">
                 {stats?.recentVisits.map((visit) => {
                   const isActive = visit.status === 'granted';
+                  const isFlagged = (visit.authMethod === 'SSO Login' && (!visit.patronEmail || !visit.patronEmail.includes('@'))) ||
+                                  (visit.authMethod === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5));
+
                   return (
-                    <tr key={visit.id} className="hover:bg-slate-50/50 transition-colors group h-9">
+                    <tr key={visit.id} className={cn("hover:bg-slate-50/50 transition-colors group h-9", isFlagged && "bg-amber-50/50")}>
                       <td className="px-6 py-0">
                         <span className={cn(
                           "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded",
@@ -185,7 +208,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-0 truncate">
-                        <span className="text-[10px] font-mono font-bold text-slate-400">
+                        <span className={cn("text-[10px] font-mono font-bold", isFlagged ? "text-red-500" : "text-slate-400")}>
                           {visit.authMethod === 'RF-ID Login' ? visit.schoolId : visit.patronEmail}
                         </span>
                       </td>

@@ -36,9 +36,10 @@
         "patronGender": { "type": "string" },
         "purpose": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["granted", "blocked"] }
+        "status": { "type": "string", "enum": ["granted", "blocked"] },
+        "authMethod": { "type": "string", "enum": ["School ID Login", "SSO Login"] }
       },
-      "required": ["id", "patronId", "timestamp", "status"]
+      "required": ["id", "patronId", "timestamp", "status", "authMethod"]
     },
     "SystemConfig": {
       "title": "System Configuration",
@@ -70,20 +71,10 @@
           } 
         },
         "capacityLimit": { "type": "number", "default": 200 },
-        "dailyEngagementTarget": { "type": "number" },
-        "reportFormat": { "type": "string", "enum": ["pdf", "excel"] },
-        "autoClearLogs": { "type": "boolean", "default": true },
-        "privacyMode": { "type": "boolean", "default": false },
-        "themeImageUrl": { "type": "string" },
-        "universityLogoUrl": { "type": "string" },
-        "overlayOpacity": { "type": "number" },
-        "welcomeTextColor": { "type": "string", "enum": ["white", "black"] },
-        "timeoutSeconds": { "type": "number", "default": 3 },
-        "requireAge": { "type": "boolean", "default": true },
-        "defaultChartType": { "type": "string", "enum": ["pie", "bar"] },
-        "reportHeaderTitle": { "type": "string" },
-        "reportFooterText": { "type": "string" },
-        "blockReasons": { "type": "array", "items": { "type": "string" } }
+        "allowEmailLogin": { "type": "boolean", "default": true },
+        "allowRfidScan": { "type": "boolean", "default": true },
+        "enforcedDomain": { "type": "string", "default": "neu.edu.ph" },
+        "autoClearLogs": { "type": "boolean", "default": true }
       }
     }
   },

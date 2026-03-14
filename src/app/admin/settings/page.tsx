@@ -8,12 +8,12 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, setDoc, collection, query, writeBatch, getDocs } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Palette, Settings2, ShieldAlert, Zap, Loader2 } from 'lucide-react';
+import { Trash2, Palette, Settings2, ShieldAlert, Zap, Loader2, ShieldCheck } from 'lucide-react';
 
 export default function SystemSettingsPage() {
   const db = useFirestore();
@@ -65,8 +65,7 @@ export default function SystemSettingsPage() {
     setIsResetting(true);
     
     try {
-      // In a real system, we'd mark visits as 'ended'. 
-      // For this prototype, we'll simulate a reset toast.
+      // Logic for purging visitors (simulated)
       await new Promise(r => setTimeout(r, 1000));
       toast({
         title: "Occupancy Purged",
@@ -79,7 +78,7 @@ export default function SystemSettingsPage() {
 
   if (isLoading) return (
     <div className="p-32 text-center">
-      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Syncing Control Room...</p>
+      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Syncing System Engine...</p>
     </div>
   );
 
@@ -88,18 +87,56 @@ export default function SystemSettingsPage() {
       <header className="flex items-center justify-between p-8 bg-white border-b border-slate-100">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-primary uppercase tracking-tighter font-headline">System Control Engine</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Institutional category & Maintenance logic</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Authentication & Maintenance Logic</p>
         </div>
         <Settings2 className="h-5 w-5 text-slate-300" />
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 max-w-7xl mx-auto">
+        {/* Authentication Manager */}
+        <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden lg:col-span-2">
+          <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+            <div>
+              <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-headline">Authentication Manager</h2>
+              <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Institutional Identity Protocols</p>
+            </div>
+            <ShieldCheck className="h-4 w-4 text-primary/40" />
+          </div>
+          <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-800 uppercase">Allow Email Login</span>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">SSO Login with @neu.edu.ph</p>
+              </div>
+              <Switch checked={settings?.allowEmailLogin ?? true} onCheckedChange={(v) => handleSaveSettings({ allowEmailLogin: v })} />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-800 uppercase">Allow RFID Scan</span>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Physical School ID Verification</p>
+              </div>
+              <Switch checked={settings?.allowRfidScan ?? true} onCheckedChange={(v) => handleSaveSettings({ allowRfidScan: v })} />
+            </div>
+
+            <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Enforced Domain</Label>
+              <Input 
+                value={settings?.enforcedDomain ?? "neu.edu.ph"} 
+                onChange={(e) => handleSaveSettings({ enforcedDomain: e.target.value })}
+                className="h-10 rounded-xl font-mono text-xs font-bold"
+                placeholder="domain.com"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Department Registry */}
         <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden">
           <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
             <div>
               <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-headline">Academic Unit Registry</h2>
-              <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Institutional Lead Management</p>
+              <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Lead Management Color Coding</p>
             </div>
             <Palette className="h-4 w-4 text-primary/40" />
           </div>
@@ -124,7 +161,7 @@ export default function SystemSettingsPage() {
               </div>
             </div>
 
-            <div className="max-h-[350px] overflow-y-auto border border-slate-100 rounded-xl bg-slate-50/30">
+            <div className="max-h-[300px] overflow-y-auto border border-slate-100 rounded-xl bg-slate-50/30">
               <Table>
                 <TableBody>
                   {settings?.departments?.map((dept: any) => (
@@ -133,7 +170,7 @@ export default function SystemSettingsPage() {
                         <div className="flex items-center gap-4">
                           <div className="h-7 w-7 rounded-lg flex items-center justify-center text-[7px] font-black text-white shadow-md font-mono" style={{ backgroundColor: dept.color }}>{dept.code}</div>
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-slate-700 uppercase truncate max-w-[150px] font-headline">{dept.name}</span>
+                            <span className="text-[10px] font-black text-slate-700 uppercase font-headline truncate max-w-[150px]">{dept.name}</span>
                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{dept.code} Unit</span>
                           </div>
                         </div>
@@ -149,53 +186,31 @@ export default function SystemSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* System & Purpose Logic */}
+        {/* System & Maintenance */}
         <div className="space-y-8">
           <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden">
             <div className="p-6 border-b bg-slate-50/30 flex justify-between items-center">
-              <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-headline">Operational Logic</h2>
+              <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-headline">Operational Maintenance</h2>
               <Zap className="h-4 w-4 text-accent" />
             </div>
             <CardContent className="p-6 space-y-6">
               <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-black text-slate-800 uppercase flex items-center gap-2">Auto-Clear Registry</span>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Archive active sessions at midnight</p>
+                  <span className="text-[10px] font-black text-slate-800 uppercase">Auto-Clear Registry</span>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Reset live count at midnight</p>
                 </div>
-                <Switch checked={settings?.autoClearLogs} onCheckedChange={(v) => handleSaveSettings({ autoClearLogs: v })} />
+                <Switch checked={settings?.autoClearLogs ?? true} onCheckedChange={(v) => handleSaveSettings({ autoClearLogs: v })} />
               </div>
 
-              <div className="space-y-4">
-                <Button 
-                  onClick={handlePurgeLiveVisitors} 
-                  disabled={isResetting}
-                  variant="outline" 
-                  className="w-full h-12 rounded-xl border-red-100 text-red-600 hover:bg-red-50 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
-                >
-                  {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
-                  Purge Live Occupancy
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm rounded-2xl bg-white overflow-hidden">
-            <div className="p-6 border-b bg-slate-50/30">
-              <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-headline">Purpose Configuration</h2>
-              <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">Allowed reasons for space utilization</p>
-            </div>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-2 gap-3">
-                {settings?.purposes?.map((purpose: any) => (
-                  <div key={purpose.id} className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl flex items-center justify-between group hover:bg-white transition-all">
-                    <span className="text-[9px] font-black text-slate-700 uppercase font-headline truncate">{purpose.label}</span>
-                    <Trash2 className="h-3 w-3 text-slate-300 group-hover:text-red-400" />
-                  </div>
-                ))}
-                <Button variant="outline" className="h-full border-dashed border-2 rounded-xl text-slate-300 hover:text-primary min-h-[44px]">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button 
+                onClick={handlePurgeLiveVisitors} 
+                disabled={isResetting}
+                variant="outline" 
+                className="w-full h-12 rounded-xl border-red-100 text-red-600 hover:bg-red-50 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2"
+              >
+                {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
+                Purge Live Occupancy
+              </Button>
             </CardContent>
           </Card>
         </div>

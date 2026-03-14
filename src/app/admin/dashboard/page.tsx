@@ -195,7 +195,7 @@ export default function DashboardPage() {
                                   (!visit.patronName || visit.patronName === 'UNKNOWN');
                   
                   const isExternal = visit.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
-                  const detail = method === 'RF-ID Login' ? (visit.schoolId || 'MISSING ID') : (visit.patronEmail || 'MISSING EMAIL');
+                  const detail = method === 'RF-ID Login' ? (visit.schoolId || 'ID NOT READ') : (visit.patronEmail || 'EMAIL NOT READ');
 
                   return (
                     <tr key={visit.id} className={cn(
@@ -264,4 +264,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

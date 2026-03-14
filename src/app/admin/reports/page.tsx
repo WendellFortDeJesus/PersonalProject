@@ -186,7 +186,7 @@ export default function ReportsPage() {
                     {analytics?.recentVisits.map((v) => {
                       const isExternal = v.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
                       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
-                      const detail = method === 'RF-ID Login' ? (v.schoolId || 'MISSING ID') : (v.patronEmail || 'MISSING EMAIL');
+                      const detail = method === 'RF-ID Login' ? (v.schoolId || 'ID NOT READ') : (v.patronEmail || 'EMAIL NOT READ');
                       return (
                         <tr key={v.id}>
                           <td className={cn("px-4 py-3", isExternal && "bg-yellow-50/50")}>
@@ -359,4 +359,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-

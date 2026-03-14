@@ -59,19 +59,19 @@ export default function DashboardPage() {
       });
 
       // Integrity Logic: Flag if email missing @ or RF-ID too short
-      if (v.authMethod === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) {
+      const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
+      if (method === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) {
         flaggedCount++;
-      } else if (v.authMethod === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) {
+      } else if (method === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) {
         flaggedCount++;
       }
     });
 
     const integrityScore = Math.max(0, Math.min(100, Number(((totalRegistered - flaggedCount) / totalRegistered * 100).toFixed(1))));
-    const topDept = Object.entries(deptCountMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
     // Primary Auth Method Logic
     const authCounts = activeVisits.reduce((acc: Record<string, number>, v) => {
-      const method = v.authMethod || 'Unknown';
+      const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
       acc[method] = (acc[method] || 0) + 1;
       return acc;
     }, {});
@@ -85,7 +85,6 @@ export default function DashboardPage() {
     return {
       inside,
       totalRegistered,
-      topDept,
       recentVisits: visits.slice(0, 50),
       integrityScore,
       flaggedCount,
@@ -119,7 +118,7 @@ export default function DashboardPage() {
           <div className="space-y-0.5">
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Primary Auth Method</p>
             <h3 className="text-sm font-headline font-black text-slate-900 uppercase truncate max-w-[120px] leading-none">
-              {stats?.primaryAuthMethod}
+              {stats?.primaryAuthMethod?.toUpperCase()}
             </h3>
             <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">
               {stats?.authMethodPct}% OF CURRENT VISITORS
@@ -143,7 +142,7 @@ export default function DashboardPage() {
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-purple-500 h-20">
           <div className="space-y-0.5">
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Entries</p>
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Entries Today</p>
             <h3 className="text-2xl font-mono font-bold text-slate-900 leading-none">{stats?.totalRegistered ?? 0}</h3>
           </div>
           <Monitor className="h-5 w-5 text-purple-500/20" />
@@ -175,8 +174,9 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-slate-100">
                 {stats?.recentVisits.map((visit) => {
                   const isActive = visit.status === 'granted';
-                  const isFlagged = (visit.authMethod === 'SSO Login' && (!visit.patronEmail || !visit.patronEmail.includes('@'))) ||
-                                  (visit.authMethod === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5));
+                  const method = visit.authMethod || (visit.schoolId ? 'RF-ID Login' : 'SSO Login');
+                  const isFlagged = (method === 'SSO Login' && (!visit.patronEmail || !visit.patronEmail.includes('@'))) ||
+                                  (method === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5));
 
                   return (
                     <tr key={visit.id} className={cn("hover:bg-slate-50/50 transition-colors group h-9", isFlagged && "bg-amber-50/50")}>
@@ -202,14 +202,14 @@ export default function DashboardPage() {
                       <td className="px-6 py-0">
                         <span className={cn(
                           "text-[8px] font-black uppercase tracking-widest",
-                          visit.authMethod === 'RF-ID Login' ? "text-primary" : "text-blue-600"
+                          method === 'RF-ID Login' ? "text-primary" : "text-blue-600"
                         )}>
-                          {visit.authMethod?.toUpperCase() || 'N/A'}
+                          {method.toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-0 truncate">
                         <span className={cn("text-[10px] font-mono font-bold", isFlagged ? "text-red-500" : "text-slate-400")}>
-                          {visit.authMethod === 'RF-ID Login' ? visit.schoolId : visit.patronEmail}
+                          {method === 'RF-ID Login' ? visit.schoolId : visit.patronEmail}
                         </span>
                       </td>
                       <td className="px-6 py-0 truncate">

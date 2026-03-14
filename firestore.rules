@@ -9,44 +9,29 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    // For prototype simplicity, we allow all signed-in users (including anonymous admin sessions)
-    function isStaff() {
-      return isSignedIn();
-    }
-
     // --- Collection Rules ---
 
-    match /admin_accounts/{adminId} {
-      allow get: if isOwner(adminId) || isStaff();
-      allow list: if isStaff();
-      allow create: if isOwner(adminId);
-      allow update: if isOwner(adminId);
-      allow delete: if isStaff();
-    }
-
     match /patrons/{patronId} {
-      // Kiosk needs to check if a patron exists by ID or query by email/schoolId
-      allow read: if true; 
-      allow create: if true; 
-      allow update: if isStaff() || isOwner(patronId);
-      allow delete: if isStaff();
+      // Kiosk and Admin need broad read access for identity verification
+      allow read, create: if true; 
+      allow update, delete: if isSignedIn();
     }
 
     match /visits/{visitId} {
-      // Allow public read (list) so the kiosk can count live occupancy
-      allow read: if true; 
-      allow create: if true; // Allow kiosk log entries
-      allow update, delete: if isStaff();
+      // Kiosk needs to log entries; Admin needs to monitor live occupancy
+      allow read, create: if true; 
+      allow update, delete: if isSignedIn();
     }
 
-    // System configuration for colleges, purposes, and capacity limits
     match /system_config/{configId} {
-      allow read: if true; // Allow kiosk and guests to read branding/purposes
-      allow write: if isStaff();
+      // System branding and purposes are public
+      allow read: if true; 
+      allow write: if isSignedIn();
+    }
+
+    // Catch-all for any other administrative paths
+    match /{document=**} {
+      allow read, write: if isSignedIn();
     }
   }
 }

@@ -22,7 +22,7 @@ import {
   Circle,
   LayoutGrid
 } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useDoc, useUser } from '@/firebase';
 import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -30,6 +30,7 @@ import { format } from 'date-fns';
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
+  const { user } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -47,15 +48,16 @@ export default function DashboardPage() {
     return d.toISOString();
   }, []);
 
+  // Only initiate queries if the user is authenticated to ensure permissions are respected
   const visitsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(500));
-  }, [db]);
+  }, [db, user]);
 
   const activeVisitsQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    if (!db || !user) return null;
     return query(collection(db, 'visits'), where('timestamp', '>=', today), where('status', '==', 'granted'));
-  }, [db, today]);
+  }, [db, today, user]);
 
   const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
   const { data: activeVisits } = useCollection(activeVisitsQuery);

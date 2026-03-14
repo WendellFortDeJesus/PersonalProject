@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -128,11 +129,12 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
               <span className="text-[9px] font-black text-accent uppercase tracking-[0.4em] border-r border-white/20 pr-16 h-4 flex items-center">Live Identity Feed:</span>
               {tickerVisits?.map((v, i) => {
                 const p = patrons?.find(patron => patron.id === v.patronId);
+                const isBlocked = p?.isBlocked ?? false;
                 const currentName = p?.name ?? v.patronName;
                 return (
                   <div key={i} className="flex items-center gap-4">
-                    <span className={cn("text-[10px] font-black uppercase tracking-tight", p?.isBlocked ? "text-red-400" : "text-white")}>
-                      {currentName} {p?.isBlocked && '[BLOCKED]'}
+                    <span className={cn("text-[10px] font-black uppercase tracking-tight", isBlocked ? "text-red-400" : "text-white")}>
+                      {currentName} {isBlocked && '[BLOCKED]'}
                     </span>
                     <span className="text-[9px] font-bold text-white/40 font-mono">[{v.authMethod === 'RF-ID Login' ? v.schoolId : 'SSO'}]</span>
                     <span className="text-[9px] font-black text-accent uppercase tracking-tighter">({v.patronDepartments?.[0]})</span>

@@ -177,8 +177,7 @@ export default function ReportsPage() {
                 <table className="w-full text-left text-[11px] border-collapse">
                   <thead className="border-b-2 border-slate-900 bg-slate-50">
                     <tr>
-                      <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Registry Detail</th>
-                      <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Student Name</th>
+                      <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Student Identity & Detail</th>
                       <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Login Method</th>
                       <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Visit Intent</th>
                     </tr>
@@ -187,10 +186,15 @@ export default function ReportsPage() {
                     {analytics?.recentVisits.map((v) => {
                       const isExternal = v.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
                       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
+                      const detail = method === 'RF-ID Login' ? (v.schoolId || 'MISSING ID') : (v.patronEmail || 'MISSING EMAIL');
                       return (
                         <tr key={v.id}>
-                          <td className={cn("px-4 py-3 font-mono font-bold text-slate-600", isExternal && "bg-yellow-50/50")}>{v.schoolId || v.patronEmail}</td>
-                          <td className={cn("px-4 py-3 font-black text-slate-900 uppercase", isExternal && "bg-yellow-50/50")}>{v.patronName}</td>
+                          <td className={cn("px-4 py-3", isExternal && "bg-yellow-50/50")}>
+                            <div className="flex flex-col">
+                              <span className="font-black text-slate-900 uppercase">{v.patronName}</span>
+                              <span className="font-mono font-bold text-slate-400 mt-0.5">{detail}</span>
+                            </div>
+                          </td>
                           <td className={cn("px-4 py-3 uppercase text-slate-500 font-bold", isExternal && "bg-yellow-50/50")}>{method.toUpperCase()}</td>
                           <td className={cn("px-4 py-3 font-bold text-primary uppercase", isExternal && "bg-yellow-50/50")}>{v.purpose}</td>
                         </tr>
@@ -240,7 +244,7 @@ export default function ReportsPage() {
           <div className="space-y-1">
             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dept Champion</h2>
             <p className="text-xl font-headline font-black text-primary uppercase truncate max-w-[200px] leading-none">{analytics?.topDept?.name || 'N/A'}</p>
-            <p className="text-[9px] font-bold text-primary uppercase mt-2">Highest Unit Volume</p>
+            <p className="text-[9px] font-bold text-primary uppercase mt-2">Highest Unit Engagement</p>
           </div>
           <TrendingUp className="h-6 w-6 text-primary" />
         </Card>
@@ -355,3 +359,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+

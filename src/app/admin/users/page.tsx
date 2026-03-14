@@ -56,7 +56,8 @@ export default function AccessManagementPage() {
 
   const filteredPatrons = patrons?.filter(p => {
     const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase());
+                         p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         p.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
     return matchesSearch && matchesDept;
   });
@@ -89,7 +90,7 @@ export default function AccessManagementPage() {
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Master Search</Label>
               <Input 
-                placeholder="Name or ID Index..." 
+                placeholder="Name, ID or Email..." 
                 className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -126,7 +127,7 @@ export default function AccessManagementPage() {
           <Table>
             <TableHeader className="bg-white sticky top-0 z-10">
               <TableRow className="hover:bg-transparent border-b">
-                <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Patron Identity</TableHead>
+                <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Patron Identity & Detail</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Primary Department</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Demographics</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Activity Start</TableHead>
@@ -135,8 +136,9 @@ export default function AccessManagementPage() {
             </TableHeader>
             <TableBody>
               {filteredPatrons?.map((patron) => {
-                const isFlagged = !patron.email || !patron.schoolId || patron.name === 'UNKNOWN';
+                const isFlagged = (!patron.email && !patron.schoolId) || patron.name === 'UNKNOWN';
                 const isExternal = patron.departments?.[0]?.toUpperCase().includes('VISITOR');
+                const detail = patron.schoolId || patron.email || 'NO IDENTITY DATA';
                 
                 return (
                   <TableRow 
@@ -157,12 +159,12 @@ export default function AccessManagementPage() {
                           </span>
                           {isFlagged && <ShieldAlert className="h-3 w-3 text-red-500" />}
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">
-                          {patron.schoolId || 'MISSING ID'}
+                        <span className={cn(
+                          "text-[10px] font-mono font-bold uppercase mt-1 tracking-tighter",
+                          isFlagged ? "text-red-600" : "text-slate-400"
+                        )}>
+                          {detail}
                         </span>
-                        {isFlagged && !patron.email && (
-                          <span className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-0.5">Missing Email Verification</span>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -263,3 +265,4 @@ export default function AccessManagementPage() {
     </div>
   );
 }
+

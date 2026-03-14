@@ -8,11 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Users, 
-  Activity,
-  Monitor,
   CreditCard,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Monitor
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
@@ -40,7 +39,6 @@ export default function DashboardPage() {
     if (!visits || visits.length === 0) return {
       inside: 0,
       totalRegistered: 0,
-      topDept: 'N/A',
       recentVisits: [],
       integrityScore: 100,
       flaggedCount: 0,
@@ -110,7 +108,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC] animate-fade-in font-body overflow-hidden">
-      {/* Top KPI Strip - Bento Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 shrink-0">
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-primary h-20">
           <div className="space-y-0.5">
@@ -162,7 +159,7 @@ export default function DashboardPage() {
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Active Departments</p>
             <h3 className="text-2xl font-mono font-bold text-slate-900 leading-none">{stats?.uniqueDepts ?? 0}</h3>
             <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">
-              UNITS CURRENTLY REPRESENTED
+              UNITS REPRESENTED
             </p>
           </div>
           <Monitor className="h-5 w-5 text-purple-500/20" />
@@ -170,7 +167,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col">
-        {/* Live Visitor Log - Primary Focus (85% approx height) */}
         <Card className="flex-1 border-none shadow-sm bg-white rounded-2xl overflow-hidden flex flex-col">
           <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50/50">
             <div className="flex items-center gap-3">
@@ -184,10 +180,9 @@ export default function DashboardPage() {
                 <tr>
                   <th className="w-[70px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                   <th className="w-[100px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time In</th>
-                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Identity Name</th>
+                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Identity Name & Detail</th>
                   <th className="w-[60px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Age</th>
                   <th className="w-[140px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Login Method</th>
-                  <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Registry Detail</th>
                   <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Department</th>
                 </tr>
               </thead>
@@ -200,10 +195,11 @@ export default function DashboardPage() {
                                   (!visit.patronName || visit.patronName === 'UNKNOWN');
                   
                   const isExternal = visit.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
+                  const detail = method === 'RF-ID Login' ? (visit.schoolId || 'MISSING ID') : (visit.patronEmail || 'MISSING EMAIL');
 
                   return (
                     <tr key={visit.id} className={cn(
-                      "hover:bg-slate-50/50 transition-colors group h-10", 
+                      "hover:bg-slate-50/50 transition-colors group h-12", 
                       isFlagged && "bg-red-50"
                     )}>
                       <td className="px-6 py-0">
@@ -219,14 +215,24 @@ export default function DashboardPage() {
                           {format(new Date(visit.timestamp), 'hh:mm:ss aa')}
                         </span>
                       </td>
-                      <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
-                        <span className={cn(
-                          "text-[10px] font-bold uppercase tracking-tight",
-                          isFlagged ? "text-red-700" : "text-slate-900"
-                        )}>
-                          {visit.patronName}
-                        </span>
-                        {isFlagged && <ShieldAlert className="inline-block ml-2 h-3 w-3 text-red-500" />}
+                      <td className={cn("px-6 py-2", isExternal && "bg-yellow-50/80")}>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "text-[10px] font-bold uppercase tracking-tight",
+                              isFlagged ? "text-red-700" : "text-slate-900"
+                            )}>
+                              {visit.patronName}
+                            </span>
+                            {isFlagged && <ShieldAlert className="h-3 w-3 text-red-500" />}
+                          </div>
+                          <span className={cn(
+                            "text-[9px] font-mono font-bold tracking-tight uppercase",
+                            isFlagged ? "text-red-500" : "text-slate-400"
+                          )}>
+                            {detail}
+                          </span>
+                        </div>
                       </td>
                       <td className={cn("px-6 py-0", isExternal && "bg-yellow-50/80")}>
                         <span className="text-[10px] font-mono font-bold text-slate-500">{visit.patronAge}</span>
@@ -241,17 +247,9 @@ export default function DashboardPage() {
                       </td>
                       <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
                         <span className={cn(
-                          "text-[10px] font-mono font-bold px-2 py-0.5 rounded",
-                          isFlagged ? "bg-red-100 text-red-700 border border-red-200" : "text-slate-400"
-                        )}>
-                          {method === 'RF-ID Login' ? (visit.schoolId || 'MISSING ID') : (visit.patronEmail || 'MISSING EMAIL')}
-                        </span>
-                      </td>
-                      <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
-                        <span className={cn(
                           "text-[10px] font-bold uppercase",
-                          isExternal ? "text-amber-600 bg-amber-100/50 px-2 py-0.5 rounded border border-amber-200" : "text-slate-50"
-                        )} style={!isExternal ? { color: 'rgb(100 116 139)' } : {}}>
+                          isExternal ? "text-amber-600 bg-amber-100/50 px-2 py-0.5 rounded border border-amber-200" : "text-slate-500"
+                        )}>
                           {visit.patronDepartments?.[0]}
                         </span>
                       </td>
@@ -266,3 +264,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

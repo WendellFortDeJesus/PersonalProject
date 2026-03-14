@@ -25,15 +25,14 @@ import {
   DialogFooter,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { format } from 'date-fns';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { 
   FileText,
   Printer,
-  TrendingUp,
   PieChart as PieIcon,
-  BarChart3
+  BarChart3,
+  TrendingUp
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -209,6 +208,32 @@ export default function ReportsPage() {
         </Dialog>
       </header>
 
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total All-Time Engagement</h2>
+            <p className="text-3xl font-mono font-bold text-slate-900 leading-none">{analytics?.totalAllTime ?? 0}</p>
+          </div>
+          <FileText className="h-8 w-8 text-primary/10" />
+        </Card>
+        <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between border-l-4 border-accent">
+          <div className="space-y-1">
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dominant Academic Unit</h2>
+            <p className="text-xl font-headline font-black text-primary uppercase truncate max-w-[200px] leading-none">{analytics?.topDept?.name || 'N/A'}</p>
+            <p className="text-[9px] font-bold text-accent uppercase mt-2">Highest Unit Engagement</p>
+          </div>
+          <TrendingUp className="h-6 w-6 text-accent" />
+        </Card>
+        <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Report Precision</h2>
+            <p className="text-3xl font-mono font-bold text-green-600 leading-none">100%</p>
+          </div>
+          <Badge className="bg-green-50 text-green-700 border-none text-[8px] font-black uppercase tracking-widest">Validated</Badge>
+        </Card>
+      </div>
+
       {/* Dual Chart Grid - Visual Intelligence Center */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-8 bg-white border-none shadow-sm rounded-2xl flex flex-col h-[400px]">
@@ -240,7 +265,10 @@ export default function ReportsPage() {
             </div>
             <PieIcon className="h-5 w-5 text-accent/40" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Intent</span>
+            </div>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 

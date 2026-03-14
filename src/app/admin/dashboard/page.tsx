@@ -6,15 +6,14 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Users, 
-  LogIn, 
-  Activity,
   TrendingUp,
+  Activity,
   Monitor
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { format, startOfDay } from 'date-fns';
+import { format } from 'date-fns';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -75,7 +74,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC] animate-fade-in font-body overflow-hidden">
-      {/* Top KPI Strip - Reduced Height */}
+      {/* Top KPI Strip - Bento Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 shrink-0">
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-primary h-20">
           <div className="space-y-0.5">
@@ -129,7 +128,7 @@ export default function DashboardPage() {
                   <th className="w-[100px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time In</th>
                   <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Identity Name</th>
                   <th className="w-[60px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Age</th>
-                  <th className="w-[140px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Method</th>
+                  <th className="w-[140px] px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Login Method</th>
                   <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Registry Detail</th>
                   <th className="px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Department</th>
                 </tr>

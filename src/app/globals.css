@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* NEU Institutional Green: #006837, Paper White: #F8FAFC, Dark Charcoal: #0F172A */
+    /* Paper White: #F8FAFC, NEU Green: #006837, Accent Gold: #FFD700 */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -17,14 +18,14 @@
     --secondary-foreground: 152 100% 10%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 51 100% 50%;
+    --accent: 48 100% 50%;
     --accent-foreground: 152 100% 5%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 152 100% 20%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
@@ -58,12 +59,21 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.high-density-table td {
-  @apply py-2 px-4;
+.animate-marquee {
+  animation: marquee 40s linear infinite;
 }
 
-.heatmap-cell {
-  @apply w-full aspect-square rounded-[2px] transition-colors border border-white/10;
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.report-container {
+  font-family: 'Inter', sans-serif;
+}
+
+.report-container h2, .report-container h3 {
+  font-family: 'Montserrat', sans-serif;
 }
 
 @media print {
@@ -73,15 +83,5 @@
   }
   .no-print {
     display: none !important;
-  }
-  .report-print-container {
-    display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 20px !important;
-  }
-  .report-print-container * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
   }
 }

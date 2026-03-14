@@ -13,7 +13,8 @@ import {
   PieChart, 
   Pie, 
   Cell,
-  Legend
+  Legend,
+  CartesianGrid
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -34,7 +35,9 @@ import {
   FileText,
   Printer,
   Activity,
-  FileDown
+  FileDown,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -161,8 +164,9 @@ export default function ReportsPage() {
                     <div className="h-[250px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics?.deptData ?? []}>
-                          <XAxis dataKey="name" hide />
-                          <YAxis hide />
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 8, fontWeight: 900, fill: '#64748b' }} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} />
                           <Bar dataKey="count" fill="#006837" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>

@@ -33,7 +33,13 @@ export default function DashboardPage() {
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(1000));
   }, [db, user, isUserLoading]);
 
+  const patronsQuery = useMemoFirebase(() => {
+    if (!db || !user || isUserLoading) return null;
+    return collection(db, 'patrons');
+  }, [db, user, isUserLoading]);
+
   const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
+  const { data: patrons, isLoading: isPatronsLoading } = useCollection(patronsQuery);
 
   const stats = useMemo(() => {
     if (!visits || visits.length === 0) return {
@@ -59,10 +65,14 @@ export default function DashboardPage() {
         uniqueDeptsSet.add(d);
       });
 
+      // Find actual patron status for integrity check
+      const p = patrons?.find(p => p.id === v.patronId);
       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
+      
       const isSuspect = (method === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) ||
                         (method === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) ||
-                        (!v.patronName || v.patronName === 'UNKNOWN');
+                        (!v.patronName || v.patronName === 'UNKNOWN') ||
+                        (p && p.isBlocked);
       
       if (isSuspect) {
         flaggedCount++;
@@ -95,9 +105,9 @@ export default function DashboardPage() {
       authMethodPct,
       uniqueDepts: uniqueDeptsSet.size
     };
-  }, [visits]);
+  }, [visits, patrons]);
 
-  if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
+  if (!mounted || isUserLoading || (user && (isVisitsLoading || isPatronsLoading))) return (
     <div className="flex h-[80vh] items-center justify-center bg-white">
       <div className="text-center space-y-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
@@ -188,26 +198,35 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {stats?.recentVisits.map((visit) => {
+                  // Real-time join with patron data
+                  const p = patrons?.find(patron => patron.id === visit.patronId);
+                  const isBlocked = p?.isBlocked ?? false;
+                  const currentName = p?.name ?? visit.patronName;
+                  const currentEmail = p?.email ?? visit.patronEmail;
+                  const currentAge = p?.age ?? visit.patronAge;
+
                   const isActive = visit.status === 'granted';
                   const method = visit.authMethod || (visit.schoolId ? 'RF-ID Login' : 'SSO Login');
-                  const isFlagged = (method === 'SSO Login' && (!visit.patronEmail || !visit.patronEmail.includes('@'))) ||
+                  const isFlagged = (method === 'SSO Login' && (!currentEmail || !currentEmail.includes('@'))) ||
                                   (method === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5)) ||
-                                  (!visit.patronName || visit.patronName === 'UNKNOWN');
+                                  (!currentName || currentName === 'UNKNOWN') ||
+                                  isBlocked;
                   
                   const isExternal = visit.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
-                  const detail = method === 'RF-ID Login' ? (visit.schoolId || 'ID NOT READ') : (visit.patronEmail || 'EMAIL NOT READ');
+                  const detail = method === 'RF-ID Login' ? (visit.schoolId || 'ID NOT READ') : (currentEmail || 'EMAIL NOT READ');
 
                   return (
                     <tr key={visit.id} className={cn(
                       "hover:bg-slate-50/50 transition-colors group h-12", 
-                      isFlagged && "bg-red-50"
+                      isFlagged && "bg-red-50",
+                      isBlocked && "bg-red-100"
                     )}>
                       <td className="px-6 py-0">
                         <span className={cn(
                           "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded",
-                          isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                          isBlocked ? "bg-red-600 text-white" : isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                         )}>
-                          {isActive ? 'IN' : 'OUT'}
+                          {isBlocked ? 'BLOCKED' : isActive ? 'IN' : 'OUT'}
                         </span>
                       </td>
                       <td className="px-6 py-0">
@@ -222,9 +241,9 @@ export default function DashboardPage() {
                               "text-[10px] font-bold uppercase tracking-tight",
                               isFlagged ? "text-red-700" : "text-slate-900"
                             )}>
-                              {visit.patronName}
+                              {currentName}
                             </span>
-                            {isFlagged && <ShieldAlert className="h-3 w-3 text-red-500" />}
+                            {(isFlagged || isBlocked) && <ShieldAlert className="h-3 w-3 text-red-500" />}
                           </div>
                           <span className={cn(
                             "text-[9px] font-mono font-bold tracking-tight uppercase",
@@ -235,7 +254,7 @@ export default function DashboardPage() {
                         </div>
                       </td>
                       <td className={cn("px-6 py-0", isExternal && "bg-yellow-50/80")}>
-                        <span className="text-[10px] font-mono font-bold text-slate-500">{visit.patronAge}</span>
+                        <span className="text-[10px] font-mono font-bold text-slate-500">{currentAge}</span>
                       </td>
                       <td className={cn("px-6 py-0", isExternal && "bg-yellow-50/80")}>
                         <span className={cn(

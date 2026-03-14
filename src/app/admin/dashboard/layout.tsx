@@ -45,6 +45,12 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   }, [db]);
   const { data: tickerVisits } = useCollection(tickerQuery);
 
+  const patronsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return collection(db, 'patrons');
+  }, [db]);
+  const { data: patrons } = useCollection(patronsQuery);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-slate-50 font-body">
@@ -120,14 +126,20 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           <footer className="h-10 bg-primary flex items-center overflow-hidden shrink-0 shadow-inner">
             <div className="flex animate-marquee whitespace-nowrap gap-16 px-8 items-center">
               <span className="text-[9px] font-black text-accent uppercase tracking-[0.4em] border-r border-white/20 pr-16 h-4 flex items-center">Live Identity Feed:</span>
-              {tickerVisits?.map((v, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <span className="text-[10px] font-black text-white uppercase tracking-tight">{v.patronName}</span>
-                  <span className="text-[9px] font-bold text-white/40 font-mono">[{v.authMethod === 'RF-ID Login' ? v.schoolId : 'SSO'}]</span>
-                  <span className="text-[9px] font-black text-accent uppercase tracking-tighter">({v.patronDepartments?.[0]})</span>
-                  <span className="text-white/20 mx-4">|</span>
-                </div>
-              ))}
+              {tickerVisits?.map((v, i) => {
+                const p = patrons?.find(patron => patron.id === v.patronId);
+                const currentName = p?.name ?? v.patronName;
+                return (
+                  <div key={i} className="flex items-center gap-4">
+                    <span className={cn("text-[10px] font-black uppercase tracking-tight", p?.isBlocked ? "text-red-400" : "text-white")}>
+                      {currentName} {p?.isBlocked && '[BLOCKED]'}
+                    </span>
+                    <span className="text-[9px] font-bold text-white/40 font-mono">[{v.authMethod === 'RF-ID Login' ? v.schoolId : 'SSO'}]</span>
+                    <span className="text-[9px] font-black text-accent uppercase tracking-tighter">({v.patronDepartments?.[0]})</span>
+                    <span className="text-white/20 mx-4">|</span>
+                  </div>
+                );
+              })}
             </div>
           </footer>
         </SidebarInset>

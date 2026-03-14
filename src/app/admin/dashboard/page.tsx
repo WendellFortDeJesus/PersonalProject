@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,9 @@ import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-export default function DashboardPage() {
+export default function DashboardPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
+  const params = use(props.params);
+  const searchParams = use(props.searchParams);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const db = useFirestore();
@@ -61,7 +64,7 @@ export default function DashboardPage() {
       uniqueDepts: 0
     };
     
-    // Live Occupancy resets daily: Only count students who checked in today
+    // Live Occupancy resets daily
     const activeToday = visits.filter(v => {
       const visitDate = new Date(v.timestamp);
       return v.status === 'granted' && visitDate >= startOfToday;
@@ -78,11 +81,12 @@ export default function DashboardPage() {
         uniqueDeptsSet.add(d);
       });
 
-      // Find actual patron status for integrity check
+      // Find actual patron status
       const p = patrons?.find(p => p.id === v.patronId);
       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
+      const currentEmail = p?.email ?? v.patronEmail;
       
-      const isSuspect = (method === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) ||
+      const isSuspect = (method === 'SSO Login' && (!currentEmail || !currentEmail.includes('@'))) ||
                         (method === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) ||
                         (!v.patronName || v.patronName === 'UNKNOWN') ||
                         (p && p.isBlocked);
@@ -211,7 +215,6 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {stats?.recentVisits.map((visit) => {
-                  // Real-time join with patron data
                   const p = patrons?.find(patron => patron.id === visit.patronId);
                   const isBlocked = p?.isBlocked ?? false;
                   const currentName = p?.name ?? visit.patronName;

@@ -1,6 +1,7 @@
 
 "use client";
 
+import React, { use } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -21,7 +22,8 @@ import { signOut } from 'firebase/auth';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
-export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+export default function AdminDashboardLayout(props: { children: React.ReactNode; params: Promise<any> }) {
+  const params = use(props.params);
   const pathname = usePathname();
   const auth = useAuth();
   const db = useFirestore();
@@ -121,7 +123,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           </header>
           
           <main className="p-0 overflow-y-auto h-[calc(100vh-104px)]">
-            {children}
+            {props.children}
           </main>
 
           <footer className="h-10 bg-primary flex items-center overflow-hidden shrink-0 shadow-inner">

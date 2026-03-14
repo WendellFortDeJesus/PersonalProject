@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, use } from 'react';
 import { Card } from '@/components/ui/card';
 import { 
   BarChart,
@@ -38,7 +38,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export default function ReportsPage() {
+export default function ReportsPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
+  const params = use(props.params);
+  const searchParams = use(props.searchParams);
   const [mounted, setMounted] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
@@ -125,8 +127,8 @@ export default function ReportsPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0 rounded-2xl border-none shadow-2xl bg-white">
-            <DialogHeader className="sr-only">
-              <DialogTitle>PatronPoint Official Strategic Audit Preview</DialogTitle>
+            <DialogHeader className="p-8 pb-0">
+              <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Official Audit Preview</DialogTitle>
             </DialogHeader>
             <div id="printable-report" className="p-16 space-y-12 report-container bg-white">
               <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
@@ -253,7 +255,7 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      {/* Dual Chart Grid - Visual Intelligence Center */}
+      {/* Visual Intelligence Center */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-8 bg-white border-none shadow-sm rounded-2xl flex flex-col h-[400px]">
           <div className="flex justify-between items-center mb-6">
@@ -308,7 +310,6 @@ export default function ReportsPage() {
         </Card>
       </div>
 
-      {/* Formal Report Preview Table */}
       <Card className="p-8 bg-white border-none shadow-sm rounded-2xl">
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <h2 className="text-[10px] font-black text-primary uppercase tracking-widest font-headline">Cumulative Summary</h2>
@@ -348,7 +349,6 @@ export default function ReportsPage() {
         </div>
       </Card>
 
-      {/* Audit Export Module */}
       <Card className="p-10 bg-primary rounded-[3rem] border-none shadow-2xl flex flex-col md:flex-row items-center justify-between gap-10 mt-6">
         <div className="space-y-3">
           <h2 className="text-3xl font-black text-white uppercase tracking-tighter font-headline leading-none">Formal Strategic Snapshot</h2>

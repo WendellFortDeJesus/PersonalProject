@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,9 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Palette, Settings2, ShieldAlert, Zap, Loader2, ShieldCheck, ToggleLeft, Smartphone, CreditCard } from 'lucide-react';
 
-export default function SystemSettingsPage() {
+export default function SystemSettingsPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
+  const params = use(props.params);
+  const searchParams = use(props.searchParams);
   const db = useFirestore();
   const { toast } = useToast();
 

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import React, { useState, use } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -33,7 +33,9 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 import { ShieldAlert } from 'lucide-react';
 
-export default function AccessManagementPage() {
+export default function AccessManagementPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
+  const params = use(props.params);
+  const searchParams = use(props.searchParams);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingPatron, setEditingPatron] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);

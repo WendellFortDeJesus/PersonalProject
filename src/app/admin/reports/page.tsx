@@ -33,8 +33,7 @@ import {
   Calendar as CalendarIcon, 
   FileText,
   Printer,
-  Activity,
-  Download
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -57,10 +56,11 @@ export default function ReportsPage() {
   }, [db]);
   const { data: config } = useDoc(configRef);
 
+  // Defensive query: only if authenticated
   const visitsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || isUserLoading) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'));
-  }, [db, user]);
+  }, [db, user, isUserLoading]);
 
   const { data: rawVisits, isLoading: isVisitsLoading } = useCollection(visitsQuery);
 
@@ -112,7 +112,7 @@ export default function ReportsPage() {
 
   if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
     <div className="p-32 text-center">
-      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Synchronizing Behavioral Audit...</p>
+      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Syncing Audit Protocol...</p>
     </div>
   );
 
@@ -122,8 +122,8 @@ export default function ReportsPage() {
     <div className="space-y-6 animate-fade-in fluid-container bg-[#F8FAFC] p-8 font-body min-h-screen no-print">
       <header className="flex justify-between items-end pb-6 border-b border-slate-200">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none font-headline">Strategic Audit</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">Institutional engagement & Behavior Analysis</p>
+          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none font-headline">Institutional Audit</h1>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">Engagement Analysis & Resource Demand</p>
         </div>
         <div className="flex gap-3">
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -137,8 +137,8 @@ export default function ReportsPage() {
               <div id="printable-report" className="p-12 space-y-10 report-container">
                 <header className="flex justify-between items-start border-b border-slate-100 pb-8">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-black text-primary uppercase tracking-tighter font-headline leading-none">PatronPoint Library System</h2>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Institutional Record</p>
+                    <h2 className="text-2xl font-black text-primary uppercase tracking-tighter font-headline leading-none">PatronPoint Library Audit</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Official Verification Record</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Snapshot Date</p>
@@ -148,7 +148,7 @@ export default function ReportsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Hourly Peak Performance</h3>
+                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Facility Utilization Trend</h3>
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics?.hourlyData ?? []}>
@@ -160,7 +160,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Visit Intent Snapshot</h3>
+                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Resource Demand Distribution</h3>
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -185,28 +185,28 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Strategic Unit Analysis</h3>
+                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Strategic Unit Lead</h3>
                    <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-[9px] font-black text-primary uppercase tracking-widest">Most Active Department</p>
+                        <p className="text-[9px] font-black text-primary uppercase tracking-widest">Most Engaged Department</p>
                         <h4 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{analytics?.topDept?.name}</h4>
                       </div>
                       <div className="text-right">
                         <p className="text-[24px] font-mono font-bold text-primary">{analytics?.topDept?.count}</p>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Registry Hits</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Registry Volume</p>
                       </div>
                    </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Identity Audit Log</h3>
+                  <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Student Identity Log</h3>
                   <table className="w-full text-left text-[10px] border-collapse">
                     <thead className="border-b bg-slate-50">
                       <tr>
-                        <th className="px-4 py-3 font-black text-slate-400 uppercase">School ID / Email</th>
-                        <th className="px-4 py-3 font-black text-slate-400 uppercase">Identity</th>
+                        <th className="px-4 py-3 font-black text-slate-400 uppercase">Registry Detail</th>
+                        <th className="px-4 py-3 font-black text-slate-400 uppercase">Student Identity</th>
                         <th className="px-4 py-3 font-black text-slate-400 uppercase">Academic Unit</th>
-                        <th className="px-4 py-3 font-black text-slate-400 uppercase">Purpose</th>
+                        <th className="px-4 py-3 font-black text-slate-400 uppercase">Visit Purpose</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -223,7 +223,7 @@ export default function ReportsPage() {
                 </div>
 
                 <footer className="pt-8 border-t flex justify-between items-center opacity-40">
-                  <p className="text-[8px] font-bold uppercase tracking-widest">System Generated Strategic Audit</p>
+                  <p className="text-[8px] font-bold uppercase tracking-widest">System Generated Audit Protocol</p>
                   <p className="text-[8px] font-bold uppercase tracking-widest font-mono">{new Date().toISOString()}</p>
                 </footer>
               </div>
@@ -231,7 +231,7 @@ export default function ReportsPage() {
                 <Button variant="ghost" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest">Close</Button>
                 <Button onClick={handlePrint} className="bg-accent text-accent-foreground rounded-xl px-8 font-black uppercase text-[10px] tracking-widest shadow-lg">
                   <Printer className="mr-2 h-4 w-4" />
-                  Download PDF Report
+                  Download PDF Audit
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -254,7 +254,7 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <Card className="lg:col-span-12 p-6 bg-white border-none rounded-2xl shadow-sm">
           <div className="mb-6 flex justify-between items-center">
-            <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Peak Performance Map (24-Hour Pulse)</h2>
+            <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Hourly Engagement Pulse</h2>
             <Activity className="h-4 w-4 text-slate-300" />
           </div>
           <div className="h-[120px] w-full">
@@ -270,17 +270,17 @@ export default function ReportsPage() {
 
         <Card className="lg:col-span-12 bg-white border-none rounded-2xl shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b flex justify-between items-center">
-            <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Departmental Engagement Summary</h2>
-            <Badge variant="outline" className="h-6 text-[8px] font-black uppercase tracking-widest">High-Density Snapshot</Badge>
+            <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Unit Engagement Analysis</h2>
+            <Badge variant="outline" className="h-6 text-[8px] font-black uppercase tracking-widest">Strategic Leaderboard</Badge>
           </div>
           <div className="flex-1 overflow-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Academic Unit</th>
-                  <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Unit Code</th>
-                  <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Visit Volume</th>
-                  <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Dominant Purpose</th>
+                  <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Unit Index</th>
+                  <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Registry Volume</th>
+                  <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Dominant Intent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -303,7 +303,7 @@ export default function ReportsPage() {
       <Card className="p-8 bg-primary rounded-[2rem] border-none shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter font-headline leading-none">Formal Strategic Record</h2>
-          <p className="text-[10px] font-black text-primary-foreground/60 uppercase tracking-widest">Generate audit-ready documentation for institutional accreditation</p>
+          <p className="text-[10px] font-black text-primary-foreground/60 uppercase tracking-widest">Generate audit-ready documentation for institutional verification</p>
         </div>
         <Button onClick={() => setIsPreviewOpen(true)} className="h-12 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl transition-transform active:scale-95">
           <Printer className="h-4 w-4 mr-3" />

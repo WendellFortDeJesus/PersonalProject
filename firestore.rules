@@ -3,27 +3,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Collection Rules ---
+    // --- Core Institutional Collections ---
 
-    // Patrons: Required for kiosk registration and admin management
+    // Patrons: Broad read for kiosk lookup; restricted write for admin management
     match /patrons/{patronId} {
-      allow get, list, create: if true;
+      allow read, create: if true;
       allow update, delete: if request.auth != null;
     }
 
-    // Visits: Log of all check-in attempts; broad read for live occupancy and analytics
+    // Visits: Log of all entries; broad read for live occupancy metrics
     match /visits/{visitId} {
-      allow get, list, create: if true;
+      allow read, create: if true;
       allow update, delete: if request.auth != null;
     }
 
-    // System Config: Global settings for the terminal and dashboard
+    // System Config: Global settings for kiosk and terminal
     match /system_config/{configId} {
-      allow get, list: if true;
+      allow read: if true;
       allow write: if request.auth != null;
     }
 
-    // Catch-all: Ensure authenticated staff can access any other administrative paths
+    // --- Global Catch-all ---
     match /{document=**} {
       allow read, write: if request.auth != null;
     }

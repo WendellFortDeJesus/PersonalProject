@@ -65,13 +65,9 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     if (!visits) return null;
     
-    // 1. Live Occupancy
     const inside = activeVisits?.length || 0;
-
-    // 2. Total Entries Today
     const todayEntries = visits.filter(v => v.timestamp >= today).length;
 
-    // 3. Auth Method Stats
     let rfidCount = 0;
     let ssoCount = 0;
     visits.forEach(v => {
@@ -86,7 +82,6 @@ export default function DashboardPage() {
       { name: 'Email SSO', count: ssoCount, color: '#3b82f6' }
     ];
 
-    // 4. Active Departments
     const activeDepts = new Set<string>();
     activeVisits?.forEach(v => {
       v.patronDepartments?.forEach((d: string) => activeDepts.add(d));
@@ -105,7 +100,7 @@ export default function DashboardPage() {
   if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
     <div className="flex h-[60vh] items-center justify-center">
       <div className="text-center space-y-4">
-        <p className="font-mono font-black text-primary/40 uppercase tracking-[0.4em] text-[10px] animate-pulse">Authenticating Portal Hub...</p>
+        <p className="font-mono font-black text-primary/40 uppercase tracking-[0.4em] text-[10px] animate-pulse">Synchronizing Security Protocols...</p>
       </div>
     </div>
   );
@@ -118,7 +113,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col h-full bg-[#F8FAFC] animate-fade-in font-body overflow-hidden">
-      {/* High-Density KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 shrink-0">
         <Card className="p-4 border-none shadow-sm bg-white rounded-xl flex items-center justify-between group hover:shadow-md transition-all">
           <div className="space-y-1">
@@ -154,7 +148,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="flex-1 px-6 pb-6 overflow-hidden flex flex-col gap-4">
-        {/* Central Visual: Auth Method Chart */}
         <Card className="h-[300px] p-6 border-none shadow-sm bg-white rounded-2xl flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest font-headline">Authentication Utilization</h2>
@@ -199,7 +192,6 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        {/* Updated Live Visitor Registry */}
         <Card className="flex-1 border-none shadow-sm bg-white rounded-2xl overflow-hidden flex flex-col">
           <div className="px-6 py-3 border-b flex justify-between items-center bg-slate-50/50">
             <h2 className="text-[10px] font-black text-primary uppercase tracking-widest font-headline">Live Identity Stream</h2>
@@ -265,7 +257,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Live Identity Ticker */}
       <footer className="h-10 bg-primary flex items-center overflow-hidden shrink-0 shadow-lg border-t border-white/10">
         <div className="flex animate-marquee whitespace-nowrap gap-12 px-6">
           <span className="text-[9px] font-black text-accent uppercase tracking-[0.2em] border-r border-white/20 pr-12">LIVE TICKER:</span>

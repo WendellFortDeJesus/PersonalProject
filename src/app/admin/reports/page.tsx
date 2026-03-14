@@ -12,7 +12,8 @@ import {
   ResponsiveContainer,
   PieChart, 
   Pie, 
-  Cell
+  Cell,
+  Label
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -100,7 +101,8 @@ export default function ReportsPage() {
       purposeData,
       totalToday: filteredVisits.length,
       dateStr: format(selectedDate, 'PPP'),
-      filteredVisits: filteredVisits.slice(0, 50)
+      filteredVisits: filteredVisits.slice(0, 50),
+      topDept: summaryData[0]
     };
   }, [rawVisits, selectedDate, config]);
 
@@ -110,7 +112,7 @@ export default function ReportsPage() {
 
   if (!mounted || isUserLoading || (user && isVisitsLoading)) return (
     <div className="p-32 text-center">
-      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Generating Strategic Audit...</p>
+      <p className="font-mono font-black text-primary/40 uppercase tracking-[0.5em] text-[11px] animate-pulse">Synchronizing Behavioral Audit...</p>
     </div>
   );
 
@@ -128,7 +130,7 @@ export default function ReportsPage() {
             <DialogTrigger asChild>
               <Button variant="outline" className="h-10 rounded-xl font-black border-slate-200 text-[10px] px-6 uppercase tracking-widest bg-white shadow-sm hover:bg-slate-50">
                 <FileText className="mr-2 h-3.5 w-3.5" />
-                Preview Audit Record
+                Preview Strategic Audit
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 rounded-2xl border-none shadow-2xl bg-white">
@@ -162,8 +164,19 @@ export default function ReportsPage() {
                     <div className="h-[200px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={analytics?.purposeData ?? []} innerRadius={50} outerRadius={70} dataKey="value">
+                          <Pie 
+                            data={analytics?.purposeData ?? []} 
+                            innerRadius={50} 
+                            outerRadius={70} 
+                            dataKey="value"
+                            stroke="none"
+                          >
                             {analytics?.purposeData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                            <Label 
+                              value="INTENT" 
+                              position="center" 
+                              className="text-[10px] font-black uppercase text-slate-400"
+                            />
                           </Pie>
                         </PieChart>
                       </ResponsiveContainer>
@@ -171,12 +184,26 @@ export default function ReportsPage() {
                   </div>
                 </div>
 
+                <div className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
+                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-4">Strategic Unit Analysis</h3>
+                   <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[9px] font-black text-primary uppercase tracking-widest">Most Active Department</p>
+                        <h4 className="text-xl font-black text-slate-900 uppercase tracking-tighter">{analytics?.topDept?.name}</h4>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[24px] font-mono font-bold text-primary">{analytics?.topDept?.count}</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Registry Hits</p>
+                      </div>
+                   </div>
+                </div>
+
                 <div className="space-y-4">
                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Identity Audit Log</h3>
                   <table className="w-full text-left text-[10px] border-collapse">
                     <thead className="border-b bg-slate-50">
                       <tr>
-                        <th className="px-4 py-3 font-black text-slate-400 uppercase">School ID</th>
+                        <th className="px-4 py-3 font-black text-slate-400 uppercase">School ID / Email</th>
                         <th className="px-4 py-3 font-black text-slate-400 uppercase">Identity</th>
                         <th className="px-4 py-3 font-black text-slate-400 uppercase">Academic Unit</th>
                         <th className="px-4 py-3 font-black text-slate-400 uppercase">Purpose</th>
@@ -185,7 +212,7 @@ export default function ReportsPage() {
                     <tbody className="divide-y divide-slate-100">
                       {analytics?.filteredVisits.map((v) => (
                         <tr key={v.id}>
-                          <td className="px-4 py-2 font-mono font-bold text-slate-500">{v.schoolId}</td>
+                          <td className="px-4 py-2 font-mono font-bold text-slate-500">{v.schoolId || v.patronEmail}</td>
                           <td className="px-4 py-2 font-black text-slate-900 uppercase">{v.patronName}</td>
                           <td className="px-4 py-2 uppercase text-slate-500">{v.patronDepartments?.[0]}</td>
                           <td className="px-4 py-2 font-bold text-slate-400 uppercase">{v.purpose}</td>
@@ -196,7 +223,7 @@ export default function ReportsPage() {
                 </div>
 
                 <footer className="pt-8 border-t flex justify-between items-center opacity-40">
-                  <p className="text-[8px] font-bold uppercase tracking-widest">System Generated Audit Record</p>
+                  <p className="text-[8px] font-bold uppercase tracking-widest">System Generated Strategic Audit</p>
                   <p className="text-[8px] font-bold uppercase tracking-widest font-mono">{new Date().toISOString()}</p>
                 </footer>
               </div>
@@ -280,7 +307,7 @@ export default function ReportsPage() {
         </div>
         <Button onClick={() => setIsPreviewOpen(true)} className="h-12 px-10 bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl transition-transform active:scale-95">
           <Printer className="h-4 w-4 mr-3" />
-          Generate Formal Report
+          Generate Strategic Audit
         </Button>
       </Card>
     </div>

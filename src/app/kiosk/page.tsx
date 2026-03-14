@@ -148,21 +148,23 @@ export default function KioskAuthPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-xl space-y-6 animate-fade-in">
-        <div className="flex justify-between items-center mb-2 px-2">
+        <div className="flex justify-between items-end mb-2 px-2">
           <Button 
             variant="ghost" 
             onClick={() => router.push('/')}
-            className={cn("hover:bg-white/10 font-headline uppercase tracking-[0.2em] text-[10px]", textColor)}
+            className={cn("hover:bg-white/10 font-headline uppercase tracking-[0.2em] text-[10px] mb-2", textColor)}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Exit Terminal
           </Button>
           
-          <div className={cn("px-4 py-2 rounded-full glass-overlay border border-white/20 flex items-center gap-3")}>
-             <div className={cn("w-2 h-2 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
-             <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-               Occupancy: {occupancy} / {settings?.capacityLimit || 200}
-             </span>
+          <div className={cn("px-6 py-4 rounded-[2rem] glass-overlay border border-white/20 flex flex-col items-end gap-1 shadow-2xl")}>
+             <div className="flex items-center gap-2">
+               <div className={cn("w-2 h-2 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
+               <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">CURRENTLY IN THE LIBRARY</span>
+             </div>
+             <div className="text-4xl font-headline font-black text-primary leading-none my-0.5">{occupancy}</div>
+             <span className="text-[8px] font-bold text-slate-600 uppercase tracking-tight">Active students on premises</span>
           </div>
         </div>
 

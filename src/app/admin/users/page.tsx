@@ -76,9 +76,28 @@ export default function AccessManagementPage() {
     });
   };
 
+  const handleSaveChanges = async () => {
+    if (!db || !editingPatron) return;
+    const patronRef = doc(db, 'patrons', editingPatron.id);
+    const { id, ...updateData } = editingPatron;
+    
+    updateDoc(patronRef, updateData)
+      .then(() => {
+        setIsEditDialogOpen(false);
+        toast({ title: "Registry Updated", description: "Identity profile has been saved." });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: patronRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        }));
+      });
+  };
+
   return (
     <div className="flex h-full overflow-hidden bg-white">
-      {/* Left Sidebar (20%) */}
+      {/* Left Sidebar (Segmentation) */}
       <aside className="w-80 border-r bg-white p-8 space-y-10 overflow-y-auto shrink-0 hidden lg:block">
         <div className="space-y-8">
           <div className="space-y-1">
@@ -121,13 +140,13 @@ export default function AccessManagementPage() {
         </div>
       </aside>
 
-      {/* Main Content (80%) */}
+      {/* Main Content (Identity Registry) */}
       <main className="flex-1 bg-slate-50/30 overflow-y-auto">
         <div className="bg-white min-h-full border-l">
           <Table>
             <TableHeader className="bg-white sticky top-0 z-10">
               <TableRow className="hover:bg-transparent border-b">
-                <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Patron Identity & Detail</TableHead>
+                <TableHead className="pl-10 h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Identity Name & Detail</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Primary Department</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Demographics</TableHead>
                 <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400">Activity Start</TableHead>
@@ -229,16 +248,28 @@ export default function AccessManagementPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Legal Identity</Label>
-                <Input value={editingPatron?.name || ''} className="h-12 rounded-xl font-bold uppercase" />
+                <Input 
+                  value={editingPatron?.name || ''} 
+                  onChange={(e) => setEditingPatron({ ...editingPatron, name: e.target.value })}
+                  className="h-12 rounded-xl font-bold uppercase" 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
-                  <Input type="number" value={editingPatron?.age || ''} className="h-12 rounded-xl font-bold" />
+                  <Input 
+                    type="number" 
+                    value={editingPatron?.age || ''} 
+                    onChange={(e) => setEditingPatron({ ...editingPatron, age: e.target.value })}
+                    className="h-12 rounded-xl font-bold" 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Gender</Label>
-                  <Select defaultValue={editingPatron?.gender || ''}>
+                  <Select 
+                    value={editingPatron?.gender || ''} 
+                    onValueChange={(val) => setEditingPatron({ ...editingPatron, gender: val })}
+                  >
                     <SelectTrigger className="h-12 rounded-xl font-bold">
                       <SelectValue placeholder="Gender" />
                     </SelectTrigger>
@@ -252,17 +283,21 @@ export default function AccessManagementPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Registry Contact (Email)</Label>
-                <Input value={editingPatron?.email || ''} className="h-12 rounded-xl font-mono font-bold" placeholder="missing@neu.edu.ph" />
+                <Input 
+                  value={editingPatron?.email || ''} 
+                  onChange={(e) => setEditingPatron({ ...editingPatron, email: e.target.value })}
+                  className="h-12 rounded-xl font-mono font-bold" 
+                  placeholder="missing@neu.edu.ph" 
+                />
               </div>
             </div>
           </div>
           <DialogFooter className="p-10 bg-slate-50 gap-4">
             <Button variant="ghost" onClick={() => setIsEditDialogOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest">Cancel</Button>
-            <Button className="bg-primary rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">Save Changes</Button>
+            <Button onClick={handleSaveChanges} className="bg-primary rounded-xl px-10 font-black uppercase text-[10px] tracking-widest">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-

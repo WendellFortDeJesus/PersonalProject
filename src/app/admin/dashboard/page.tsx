@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,9 +22,18 @@ export default function DashboardPage() {
   const router = useRouter();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
+  const [startOfToday, setStartOfToday] = useState<Date | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    const updateToday = () => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      setStartOfToday(d);
+    };
+    updateToday();
+    const interval = setInterval(updateToday, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const visitsQuery = useMemoFirebase(() => {
@@ -42,7 +50,7 @@ export default function DashboardPage() {
   const { data: patrons, isLoading: isPatronsLoading } = useCollection(patronsQuery);
 
   const stats = useMemo(() => {
-    if (!visits || visits.length === 0) return {
+    if (!visits || visits.length === 0 || !startOfToday) return {
       inside: 0,
       totalRegistered: 0,
       recentVisits: [],
@@ -53,8 +61,13 @@ export default function DashboardPage() {
       uniqueDepts: 0
     };
     
-    const activeVisits = visits.filter(v => v.status === 'granted');
-    const inside = activeVisits.length;
+    // Live Occupancy resets daily: Only count students who checked in today
+    const activeToday = visits.filter(v => {
+      const visitDate = new Date(v.timestamp);
+      return v.status === 'granted' && visitDate >= startOfToday;
+    });
+    
+    const inside = activeToday.length;
     const totalRegistered = visits.length;
 
     let flaggedCount = 0;
@@ -83,7 +96,7 @@ export default function DashboardPage() {
       ? Math.max(0, Math.min(100, Number(((totalRegistered - flaggedCount) / totalRegistered * 100).toFixed(1))))
       : 100;
 
-    const authCounts = activeVisits.reduce((acc: Record<string, number>, v) => {
+    const authCounts = activeToday.reduce((acc: Record<string, number>, v) => {
       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
       acc[method] = (acc[method] || 0) + 1;
       return acc;
@@ -105,7 +118,7 @@ export default function DashboardPage() {
       authMethodPct,
       uniqueDepts: uniqueDeptsSet.size
     };
-  }, [visits, patrons]);
+  }, [visits, patrons, startOfToday]);
 
   if (!mounted || isUserLoading || (user && (isVisitsLoading || isPatronsLoading))) return (
     <div className="flex h-[80vh] items-center justify-center bg-white">

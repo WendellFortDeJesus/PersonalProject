@@ -7,11 +7,26 @@ import { LogIn, ShieldCheck, Library } from 'lucide-react';
 import Image from 'next/image';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const db = useFirestore();
+  const [startOfToday, setStartOfToday] = useState<string | null>(null);
+
+  // Sync the start of the day to ensure occupancy resets at midnight without refresh
+  useEffect(() => {
+    const updateStartOfToday = () => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      setStartOfToday(d.toISOString());
+    };
+    updateStartOfToday();
+    
+    // Check every minute if the date has changed to maintain livetime reset logic
+    const interval = setInterval(updateStartOfToday, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -20,15 +35,15 @@ export default function HomePage() {
   const { data: settings } = useDoc(settingsRef);
 
   const visitsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return query(collection(db, 'visits'), where('timestamp', '>=', today.toISOString()));
-  }, [db]);
+    if (!db || !startOfToday) return null;
+    return query(collection(db, 'visits'), where('timestamp', '>=', startOfToday));
+  }, [db, startOfToday]);
+
   const { data: visits } = useCollection(visitsQuery);
 
   const occupancy = useMemo(() => {
     if (!visits) return 0;
+    // Occupancy resets daily as it only filters visits from the current calendar day
     return visits.filter(v => v.status === 'granted').length;
   }, [visits]);
 

@@ -25,6 +25,20 @@ export default function KioskAuthPage() {
   const { toast } = useToast();
   const db = useFirestore();
 
+  const [startOfToday, setStartOfToday] = useState<string | null>(null);
+
+  // Maintain reactive today's timestamp for daily occupancy reset
+  useEffect(() => {
+    const updateStartOfToday = () => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      setStartOfToday(d.toISOString());
+    };
+    updateStartOfToday();
+    const interval = setInterval(updateStartOfToday, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
@@ -32,11 +46,9 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const visitsQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return query(collection(db, 'visits'), where('timestamp', '>=', today.toISOString()));
-  }, [db]);
+    if (!db || !startOfToday) return null;
+    return query(collection(db, 'visits'), where('timestamp', '>=', startOfToday));
+  }, [db, startOfToday]);
   const { data: visits } = useCollection(visitsQuery);
 
   const occupancy = useMemo(() => {

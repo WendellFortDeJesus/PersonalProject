@@ -49,20 +49,20 @@ export default function DashboardPage() {
     const inside = activeVisits.length;
     const totalRegistered = visits.length;
 
-    const deptCountMap: Record<string, number> = {};
     let flaggedCount = 0;
     const uniqueDeptsSet = new Set<string>();
 
     visits.forEach(v => {
       v.patronDepartments?.forEach((d: string) => {
-        deptCountMap[d] = (deptCountMap[d] || 0) + 1;
         uniqueDeptsSet.add(d);
       });
 
       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
-      if (method === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) {
-        flaggedCount++;
-      } else if (method === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) {
+      const isSuspect = (method === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) ||
+                        (method === 'RF-ID Login' && (!v.schoolId || v.schoolId.length < 5)) ||
+                        (!v.patronName || v.patronName === 'UNKNOWN');
+      
+      if (isSuspect) {
         flaggedCount++;
       }
     });
@@ -129,17 +129,17 @@ export default function DashboardPage() {
           <CreditCard className="h-5 w-5 text-accent/20" />
         </Card>
 
-        <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-blue-500 h-20">
+        <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-red-500 h-20">
           <div className="space-y-0.5">
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Data Integrity</p>
-            <h3 className="text-sm font-mono font-bold text-blue-600 uppercase tracking-tighter truncate leading-none">
+            <h3 className="text-sm font-mono font-bold text-red-600 uppercase tracking-tighter truncate leading-none">
               {stats?.integrityScore}% ACCURATE
             </h3>
             <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">
-              {stats?.flaggedCount} FLAGGED REGISTRY DETAILS
+              {stats?.flaggedCount} SUSPICIOUS ENTRIES
             </p>
           </div>
-          <ShieldAlert className="h-5 w-5 text-blue-500/20" />
+          <ShieldAlert className="h-5 w-5 text-red-500/20" />
         </Card>
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-purple-500 h-20">
@@ -181,13 +181,15 @@ export default function DashboardPage() {
                   const isActive = visit.status === 'granted';
                   const method = visit.authMethod || (visit.schoolId ? 'RF-ID Login' : 'SSO Login');
                   const isFlagged = (method === 'SSO Login' && (!visit.patronEmail || !visit.patronEmail.includes('@'))) ||
-                                  (method === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5));
+                                  (method === 'RF-ID Login' && (!visit.schoolId || visit.schoolId.length < 5)) ||
+                                  (!visit.patronName || visit.patronName === 'UNKNOWN');
+                  
                   const isExternal = visit.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
 
                   return (
                     <tr key={visit.id} className={cn(
                       "hover:bg-slate-50/50 transition-colors group h-10", 
-                      isFlagged && "bg-red-50/30"
+                      isFlagged && "bg-red-50"
                     )}>
                       <td className="px-6 py-0">
                         <span className={cn(
@@ -203,7 +205,13 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
-                        <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight">{visit.patronName}</span>
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase tracking-tight",
+                          isFlagged ? "text-red-700" : "text-slate-900"
+                        )}>
+                          {visit.patronName}
+                        </span>
+                        {isFlagged && <ShieldAlert className="inline-block ml-2 h-3 w-3 text-red-500" />}
                       </td>
                       <td className={cn("px-6 py-0", isExternal && "bg-yellow-50/80")}>
                         <span className="text-[10px] font-mono font-bold text-slate-500">{visit.patronAge}</span>
@@ -217,15 +225,18 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
-                        <span className={cn("text-[10px] font-mono font-bold", isFlagged ? "text-red-500" : "text-slate-400")}>
-                          {method === 'RF-ID Login' ? visit.schoolId : visit.patronEmail}
+                        <span className={cn(
+                          "text-[10px] font-mono font-bold px-2 py-0.5 rounded",
+                          isFlagged ? "bg-red-100 text-red-700 border border-red-200" : "text-slate-400"
+                        )}>
+                          {method === 'RF-ID Login' ? (visit.schoolId || 'MISSING ID') : (visit.patronEmail || 'MISSING EMAIL')}
                         </span>
                       </td>
                       <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
                         <span className={cn(
                           "text-[10px] font-bold uppercase",
-                          isExternal ? "text-amber-600 bg-amber-100/50 px-2 py-0.5 rounded border border-amber-200" : "text-slate-500"
-                        )}>
+                          isExternal ? "text-amber-600 bg-amber-100/50 px-2 py-0.5 rounded border border-amber-200" : "text-slate-50"
+                        )} style={!isExternal ? { color: 'rgb(100 116 139)' } : {}}>
                           {visit.patronDepartments?.[0]}
                         </span>
                       </td>

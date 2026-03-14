@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -148,7 +147,7 @@ export default function KioskAuthPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-xl space-y-6 animate-fade-in">
-        <div className="flex justify-between items-end mb-2 px-2">
+        <div className="flex justify-start items-end mb-2 px-2">
           <Button 
             variant="ghost" 
             onClick={() => router.push('/')}
@@ -157,15 +156,6 @@ export default function KioskAuthPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Exit Terminal
           </Button>
-          
-          <div className={cn("px-4 py-3 rounded-2xl glass-overlay border border-white/20 flex flex-col items-end gap-0.5 shadow-xl")}>
-             <div className="flex items-center gap-2">
-               <div className={cn("w-1.5 h-1.5 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
-               <span className="text-[8px] font-black text-primary uppercase tracking-[0.2em]">CURRENTLY IN THE LIBRARY</span>
-             </div>
-             <div className="text-2xl font-headline font-black text-primary leading-none my-0.5">{occupancy}</div>
-             <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tight">Active students on premises</span>
-          </div>
         </div>
 
         <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30 glass-overlay">

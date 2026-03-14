@@ -1,11 +1,39 @@
+'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { LogIn, ShieldCheck, Library } from 'lucide-react';
 import Image from 'next/image';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function HomePage() {
+  const db = useFirestore();
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  const visitsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return query(collection(db, 'visits'), where('timestamp', '>=', today.toISOString()));
+  }, [db]);
+  const { data: visits } = useCollection(visitsQuery);
+
+  const occupancy = useMemo(() => {
+    if (!visits) return 0;
+    return visits.filter(v => v.status === 'granted').length;
+  }, [visits]);
+
+  const isAtCapacity = occupancy >= (settings?.capacityLimit || 200);
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
       {/* Background Image with Overlay */}
@@ -38,6 +66,21 @@ export default function HomePage() {
 
         <Card className="bg-white/95 backdrop-blur shadow-2xl border-none">
           <CardContent className="p-8 space-y-6">
+            {/* Real-time Occupancy Badge */}
+            <div className="flex justify-center -mb-2">
+              <div className={cn(
+                "px-5 py-2.5 rounded-2xl border flex flex-col items-center gap-0.5 shadow-sm transition-all duration-300",
+                isAtCapacity ? "bg-red-50 border-red-200" : "bg-primary/5 border-primary/10"
+              )}>
+                 <div className="flex items-center gap-1.5">
+                   <div className={cn("w-1.5 h-1.5 rounded-full", isAtCapacity ? "bg-red-500 animate-pulse" : "bg-green-500")} />
+                   <span className="text-[7px] font-black text-primary uppercase tracking-[0.2em]">CURRENTLY IN THE LIBRARY</span>
+                 </div>
+                 <div className="text-2xl font-headline font-black text-primary leading-none">{occupancy}</div>
+                 <span className="text-[6px] font-bold text-slate-500 uppercase tracking-tighter">Active students on premises</span>
+              </div>
+            </div>
+
             <div className="space-y-2 text-center">
               <h2 className="text-2xl font-headline font-bold text-primary">Ready to Start?</h2>
               <p className="text-muted-foreground">Choose your access mode below</p>

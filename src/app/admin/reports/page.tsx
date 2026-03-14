@@ -81,7 +81,7 @@ export default function ReportsPage() {
         deptMap[name] = (deptMap[name] || 0) + 1;
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
-      if (v.authMethod === 'School ID Login') rfidCount++;
+      if (v.authMethod === 'RF-ID Login') rfidCount++;
       else ssoCount++;
     });
 
@@ -91,7 +91,7 @@ export default function ReportsPage() {
     })).sort((a, b) => b.count - a.count);
 
     const intentData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
-    const topMethod = rfidCount >= ssoCount ? 'SCHOOL ID' : 'SSO LOGIN';
+    const topMethod = rfidCount >= ssoCount ? 'RF-ID LOGIN' : 'SSO LOGIN';
 
     return { 
       deptData,
@@ -122,7 +122,7 @@ export default function ReportsPage() {
       <header className="flex justify-between items-end pb-8 border-b border-slate-200">
         <div className="space-y-1">
           <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none font-headline">Audit Terminal</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Institutional Engagement Snapshot</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Institutional engagement record</p>
         </div>
         <div className="flex gap-4">
           <Popover>
@@ -160,7 +160,7 @@ export default function ReportsPage() {
 
                 <div className="grid grid-cols-2 gap-16">
                   <div className="space-y-6">
-                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest border-b pb-2">Unit Engagement Intensity</h3>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest border-b pb-2">Institutional Impact Matrix</h3>
                     <div className="h-[250px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics?.deptData ?? []}>
@@ -173,7 +173,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                   <div className="space-y-6">
-                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest border-b pb-2">Facility Intent Matrix</h3>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest border-b pb-2">Visit Intent Distribution</h3>
                     <div className="h-[250px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -194,13 +194,13 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest border-b pb-2">Audit Identity Log</h3>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest border-b pb-2">Verified Identity Registry</h3>
                   <table className="w-full text-left text-[11px] border-collapse">
                     <thead className="border-b-2 border-slate-900 bg-slate-50">
                       <tr>
                         <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Registry Detail</th>
-                        <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Student Identity</th>
-                        <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Academic Unit</th>
+                        <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Student Name</th>
+                        <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Login Method</th>
                         <th className="px-4 py-4 font-black text-slate-900 uppercase tracking-widest">Visit Intent</th>
                       </tr>
                     </thead>
@@ -209,7 +209,7 @@ export default function ReportsPage() {
                         <tr key={v.id}>
                           <td className="px-4 py-3 font-mono font-bold text-slate-600">{v.schoolId || v.patronEmail}</td>
                           <td className="px-4 py-3 font-black text-slate-900 uppercase">{v.patronName}</td>
-                          <td className="px-4 py-3 uppercase text-slate-500 font-bold">{v.patronDepartments?.[0]}</td>
+                          <td className="px-4 py-3 uppercase text-slate-500 font-bold">{v.authMethod}</td>
                           <td className="px-4 py-3 font-bold text-primary uppercase">{v.purpose}</td>
                         </tr>
                       ))}
@@ -222,7 +222,7 @@ export default function ReportsPage() {
                     <div className="w-8 h-8 bg-primary rounded-lg" />
                     <p className="text-[9px] font-black uppercase tracking-widest">PatronPoint Systems Engine</p>
                   </div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest font-mono">NEU Library Accreditation Standard</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest font-mono">Institutional Verification Standard</p>
                 </footer>
               </div>
               <DialogFooter className="p-10 bg-slate-50 border-t gap-6">
@@ -240,7 +240,7 @@ export default function ReportsPage() {
       {/* Bento Reports Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-8 bg-white border-none shadow-sm rounded-2xl border-t-4 border-primary">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cumulative Today</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Entries Today</p>
           <h2 className="text-4xl font-mono font-black text-slate-900">{analytics?.totalToday ?? 0}</h2>
           <p className="text-[9px] font-bold text-primary uppercase mt-4">Verified Registry Entries</p>
         </Card>
@@ -269,7 +269,7 @@ export default function ReportsPage() {
         </div>
         <Button onClick={() => setIsPreviewOpen(true)} className="h-16 px-12 bg-accent text-accent-foreground hover:bg-accent/90 rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl transition-transform active:scale-95">
           <FileDown className="h-5 w-5 mr-4" />
-          Download PDF Strategic Report
+          Generate Formal PDF Audit
         </Button>
       </Card>
     </div>

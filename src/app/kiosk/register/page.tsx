@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -36,7 +37,7 @@ function RegistrationContent() {
   const searchParams = useSearchParams();
   const schoolId = searchParams.get('schoolId') || "";
   const email = searchParams.get('email') || "";
-  const authMethod = searchParams.get('authMethod') || (schoolId ? 'School ID Login' : 'SSO Login');
+  const authMethod = searchParams.get('authMethod') || (schoolId ? 'RF-ID Login' : 'SSO Login');
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
 
@@ -167,7 +168,7 @@ function RegistrationContent() {
           className={cn("hover:bg-white/10", textColor)}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Terminal
+          Back to Hub
         </Button>
 
         <Card 
@@ -175,13 +176,13 @@ function RegistrationContent() {
           style={{ backgroundColor: `rgba(255, 255, 255, ${overlayOpacity})`, backdropFilter: 'blur(20px)' }}
         >
           <div className="absolute top-6 left-8 flex items-center gap-2">
-            <span className="font-headline font-bold text-primary text-xs tracking-widest uppercase">PatronPoint Library</span>
+            <span className="font-headline font-bold text-primary text-xs tracking-widest uppercase">PatronPoint Registration</span>
           </div>
           
           <CardHeader className="text-center pt-16">
             <CardTitle className="text-3xl font-headline font-bold text-primary uppercase tracking-tight">Identity Registration</CardTitle>
             <CardDescription className="text-base font-bold text-slate-700 uppercase tracking-tight mt-2">
-              {schoolId ? `School ID: ${schoolId}` : `Email: ${email}`}
+              {schoolId ? `School ID Index: ${schoolId}` : `Institutional Email: ${email}`}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4">
@@ -193,7 +194,7 @@ function RegistrationContent() {
                     name="name"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Full Legal Name</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Full Legal Identity</FormLabel>
                         <FormControl>
                           <Input placeholder="JUAN DELA CRUZ" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold uppercase" />
                         </FormControl>
@@ -207,7 +208,7 @@ function RegistrationContent() {
                     name="age"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Age {!requireAge && "(Optional)"}</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Age Index {!requireAge && "(Optional)"}</FormLabel>
                         <FormControl>
                           <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold" />
                         </FormControl>
@@ -221,7 +222,7 @@ function RegistrationContent() {
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Gender</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Gender Identity</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold">
@@ -244,11 +245,11 @@ function RegistrationContent() {
                     name="purposeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Purpose of Visit</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Visit Purpose</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold">
-                              <SelectValue placeholder="Select Purpose" />
+                              <SelectValue placeholder="Select Intent" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -267,11 +268,11 @@ function RegistrationContent() {
                     name="department"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Department</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Academic Unit</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-14 rounded-xl bg-white/50 border-white/50 font-bold text-left">
-                              <SelectValue placeholder="Select Department" />
+                              <SelectValue placeholder="Select Unit" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[300px]">

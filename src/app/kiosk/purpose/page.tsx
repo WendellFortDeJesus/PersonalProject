@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -17,7 +18,7 @@ function PurposeSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patronId = searchParams.get('patronId');
-  const authMethod = searchParams.get('authMethod') || 'School ID Login';
+  const authMethod = searchParams.get('authMethod') || 'RF-ID Login';
   const [selected, setSelected] = useState<string | null>(null);
   const db = useFirestore();
   const { toast } = useToast();
@@ -114,7 +115,7 @@ function PurposeSelectionContent() {
         </div>
 
         <div className="text-center space-y-2 pt-8">
-          <h1 className={cn("text-5xl font-headline font-bold tracking-tight", textColor)}>Identity Terminal</h1>
+          <h1 className={cn("text-5xl font-headline font-bold tracking-tight", textColor)}>Identity Hub</h1>
           <p className="text-xl text-slate-700 font-medium">Select your primary purpose of visit</p>
         </div>
 

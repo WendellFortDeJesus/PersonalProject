@@ -13,6 +13,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Trash2, Palette, Settings2, ShieldAlert, Zap, Loader2, ShieldCheck, ToggleLeft, Smartphone, CreditCard } from 'lucide-react';
 
 export default function SystemSettingsPage() {
@@ -113,8 +114,8 @@ export default function SystemSettingsPage() {
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-white rounded-xl shadow-sm"><CreditCard className="h-5 w-5 text-primary" /></div>
                 <div className="space-y-1">
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-tight">Allow School ID Scan</span>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">Physical RFID Hardware Sync</p>
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-tight">Allow RF-ID Login</span>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase">Physical Hardware Scanner Sync</p>
                 </div>
               </div>
               <Switch checked={settings?.allowRfidScan ?? true} onCheckedChange={(v) => handleSaveSettings({ allowRfidScan: v })} />

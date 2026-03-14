@@ -27,10 +27,10 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
   const router = useRouter();
 
   const menuItems = [
-    { label: 'Dashboard', href: '/admin/dashboard' },
-    { label: 'Access Management', href: '/admin/users' },
-    { label: 'Analytics & Reports', href: '/admin/reports' },
-    { label: 'System Settings', href: '/admin/settings' },
+    { label: 'DASHBOARD', href: '/admin/dashboard' },
+    { label: 'ACCESS MANAGEMENT', href: '/admin/users' },
+    { label: 'ANALYTICS & REPORTS', href: '/admin/reports' },
+    { label: 'CONTROL ROOM', href: '/admin/settings' },
   ];
 
   const handleSignOut = async () => {
@@ -38,7 +38,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
     router.push('/admin/login');
   };
 
-  // Live Ticker Data
+  // Live Identity Ticker
   const tickerQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(5));
@@ -52,7 +52,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           <SidebarHeader className="p-8 border-b border-slate-100 bg-white">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
               <span className="font-headline font-black text-primary text-xl tracking-tighter uppercase leading-none">PatronPoint</span>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] mt-1 leading-none">Terminal v2.0</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] mt-1 leading-none">Admin Terminal</span>
             </div>
           </SidebarHeader>
           <SidebarContent className="px-4 py-8 bg-white">
@@ -84,7 +84,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                   onClick={handleSignOut}
                   className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 h-12 rounded-xl transition-colors"
                 >
-                  <span className="font-black text-[10px] uppercase tracking-widest ml-2">Log Out</span>
+                  <span className="font-black text-[10px] uppercase tracking-widest ml-2">TERMINAL LOGOUT</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -119,11 +119,11 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 
           <footer className="h-10 bg-primary flex items-center overflow-hidden shrink-0 shadow-inner">
             <div className="flex animate-marquee whitespace-nowrap gap-16 px-8 items-center">
-              <span className="text-[9px] font-black text-accent uppercase tracking-[0.4em] border-r border-white/20 pr-16 h-4 flex items-center">Live Identity Ticker:</span>
+              <span className="text-[9px] font-black text-accent uppercase tracking-[0.4em] border-r border-white/20 pr-16 h-4 flex items-center">Live Identity Feed:</span>
               {tickerVisits?.map((v, i) => (
                 <div key={i} className="flex items-center gap-4">
                   <span className="text-[10px] font-black text-white uppercase tracking-tight">{v.patronName}</span>
-                  <span className="text-[9px] font-bold text-white/40 font-mono">[{v.authMethod === 'School ID Login' ? v.schoolId : 'SSO'}]</span>
+                  <span className="text-[9px] font-bold text-white/40 font-mono">[{v.authMethod === 'RF-ID Login' ? v.schoolId : 'SSO'}]</span>
                   <span className="text-[9px] font-black text-accent uppercase tracking-tighter">({v.patronDepartments?.[0]})</span>
                   <span className="text-white/20 mx-4">|</span>
                 </div>

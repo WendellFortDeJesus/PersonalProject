@@ -37,7 +37,7 @@
         "purpose": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["granted", "blocked"] },
-        "authMethod": { "type": "string", "enum": ["School ID Login", "SSO Login"] }
+        "authMethod": { "type": "string", "enum": ["RF-ID Login", "SSO Login"] }
       },
       "required": ["id", "patronId", "timestamp", "status", "authMethod"]
     },

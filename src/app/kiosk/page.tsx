@@ -66,7 +66,7 @@ export default function KioskAuthPage() {
 
     try {
       const patronsRef = collection(db, 'patrons');
-      const authMethod = activeTab === 'rfid' ? 'School ID Login' : 'SSO Login';
+      const authMethod = activeTab === 'rfid' ? 'RF-ID Login' : 'SSO Login';
       const field = activeTab === 'rfid' ? 'schoolId' : 'email';
       const value = activeTab === 'rfid' ? rfid : email;
 
@@ -186,7 +186,7 @@ export default function KioskAuthPage() {
                   disabled={settings && !settings.allowRfidScan}
                   className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary rounded-xl transition-all font-headline uppercase tracking-widest"
                 >
-                  Quick Scan
+                  RF-ID Login
                 </TabsTrigger>
                 <TabsTrigger 
                   value="email" 
@@ -201,7 +201,7 @@ export default function KioskAuthPage() {
                 {settings && !settings.allowRfidScan ? (
                   <div className="py-12 text-center space-y-4">
                     <ShieldAlert className="h-12 w-12 text-red-400 mx-auto" />
-                    <p className="text-sm font-black text-slate-500 uppercase tracking-widest">RFID Scanning is Disabled</p>
+                    <p className="text-sm font-black text-slate-500 uppercase tracking-widest">RF-ID Login is Disabled</p>
                   </div>
                 ) : (
                   <form onSubmit={handleAuth} className="space-y-8">
@@ -211,7 +211,7 @@ export default function KioskAuthPage() {
                       </div>
                       <div className="mt-10 text-center space-y-2">
                         <p className="text-2xl font-headline font-black text-slate-800 uppercase tracking-tight">Scanner Active</p>
-                        <p className="text-base font-semibold text-slate-500 tracking-tight">Tap your NEU School ID card</p>
+                        <p className="text-base font-semibold text-slate-500 tracking-tight">Tap your NEU RF-ID card</p>
                       </div>
                       <div className="mt-8 w-full max-w-xs px-6 opacity-0 focus-within:opacity-100 transition-opacity">
                          <Input 
@@ -241,7 +241,7 @@ export default function KioskAuthPage() {
                 ) : (
                   <form onSubmit={handleAuth} className="space-y-8">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-headline font-black uppercase tracking-[0.3em] text-primary ml-1">Official Email</label>
+                      <label className="text-[10px] font-headline font-black uppercase tracking-[0.3em] text-primary ml-1">Official Institutional Email</label>
                       <div className="relative">
                         <Mail className="absolute left-5 top-5 h-5 w-5 text-muted-foreground" />
                         <Input 

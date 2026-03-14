@@ -32,7 +32,8 @@ import {
   Printer,
   PieChart as PieIcon,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  CreditCard
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -66,12 +67,15 @@ export default function ReportsPage() {
 
     const deptMap: Record<string, number> = {};
     const purposeMap: Record<string, number> = {};
+    const authMap: Record<string, number> = {};
     
     rawVisits.forEach(v => {
       v.patronDepartments?.forEach((name: string) => {
         deptMap[name] = (deptMap[name] || 0) + 1;
       });
       purposeMap[v.purpose || 'Other'] = (purposeMap[v.purpose || 'Other'] || 0) + 1;
+      const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
+      authMap[method] = (authMap[method] || 0) + 1;
     });
 
     const deptData = Object.entries(deptMap).map(([name, count]) => ({
@@ -80,13 +84,15 @@ export default function ReportsPage() {
     })).sort((a, b) => b.count - a.count);
 
     const intentData = Object.entries(purposeMap).map(([name, value]) => ({ name, value }));
+    const topAuth = Object.entries(authMap).sort((a, b) => b[1] - a[1])[0];
 
     return { 
       deptData,
       intentData,
       totalAllTime: rawVisits.length,
       recentVisits: rawVisits.slice(0, 50),
-      topDept: deptData[0]
+      topDept: deptData[0],
+      topAuth: topAuth ? topAuth[0] : 'N/A'
     };
   }, [rawVisits]);
 
@@ -178,14 +184,18 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {analytics?.recentVisits.map((v) => (
-                      <tr key={v.id}>
-                        <td className="px-4 py-3 font-mono font-bold text-slate-600">{v.schoolId || v.patronEmail}</td>
-                        <td className="px-4 py-3 font-black text-slate-900 uppercase">{v.patronName}</td>
-                        <td className="px-4 py-3 uppercase text-slate-500 font-bold">{v.authMethod?.toUpperCase()}</td>
-                        <td className="px-4 py-3 font-bold text-primary uppercase">{v.purpose}</td>
-                      </tr>
-                    ))}
+                    {analytics?.recentVisits.map((v) => {
+                      const isExternal = v.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
+                      const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
+                      return (
+                        <tr key={v.id}>
+                          <td className={cn("px-4 py-3 font-mono font-bold text-slate-600", isExternal && "bg-yellow-50/50")}>{v.schoolId || v.patronEmail}</td>
+                          <td className={cn("px-4 py-3 font-black text-slate-900 uppercase", isExternal && "bg-yellow-50/50")}>{v.patronName}</td>
+                          <td className={cn("px-4 py-3 uppercase text-slate-500 font-bold", isExternal && "bg-yellow-50/50")}>{method.toUpperCase()}</td>
+                          <td className={cn("px-4 py-3 font-bold text-primary uppercase", isExternal && "bg-yellow-50/50")}>{v.purpose}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -220,18 +230,19 @@ export default function ReportsPage() {
         </Card>
         <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between border-l-4 border-accent">
           <div className="space-y-1">
-            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dominant Academic Unit</h2>
-            <p className="text-xl font-headline font-black text-primary uppercase truncate max-w-[200px] leading-none">{analytics?.topDept?.name || 'N/A'}</p>
-            <p className="text-[9px] font-bold text-accent uppercase mt-2">Highest Unit Engagement</p>
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Primary Entry Protocol</h2>
+            <p className="text-xl font-headline font-black text-primary uppercase leading-none">{analytics?.topAuth || 'N/A'}</p>
+            <p className="text-[9px] font-bold text-accent uppercase mt-2">Dominant Access Method</p>
           </div>
-          <TrendingUp className="h-6 w-6 text-accent" />
+          <CreditCard className="h-6 w-6 text-accent" />
         </Card>
-        <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between">
+        <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between border-l-4 border-primary">
           <div className="space-y-1">
-            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Report Precision</h2>
-            <p className="text-3xl font-mono font-bold text-green-600 leading-none">100%</p>
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dept Champion</h2>
+            <p className="text-xl font-headline font-black text-primary uppercase truncate max-w-[200px] leading-none">{analytics?.topDept?.name || 'N/A'}</p>
+            <p className="text-[9px] font-bold text-primary uppercase mt-2">Highest Unit Volume</p>
           </div>
-          <Badge className="bg-green-50 text-green-700 border-none text-[8px] font-black uppercase tracking-widest">Validated</Badge>
+          <TrendingUp className="h-6 w-6 text-primary" />
         </Card>
       </div>
 

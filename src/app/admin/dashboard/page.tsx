@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Users, 
-  TrendingUp,
   Activity,
   Monitor,
   CreditCard,
@@ -42,7 +41,8 @@ export default function DashboardPage() {
       integrityScore: 100,
       flaggedCount: 0,
       primaryAuthMethod: 'N/A',
-      authMethodPct: 0
+      authMethodPct: 0,
+      uniqueDepts: 0
     };
     
     const activeVisits = visits.filter(v => v.status === 'granted');
@@ -51,14 +51,14 @@ export default function DashboardPage() {
 
     const deptCountMap: Record<string, number> = {};
     let flaggedCount = 0;
+    const uniqueDeptsSet = new Set<string>();
 
     visits.forEach(v => {
-      // Dept Mapping
       v.patronDepartments?.forEach((d: string) => {
         deptCountMap[d] = (deptCountMap[d] || 0) + 1;
+        uniqueDeptsSet.add(d);
       });
 
-      // Integrity Logic: Flag if email missing @ or RF-ID too short
       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
       if (method === 'SSO Login' && (!v.patronEmail || !v.patronEmail.includes('@'))) {
         flaggedCount++;
@@ -67,9 +67,10 @@ export default function DashboardPage() {
       }
     });
 
-    const integrityScore = Math.max(0, Math.min(100, Number(((totalRegistered - flaggedCount) / totalRegistered * 100).toFixed(1))));
+    const integrityScore = totalRegistered > 0 
+      ? Math.max(0, Math.min(100, Number(((totalRegistered - flaggedCount) / totalRegistered * 100).toFixed(1))))
+      : 100;
 
-    // Primary Auth Method Logic
     const authCounts = activeVisits.reduce((acc: Record<string, number>, v) => {
       const method = v.authMethod || (v.schoolId ? 'RF-ID Login' : 'SSO Login');
       acc[method] = (acc[method] || 0) + 1;
@@ -85,11 +86,12 @@ export default function DashboardPage() {
     return {
       inside,
       totalRegistered,
-      recentVisits: visits.slice(0, 50),
+      recentVisits: visits.slice(0, 100),
       integrityScore,
       flaggedCount,
       primaryAuthMethod,
-      authMethodPct
+      authMethodPct,
+      uniqueDepts: uniqueDeptsSet.size
     };
   }, [visits]);
 
@@ -142,8 +144,11 @@ export default function DashboardPage() {
 
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-purple-500 h-20">
           <div className="space-y-0.5">
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Entries Today</p>
-            <h3 className="text-2xl font-mono font-bold text-slate-900 leading-none">{stats?.totalRegistered ?? 0}</h3>
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Active Departments</p>
+            <h3 className="text-2xl font-mono font-bold text-slate-900 leading-none">{stats?.uniqueDepts ?? 0}</h3>
+            <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">
+              UNITS CURRENTLY REPRESENTED
+            </p>
           </div>
           <Monitor className="h-5 w-5 text-purple-500/20" />
         </Card>
@@ -180,7 +185,10 @@ export default function DashboardPage() {
                   const isExternal = visit.patronDepartments?.[0]?.toUpperCase().includes('VISITOR');
 
                   return (
-                    <tr key={visit.id} className={cn("hover:bg-slate-50/50 transition-colors group h-9", isFlagged && "bg-amber-50/50")}>
+                    <tr key={visit.id} className={cn(
+                      "hover:bg-slate-50/50 transition-colors group h-10", 
+                      isFlagged && "bg-red-50/30"
+                    )}>
                       <td className="px-6 py-0">
                         <span className={cn(
                           "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded",
@@ -194,13 +202,13 @@ export default function DashboardPage() {
                           {format(new Date(visit.timestamp), 'hh:mm:ss aa')}
                         </span>
                       </td>
-                      <td className="px-6 py-0 truncate">
+                      <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
                         <span className="text-[10px] font-bold text-slate-900 uppercase tracking-tight">{visit.patronName}</span>
                       </td>
-                      <td className="px-6 py-0">
+                      <td className={cn("px-6 py-0", isExternal && "bg-yellow-50/80")}>
                         <span className="text-[10px] font-mono font-bold text-slate-500">{visit.patronAge}</span>
                       </td>
-                      <td className="px-6 py-0">
+                      <td className={cn("px-6 py-0", isExternal && "bg-yellow-50/80")}>
                         <span className={cn(
                           "text-[8px] font-black uppercase tracking-widest",
                           method === 'RF-ID Login' ? "text-primary" : "text-blue-600"
@@ -208,15 +216,15 @@ export default function DashboardPage() {
                           {method.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-6 py-0 truncate">
+                      <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
                         <span className={cn("text-[10px] font-mono font-bold", isFlagged ? "text-red-500" : "text-slate-400")}>
                           {method === 'RF-ID Login' ? visit.schoolId : visit.patronEmail}
                         </span>
                       </td>
-                      <td className="px-6 py-0 truncate">
+                      <td className={cn("px-6 py-0 truncate", isExternal && "bg-yellow-50/80")}>
                         <span className={cn(
                           "text-[10px] font-bold uppercase",
-                          isExternal ? "text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded" : "text-slate-500"
+                          isExternal ? "text-amber-600 bg-amber-100/50 px-2 py-0.5 rounded border border-amber-200" : "text-slate-500"
                         )}>
                           {visit.patronDepartments?.[0]}
                         </span>

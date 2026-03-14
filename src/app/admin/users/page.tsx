@@ -31,6 +31,7 @@ import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { ShieldAlert } from 'lucide-react';
 
 export default function AccessManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,61 +134,78 @@ export default function AccessManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPatrons?.map((patron) => (
-                <TableRow 
-                  key={patron.id} 
-                  className={cn(
-                    "zebra-row group transition-colors",
-                    patron.isBlocked && "bg-red-50/70 hover:bg-red-100/70"
-                  )}
-                >
-                  <TableCell className="pl-10 py-5">
-                    <div className="flex flex-col">
-                      <span className={cn("text-sm font-black tracking-tight", patron.isBlocked ? "text-red-700" : "text-slate-900 uppercase")}>
-                        {patron.name}
-                      </span>
-                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">
-                        {patron.schoolId}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {patron.departments?.map((dept: string, i: number) => (
-                        <span key={i} className="text-[9px] font-black text-slate-500 bg-slate-100 px-2.5 py-1 rounded uppercase border border-slate-200">
-                          {dept}
+              {filteredPatrons?.map((patron) => {
+                const isFlagged = !patron.email || !patron.schoolId || patron.name === 'UNKNOWN';
+                const isExternal = patron.departments?.[0]?.toUpperCase().includes('VISITOR');
+                
+                return (
+                  <TableRow 
+                    key={patron.id} 
+                    className={cn(
+                      "zebra-row group transition-colors",
+                      patron.isBlocked ? "bg-red-100 hover:bg-red-200" : isFlagged ? "bg-red-50 hover:bg-red-100 border-l-4 border-red-500" : "hover:bg-slate-50"
+                    )}
+                  >
+                    <TableCell className="pl-10 py-5">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "text-sm font-black tracking-tight uppercase", 
+                            patron.isBlocked || isFlagged ? "text-red-700" : "text-slate-900"
+                          )}>
+                            {patron.name}
+                          </span>
+                          {isFlagged && <ShieldAlert className="h-3 w-3 text-red-500" />}
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-slate-400 uppercase mt-1 tracking-tighter">
+                          {patron.schoolId || 'MISSING ID'}
                         </span>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-[10px] font-mono font-black text-primary/60 uppercase">
-                      {patron.age}Y / {patron.gender?.charAt(0) || 'U'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      {patron.createdAt ? format(new Date(patron.createdAt), 'MMM dd, yyyy') : '...'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right pr-10">
-                    <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" size="sm" className="h-9 px-4 text-primary font-black uppercase text-[9px] tracking-widest rounded-xl"
-                        onClick={() => { setEditingPatron(patron); setIsEditDialogOpen(true); }}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="ghost" size="sm" className={cn("h-9 px-4 font-black uppercase text-[9px] tracking-widest rounded-xl", patron.isBlocked ? "text-green-600" : "text-red-400")}
-                        onClick={() => handleToggleBlock(patron)}
-                      >
-                        {patron.isBlocked ? 'Unlock' : 'Block'}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {isFlagged && !patron.email && (
+                          <span className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-0.5">Missing Email Verification</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {patron.departments?.map((dept: string, i: number) => (
+                          <span key={i} className={cn(
+                            "text-[9px] font-black px-2.5 py-1 rounded uppercase border",
+                            isExternal ? "bg-yellow-100 text-yellow-800 border-yellow-200" : "bg-slate-100 text-slate-500 border-slate-200"
+                          )}>
+                            {dept}
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[10px] font-mono font-black text-primary/60 uppercase">
+                        {patron.age}Y / {patron.gender?.charAt(0) || 'U'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        {patron.createdAt ? format(new Date(patron.createdAt), 'MMM dd, yyyy') : '...'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right pr-10">
+                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="ghost" size="sm" className="h-9 px-4 text-primary font-black uppercase text-[9px] tracking-widest rounded-xl"
+                          onClick={() => { setEditingPatron(patron); setIsEditDialogOpen(true); }}
+                        >
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="ghost" size="sm" className={cn("h-9 px-4 font-black uppercase text-[9px] tracking-widest rounded-xl", patron.isBlocked ? "text-green-600" : "text-red-400")}
+                          onClick={() => handleToggleBlock(patron)}
+                        >
+                          {patron.isBlocked ? 'Unlock' : 'Block'}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           
@@ -229,6 +247,10 @@ export default function AccessManagementPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Registry Contact (Email)</Label>
+                <Input value={editingPatron?.email || ''} className="h-12 rounded-xl font-mono font-bold" placeholder="missing@neu.edu.ph" />
               </div>
             </div>
           </div>

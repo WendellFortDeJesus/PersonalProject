@@ -89,7 +89,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
         return;
       }
 
-      // Initiate deletion of all documents in the visits collection
+      // Automatically delete all visitor information from the dashboard
       snapshot.docs.forEach((docSnap) => {
         deleteDoc(docSnap.ref).catch(error => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -100,7 +100,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
       });
 
       setIsResetting(false);
-      toast({ title: "System Cleared", description: "All information has been deleted from the dashboard." });
+      toast({ title: "System Cleared", description: "All visitor information has been instantly deleted from the dashboard." });
     } catch (err) {
       console.error(err);
       setIsResetting(false);
@@ -259,7 +259,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
                   className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95"
                 >
                   {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
-                  Purge Live Occupancy
+                  Delete all visitor information from the dashboard
                 </Button>
               </div>
             </CardContent>

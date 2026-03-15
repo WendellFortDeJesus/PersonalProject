@@ -128,7 +128,7 @@ export default function ReportsPage(props: { params: Promise<any>; searchParams:
           </DialogTrigger>
           <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0 rounded-2xl border-none shadow-2xl bg-white">
             <DialogHeader className="p-8 pb-0">
-              <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Official Audit Preview</DialogTitle>
+              <DialogTitle className="text-xl font-black uppercase tracking-tight text-primary">Official Institutional Audit</DialogTitle>
             </DialogHeader>
             <div id="printable-report" className="p-16 space-y-12 report-container bg-white">
               <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
@@ -248,7 +248,7 @@ export default function ReportsPage(props: { params: Promise<any>; searchParams:
         <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between border-l-4 border-primary">
           <div className="space-y-1">
             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Most students in the college department</h2>
-            <p className="text-xl font-headline font-black text-primary uppercase leading-none">
+            <p className="text-xl font-headline font-black text-primary uppercase leading-tight">
               {analytics?.topDept?.name || 'N/A'}
             </p>
             <p className="text-[9px] font-bold text-primary uppercase mt-2">Highest Unit Engagement</p>

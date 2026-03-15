@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
   DialogContent, 
-  DialogDescription, 
   DialogFooter, 
   DialogHeader, 
   DialogTitle 
@@ -256,6 +255,15 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                   className="h-12 rounded-xl font-bold uppercase" 
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Institutional Identity Index (School ID)</Label>
+                <Input 
+                  value={editingPatron?.schoolId || ''} 
+                  onChange={(e) => setEditingPatron({ ...editingPatron, schoolId: e.target.value })}
+                  className="h-12 rounded-xl font-mono font-bold" 
+                  placeholder="ID NOT READ"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
@@ -289,7 +297,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                   value={editingPatron?.email || ''} 
                   onChange={(e) => setEditingPatron({ ...editingPatron, email: e.target.value })}
                   className="h-12 rounded-xl font-mono font-bold" 
-                  placeholder="missing@neu.edu.ph" 
+                  placeholder="EMAIL NOT READ" 
                 />
               </div>
             </div>

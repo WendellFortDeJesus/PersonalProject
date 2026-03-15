@@ -147,7 +147,7 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
         <Card className="p-3 border-none shadow-sm bg-white rounded-xl flex items-center justify-between border-l-4 border-accent h-20">
           <div className="space-y-0.5">
             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Primary Auth Method</p>
-            <h3 className="text-sm font-headline font-black text-slate-900 uppercase truncate max-w-[120px] leading-none">
+            <h3 className="text-sm font-headline font-black text-slate-900 uppercase leading-none">
               {stats?.primaryAuthMethod?.toUpperCase()}
             </h3>
             <p className="text-[7px] font-bold text-slate-400 uppercase mt-1">

@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -89,15 +89,18 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
         return;
       }
 
-      // Automatically delete all visitor information from the dashboard
-      snapshot.docs.forEach((docSnap) => {
+      // Execute real-time bulk deletion
+      // We use Promise.all to ensure the local "Resetting" state stays active until the background queue is processed
+      const deletePromises = snapshot.docs.map((docSnap) => 
         deleteDoc(docSnap.ref).catch(error => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: docSnap.ref.path,
             operation: 'delete',
           }));
-        });
-      });
+        })
+      );
+
+      await Promise.all(deletePromises);
 
       setIsResetting(false);
       toast({ title: "System Cleared", description: "All visitor information has been instantly deleted from the dashboard." });

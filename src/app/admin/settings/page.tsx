@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -76,12 +76,40 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
   };
 
   const handlePurgeLiveVisitors = async () => {
-    if (!db || !confirm("CRITICAL: This will reset all active library sessions. Proceed?")) return;
+    if (!db || !confirm("CRITICAL: This will permanently delete ALL visitor records from the dashboard. This action cannot be undone. Proceed?")) return;
     setIsResetting(true);
-    setTimeout(() => {
+    
+    try {
+      const visitsRef = collection(db, 'visits');
+      const snapshot = await getDocs(visitsRef);
+      
+      if (snapshot.empty) {
+        setIsResetting(false);
+        toast({ title: "System Ready", description: "No active occupancy records found to purge." });
+        return;
+      }
+
+      // Initiate deletion of all documents in the visits collection
+      snapshot.docs.forEach((docSnap) => {
+        deleteDoc(docSnap.ref).catch(error => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: docSnap.ref.path,
+            operation: 'delete',
+          }));
+        });
+      });
+
       setIsResetting(false);
-      toast({ title: "System Cleared", description: "All active occupancy reset to zero." });
-    }, 1500);
+      toast({ title: "System Cleared", description: "All information has been deleted from the dashboard." });
+    } catch (err) {
+      console.error(err);
+      setIsResetting(false);
+      toast({ 
+        variant: "destructive", 
+        title: "Purge Failed", 
+        description: "Communication with the identity hub failed." 
+      });
+    }
   };
 
   if (isLoading) return (

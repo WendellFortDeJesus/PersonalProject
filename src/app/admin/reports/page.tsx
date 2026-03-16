@@ -108,8 +108,6 @@ export default function ReportsPage(props: { params: Promise<any>; searchParams:
     </div>
   );
 
-  const CHART_COLORS = ['#006837', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7'];
-
   return (
     <div className="space-y-6 animate-fade-in fluid-container bg-[#F8FAFC] p-8 font-body min-h-screen no-print">
       <header className="flex justify-between items-end pb-8 border-b border-slate-200">
@@ -197,14 +195,14 @@ export default function ReportsPage(props: { params: Promise<any>; searchParams:
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <Card className="p-6 bg-white border-none shadow-sm rounded-2xl flex items-center justify-between border-l-4 border-primary">
-          <div className="space-y-1 w-full overflow-hidden">
+          <div className="space-y-1 w-full">
             <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Most students in the college department</h2>
             <p className="text-xl font-headline font-black text-primary uppercase leading-tight whitespace-normal break-words">
               {analytics?.topDept?.name || 'N/A'}
             </p>
             <p className="text-[9px] font-bold text-primary uppercase mt-2">Highest Unit Engagement</p>
           </div>
-          <TrendingUp className="h-6 w-6 text-primary shrink-0" />
+          <TrendingUp className="h-6 w-6 text-primary shrink-0 ml-4" />
         </Card>
       </div>
     </div>

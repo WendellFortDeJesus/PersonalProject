@@ -40,10 +40,6 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
   }, [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
 
-  const [newDeptName, setNewDeptName] = useState('');
-  const [newDeptCode, setNewDeptCode] = useState('');
-  const [newDeptColor, setNewDeptColor] = useState('#006837');
-  const [newPurposeLabel, setNewPurposeLabel] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
   const handleSaveSettings = async (updates: any) => {
@@ -90,7 +86,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
       toast({ 
         variant: "destructive", 
         title: "Purge Failed", 
-        description: "Communication with the identity hub failed." 
+        description: "Communication with the identity hub failed. Please check permissions." 
       });
     }
   };

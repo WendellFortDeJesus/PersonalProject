@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { LayoutDashboard, BarChart3, Settings, LogOut, ShieldCheck } from 'lucide-react';
+import { LogOut, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardLayout(props: { children: React.ReactNode; params: Promise<any> }) {
@@ -29,12 +29,6 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
-
-  const menuItems = [
-    { label: 'DASHBOARD', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'ANALYTICS & REPORTS', href: '/admin/reports', icon: BarChart3 },
-    { label: 'CONTROL ROOM', href: '/admin/settings', icon: Settings },
-  ];
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -63,28 +57,11 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
             </div>
           </SidebarHeader>
           <SidebarContent className="px-3 py-6 bg-white">
-            <SidebarMenu className="gap-2">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                    className={cn(
-                      "h-12 rounded-xl transition-all duration-200",
-                      pathname === item.href 
-                      ? "bg-primary text-white shadow-md" 
-                      : "text-slate-500 hover:bg-slate-50 hover:text-primary"
-                    )}
-                  >
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-white" : "text-slate-400")} />
-                      <span className="font-bold text-[10px] uppercase tracking-widest">{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <div className="px-4 py-8 text-center space-y-4 group-data-[collapsible=icon]:hidden">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                System Active
+              </p>
+            </div>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-slate-100 bg-white">
             <SidebarMenu>
@@ -107,7 +84,7 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
               <SidebarTrigger className="h-9 w-9 hover:bg-slate-100 rounded-lg" />
               <div className="h-4 w-px bg-slate-200 mx-2" />
               <h2 className="text-[10px] font-black text-slate-900 tracking-[0.3em] uppercase font-headline">
-                {menuItems.find(item => pathname === item.href)?.label || 'System'}
+                Admin Terminal
               </h2>
             </div>
             

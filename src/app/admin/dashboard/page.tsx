@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, use } from 'react';
@@ -233,7 +232,7 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
 
                   return (
                     <tr key={visit.id} className={cn(
-                      "hover:bg-slate-50/50 transition-colors group h-12", 
+                      "hover:bg-slate-50/50 transition-colors group h-10", 
                       isFlagged && "bg-red-50",
                       isBlocked && "bg-red-100"
                     )}>
@@ -250,7 +249,7 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
                           {format(new Date(visit.timestamp), 'hh:mm:ss aa')}
                         </span>
                       </td>
-                      <td className={cn("px-6 py-2", isExternal && "bg-yellow-50/80")}>
+                      <td className={cn("px-6 py-1", isExternal && "bg-yellow-50/80")}>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
                             <span className={cn(

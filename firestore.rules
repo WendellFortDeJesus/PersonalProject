@@ -1,9 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // INSTITUTIONAL SECURITY PROTOCOL - REINFORCED DEPLOYMENT: 2026-03-16 04:35:00 UTC
-    // Explicit authorization for institutional identity collections to resolve listing issues.
+    // INSTITUTIONAL SECURITY PROTOCOL - REINFORCED DEPLOYMENT: 2026-03-16 05:20:00 UTC
+    // Universal authorization for institutional terminal nodes to resolve recursive listing and sync issues.
     
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
     match /patrons/{document=**} {
       allow read, write: if true;
     }
@@ -13,10 +17,6 @@ service cloud.firestore {
     }
     
     match /system_config/{document=**} {
-      allow read, write: if true;
-    }
-
-    match /{document=**} {
       allow read, write: if true;
     }
   }

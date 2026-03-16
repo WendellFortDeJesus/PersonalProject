@@ -181,12 +181,12 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         <Table className="table-fixed w-full">
           <TableHeader className="bg-white sticky top-0 z-20 shadow-sm">
             <TableRow className="hover:bg-transparent border-b border-slate-100">
-              <TableHead className="pl-10 h-14 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[25%]">Identity Name & Detail</TableHead>
-              <TableHead className="h-14 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[8%]">Age</TableHead>
-              <TableHead className="h-14 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Department</TableHead>
-              <TableHead className="h-14 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Registry Detail</TableHead>
-              <TableHead className="h-14 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[12%]">Method</TableHead>
-              <TableHead className="h-14 pr-10 text-right font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[15%]">Actions</TableHead>
+              <TableHead className="pl-10 h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[25%]">Identity Name & Detail</TableHead>
+              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[8%]">Age</TableHead>
+              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Department</TableHead>
+              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Registry Detail</TableHead>
+              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[12%]">Method</TableHead>
+              <TableHead className="h-10 pr-10 text-right font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[15%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,11 +197,11 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                 <TableRow 
                   key={patron.id} 
                   className={cn(
-                    "group transition-colors h-11 border-slate-50",
+                    "group transition-colors h-9 border-slate-50",
                     patron.isBlocked ? "bg-red-50/50 hover:bg-red-100/50" : "hover:bg-slate-50/80"
                   )}
                 >
-                  <TableCell className="pl-10 py-1">
+                  <TableCell className="pl-10 py-0.5">
                     <div className="flex items-center gap-3">
                       <div className={cn("w-1.5 h-1.5 rounded-full", patron.isBlocked ? "bg-red-500" : "bg-green-500")} />
                       <span className={cn(
@@ -212,30 +212,30 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-0.5">
                     <span className="text-[10px] font-mono font-bold text-slate-500">{patron.age}</span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-0.5">
                     <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase border border-slate-100 text-slate-500 bg-slate-50/50 truncate block max-w-[140px]">
                       {patron.departments?.[0]}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-0.5">
                     <span className="text-[9px] font-mono font-bold text-slate-400 uppercase truncate block max-w-[160px]">
                       {email}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-0.5">
                     <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter h-5 border-slate-200 text-slate-400">
                       {patron.schoolId ? 'RF-ID' : 'SSO'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right pr-10">
+                  <TableCell className="text-right pr-10 py-0.5">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="h-8 px-3 border-primary/20 text-primary hover:bg-primary/5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
+                        className="h-7 px-3 border-primary/20 text-primary hover:bg-primary/5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
                         onClick={() => { setEditingPatron(patron); setIsEditSheetOpen(true); }}
                       >
                         <Edit3 className="h-3 w-3" /> Edit
@@ -243,7 +243,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="h-8 px-3 border-red-200 text-red-500 hover:bg-red-50 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
+                        className="h-7 px-3 border-red-200 text-red-500 hover:bg-red-50 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
                         onClick={() => { setPatronToDelete(patron); setIsDeleteDialogOpen(true); }}
                       >
                         <Trash2 className="h-3 w-3" /> Delete

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -22,7 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { ShieldCheck, LayoutDashboard, FileBarChart, LogOut } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, FileBarChart, LogOut, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardLayout(props: { children: React.ReactNode; params: Promise<any> }) {
@@ -37,12 +36,13 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
 
   const navItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { title: "User Management", href: "/admin/users", icon: Users },
     { title: "Analytics & Reports", href: "/admin/reports", icon: FileBarChart },
   ];
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-slate-50 font-body">
+      <div className="flex min-h-screen w-full bg-slate-50 font-body overflow-x-hidden">
         <Sidebar variant="sidebar" collapsible="icon" className="border-r border-slate-200 shadow-xl">
           <SidebarHeader className="p-6 border-b border-slate-100 bg-white">
             <div className="flex items-center gap-3 group-data-[collapsible=icon]:hidden">
@@ -96,7 +96,7 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
           </SidebarFooter>
         </Sidebar>
 
-        <SidebarInset className="bg-[#F8FAFC]">
+        <SidebarInset className="bg-[#F8FAFC] max-w-full overflow-x-hidden">
           <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-white px-8 sticky top-0 z-50 shadow-sm">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="h-9 w-9 hover:bg-slate-100 rounded-lg text-primary" />

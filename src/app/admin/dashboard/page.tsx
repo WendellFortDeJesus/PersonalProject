@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { 
@@ -11,16 +11,8 @@ import {
   Clock, 
   TrendingUp, 
   BookOpen, 
-  Activity,
   UserCheck
 } from 'lucide-react';
-import { 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip as ChartTooltip
-} from 'recharts';
 import { format, isToday, isThisWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -69,12 +61,6 @@ export default function DashboardPage() {
       ? Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b, '0')
       : '0';
 
-    const collegeCounts = visits.reduce((acc: any, v) => {
-      const c = v.patronDepartments?.[0] || 'Unknown';
-      acc[c] = (acc[c] || 0) + 1;
-      return acc;
-    }, {});
-
     const purposeCounts = visits.reduce((acc: any, v) => {
       acc[v.purpose] = (acc[v.purpose] || 0) + 1;
       return acc;
@@ -89,13 +75,9 @@ export default function DashboardPage() {
       newVisitorsList: newVisitorsTodayList,
       weekCount: weekVisits.length,
       peakHour: `${peakHour}:00`,
-      mostCommonPurpose,
-      purposeData: Object.entries(purposeCounts).map(([name, value]) => ({ name, value })),
-      collegeData: Object.entries(collegeCounts).map(([name, value]) => ({ name, value })).slice(0, 5)
+      mostCommonPurpose
     };
   }, [visits]);
-
-  const COLORS = ['#355872', '#7AAACE', '#9CD5FF', '#1e293b', '#64748b'];
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -144,48 +126,6 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card className="xl:col-span-1 border-none shadow-md rounded-[1.5rem] bg-white">
-          <CardHeader className="p-4 pb-0 flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-sm font-black uppercase tracking-tighter text-primary">Department Reach</CardTitle>
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Institutional engagement map</p>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 h-[180px] flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height={120}>
-              <PieChart>
-                <Pie
-                  data={stats?.collegeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={35}
-                  outerRadius={55}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {stats?.collegeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
-                  ))}
-                </Pie>
-                <ChartTooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="w-full space-y-1 mt-2">
-              {stats?.collegeData.slice(0, 3).map((item: any, i) => (
-                <div key={i} className="flex items-center justify-between p-1.5 rounded-lg bg-slate-50 border border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                    <span className="text-[8px] font-black uppercase text-slate-600 truncate max-w-[100px] tracking-tight">{item.name}</span>
-                  </div>
-                  <span className="text-[10px] font-black text-primary">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
       
       <div className="bg-primary p-10 rounded-[2.5rem] shadow-xl border-none text-white overflow-hidden relative group transition-all duration-500 hover:shadow-primary/20">
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700">
@@ -205,7 +145,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats?.newVisitorsList && stats.newVisitorsList.length > 0 ? (
-              stats.newVisitorsList.slice(0, 4).map((v: any, idx: number) => (
+              stats.newVisitorsList.map((v: any, idx: number) => (
                 <div key={idx} className="p-6 bg-white/5 rounded-[1.5rem] border border-white/10 backdrop-blur-xl flex flex-col justify-center transition-all hover:bg-white/10 hover:scale-[1.02]">
                   <p className="text-lg font-black text-accent uppercase tracking-tight leading-none mb-2 truncate">{v.patronName}</p>
                   <p className="text-xs font-bold text-white/70 uppercase tracking-tighter truncate">{v.patronDepartments?.[0] || 'Unit Unassigned'}</p>

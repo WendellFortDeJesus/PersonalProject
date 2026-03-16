@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -6,14 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ContactRound, ArrowLeft, Loader2, ShieldAlert } from 'lucide-react';
+import { Mail, ContactRound, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-
-const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
@@ -32,6 +31,16 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
+    if (settings) {
+      if (!settings.allowRfidScan && settings.allowEmailLogin) {
+        setActiveTab('email');
+      } else if (settings.allowRfidScan) {
+        setActiveTab('rfid');
+      }
+    }
+  }, [settings]);
+
+  useEffect(() => {
     if (activeTab === 'rfid' && rfidInputRef.current) {
       rfidInputRef.current.focus();
     }
@@ -45,7 +54,10 @@ export default function KioskAuthPage() {
       const patronsRef = collection(db, 'patrons');
       const authMethod = activeTab === 'rfid' ? 'RF-ID Login' : 'SSO Login';
       
-      if (activeTab === 'rfid' && !SCHOOL_ID_REGEX.test(rfid)) {
+      const enforcedPattern = settings?.rfidPattern || "^[0-9]{2}-[0-9]{5}-[0-9]{3}$";
+      const regex = new RegExp(enforcedPattern);
+
+      if (activeTab === 'rfid' && !regex.test(rfid)) {
         setIsLoading(false);
         toast({
           variant: "destructive",
@@ -130,8 +142,12 @@ export default function KioskAuthPage() {
           <CardContent className="p-10 pt-0">
             <Tabs defaultValue="rfid" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-50 p-1 rounded-xl">
-                <TabsTrigger value="rfid" className="text-[10px] font-bold uppercase tracking-wider rounded-lg data-[state=active]:shadow-sm">RFID Card</TabsTrigger>
-                <TabsTrigger value="email" className="text-[10px] font-bold uppercase tracking-wider rounded-lg data-[state=active]:shadow-sm">Email SSO</TabsTrigger>
+                {settings?.allowRfidScan !== false && (
+                  <TabsTrigger value="rfid" className="text-[10px] font-bold uppercase tracking-wider rounded-lg data-[state=active]:shadow-sm">RFID Card</TabsTrigger>
+                )}
+                {settings?.allowEmailLogin !== false && (
+                  <TabsTrigger value="email" className="text-[10px] font-bold uppercase tracking-wider rounded-lg data-[state=active]:shadow-sm">Email SSO</TabsTrigger>
+                )}
               </TabsList>
               
               <TabsContent value="rfid" className="mt-0 outline-none">

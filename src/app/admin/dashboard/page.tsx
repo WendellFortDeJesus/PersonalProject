@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
@@ -31,6 +31,16 @@ import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const db = useFirestore();
+  const [currentTime, setCurrentTime] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Set initial time and update every second
+    setCurrentTime(format(new Date(), 'HH:mm:ss'));
+    const timer = setInterval(() => {
+      setCurrentTime(format(new Date(), 'HH:mm:ss'));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const visitsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -97,7 +107,7 @@ export default function DashboardPage() {
         <div className="bg-white border p-3 rounded-2xl flex items-center gap-4 shadow-sm">
           <div className="flex flex-col items-end">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">System Time</span>
-            <span className="text-sm font-black text-primary font-mono">{format(new Date(), 'HH:mm:ss')}</span>
+            <span className="text-sm font-black text-primary font-mono">{currentTime || '--:--:--'}</span>
           </div>
           <div className="w-px h-8 bg-slate-100" />
           <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse" />
@@ -144,7 +154,7 @@ export default function DashboardPage() {
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 9, fontWeight: 800, fill: '#64748b' }} 
+                  tick={{ fontSize: 9, fontWeights: 800, fill: '#64748b' }} 
                   interval={0}
                 />
                 <YAxis hide />

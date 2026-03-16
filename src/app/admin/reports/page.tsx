@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,11 @@ export default function ReportsPage() {
   const [purpose, setPurpose] = useState('all');
   const [college, setCollege] = useState('all');
   const [role, setRole] = useState('all');
+  const [generatedOn, setGeneratedOn] = useState<string | null>(null);
+
+  useEffect(() => {
+    setGeneratedOn(format(new Date(), 'MMMM dd, yyyy HH:mm'));
+  }, []);
 
   const visitsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -137,7 +142,7 @@ export default function ReportsPage() {
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generated On</p>
-            <p className="text-sm font-black text-primary">{format(new Date(), 'MMMM dd, yyyy HH:mm')}</p>
+            <p className="text-sm font-black text-primary">{generatedOn || '...'}</p>
           </div>
         </div>
 
@@ -148,7 +153,9 @@ export default function ReportsPage() {
           </div>
           <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Date Interval</p>
-            <p className="text-sm font-black text-primary uppercase">{format(new Date(dateFrom), 'MMM dd')} - {format(new Date(dateTo), 'MMM dd')}</p>
+            <p className="text-sm font-black text-primary uppercase">
+              {format(new Date(dateFrom), 'MMM dd')} - {format(new Date(dateTo), 'MMM dd')}
+            </p>
           </div>
           <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Status</p>

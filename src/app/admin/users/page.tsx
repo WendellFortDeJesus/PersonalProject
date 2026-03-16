@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from 'react';
+import React, { useState, useMemo, use } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -58,13 +58,16 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
 
   const { data: patrons, isLoading } = useCollection(patronsQuery);
 
-  const filteredPatrons = patrons?.filter(p => {
-    const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         p.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
-    return matchesSearch && matchesDept;
-  });
+  const filteredPatrons = useMemo(() => {
+    if (!patrons) return [];
+    return patrons.filter(p => {
+      const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           p.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
+      return matchesSearch && matchesDept;
+    });
+  }, [patrons, searchTerm, selectedDept]);
 
   const handleSaveChanges = async () => {
     if (!db || !editingPatron) return;
@@ -126,7 +129,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
   };
 
   return (
-    <div className="flex h-full overflow-hidden bg-slate-50/50">
+    <div className="flex h-full overflow-hidden bg-slate-50/50 font-body">
       <aside className="w-80 border-r bg-white p-8 space-y-10 overflow-y-auto shrink-0 hidden lg:block shadow-sm">
         <div className="space-y-8">
           <div className="space-y-2">

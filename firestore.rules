@@ -1,22 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // REINFORCED TERMINAL AUTHORIZATION - DEPLOYMENT TIMESTAMP: 2026-02-21 17:50:00 UTC
-    // Explicitly allow all operations on institutional collections to prevent 'list' permission errors.
+    // REINFORCED INSTITUTIONAL AUTHORIZATION - DEPLOYMENT TIMESTAMP: 2026-02-21 18:05:00 UTC
+    // Universal access for terminal identity hub and management portal to ensure 100% sync reliability.
     
-    match /patrons/{patronId} {
-      allow read, write: if true;
-    }
-    
-    match /visits/{visitId} {
-      allow read, write: if true;
-    }
-    
-    match /system_config/{configId} {
-      allow read, write: if true;
-    }
-
-    // Fallback for any other paths
     match /{document=**} {
       allow read, write: if true;
     }

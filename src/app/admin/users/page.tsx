@@ -181,7 +181,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
           </TableHeader>
           <TableBody>
             {filteredPatrons?.map((patron) => {
-              const detail = patron.schoolId || (patron.email ? 'SSO LOGGED' : 'ID NOT READ');
               const email = patron.email || 'EMAIL NOT READ';
               
               return (

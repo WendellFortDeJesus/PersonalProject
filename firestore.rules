@@ -2,18 +2,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // INSTITUTIONAL TERMINAL AUTHORIZATION - DEPLOYED: 2026-03-16 09:30:00 UTC
-    // Explicitly authorizing all operations for library visitor management system.
+    // INSTITUTIONAL TERMINAL AUTHORIZATION - DEPLOYED: 2026-03-16 10:15:00 UTC
+    // Explicitly authorizing all operations for the library visitor management system.
     
-    match /patrons/{document=**} {
+    match /patrons/{patronId} {
       allow read, write: if true;
     }
     
-    match /visits/{document=**} {
+    match /visits/{visitId} {
       allow read, write: if true;
     }
     
-    match /system_config/{document=**} {
+    match /system_config/{configId} {
       allow read, write: if true;
     }
 

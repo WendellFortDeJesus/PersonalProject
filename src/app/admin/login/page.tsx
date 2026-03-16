@@ -23,8 +23,8 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate credentials using institutional email
-    if (username === 'jcesperanza@neu.edu.ph' && password === '12345') {
+    // Validate credentials using the generic institutional format
+    if (username === 'username@neu.edu.ph' && password === '12345') {
       try {
         // Perform real Firebase sign-in to satisfy security rules
         await signInAnonymously(auth);
@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                     <Input 
-                      placeholder="jcesperanza@neu.edu.ph" 
+                      placeholder="username@neu.edu.ph" 
                       type="text" 
                       required
                       value={username}

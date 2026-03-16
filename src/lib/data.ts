@@ -23,6 +23,7 @@ export interface Visit {
   patronDepartments: string[];
   patronAge: number;
   patronGender: string;
+  patronRole?: string;
   purpose: string;
   timestamp: string;
   status: 'granted' | 'blocked';

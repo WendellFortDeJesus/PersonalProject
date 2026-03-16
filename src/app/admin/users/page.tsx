@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, use } from 'react';
@@ -18,7 +19,8 @@ import {
   DialogContent, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from '@/components/ui/dialog';
 import { 
   Sheet,
@@ -29,6 +31,7 @@ import {
 } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc, where } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -36,7 +39,8 @@ import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
-import { ShieldAlert, Trash2, Edit3, Search, Filter, AlertTriangle, UserCircle } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit3, Search, Filter, AlertTriangle, UserCircle, ShieldCheck, ShieldOff } from 'lucide-react';
+import { DEPARTMENTS } from '@/lib/data';
 
 export default function AccessManagementPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
   const params = use(props.params);
@@ -46,7 +50,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [patronToDelete, setPatronToDelete] = useState<any>(null);
-  const [deleteReason, setDeleteReason] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
 
   const db = useFirestore();
@@ -85,7 +88,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
     updateDoc(patronRef, updateData)
       .then(() => {
         setIsEditSheetOpen(false);
-        toast({ title: "Registry Updated", description: "Identity profile has been saved." });
+        toast({ title: "Registry Updated", description: "Identity profile has been saved successfully." });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -96,166 +99,172 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
       });
   };
 
-  const handleDeletePatron = async () => {
-    if (!db || !patronToDelete) return;
+  const toggleBlockStatus = async (patron: any) => {
+    if (!db) return;
+    const patronRef = doc(db, 'patrons', patron.id);
+    const newStatus = !patron.isBlocked;
     
-    if (config?.requireDeleteReason && !deleteReason) {
-      toast({ variant: "destructive", title: "Action Denied", description: "A reason for deletion is required." });
-      return;
-    }
-
-    const patronRef = doc(db, 'patrons', patronToDelete.id);
-
-    if (config?.hardDelete) {
-      deleteDoc(patronRef).then(() => {
-        setIsDeleteDialogOpen(false);
-        toast({ title: "Permanently Erased", description: "Record has been removed from the server." });
-      }).catch(error => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: patronRef.path,
-          operation: 'delete'
-        }));
-      });
-    } else {
-      const update = { 
-        isArchived: true, 
-        archiveReason: deleteReason, 
-        updatedAt: new Date().toISOString() 
-      };
-      updateDoc(patronRef, update).then(() => {
-        setIsDeleteDialogOpen(false);
-        toast({ title: "Record Archived", description: "Student is now hidden from active registry." });
-      }).catch(error => {
+    updateDoc(patronRef, { isBlocked: newStatus })
+      .then(() => {
+        toast({ 
+          title: newStatus ? "Identity Restricted" : "Identity Restored", 
+          description: `${patron.name} access has been updated.` 
+        });
+      })
+      .catch(error => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: patronRef.path,
           operation: 'update',
-          requestResourceData: update
+          requestResourceData: { isBlocked: newStatus }
         }));
       });
-    }
   };
 
+  const handleDeletePatron = async () => {
+    if (!db || !patronToDelete) return;
+    const patronRef = doc(db, 'patrons', patronToDelete.id);
+
+    deleteDoc(patronRef).then(() => {
+      setIsDeleteDialogOpen(false);
+      toast({ title: "Permanently Erased", description: "Identity record has been removed from the institutional registry." });
+    }).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: patronRef.path,
+        operation: 'delete'
+      }));
+    });
+  };
+
+  if (isLoading) return (
+    <div className="p-32 text-center h-[80vh] flex flex-col items-center justify-center">
+      <div className="w-10 h-10 border-4 border-primary/10 border-t-primary rounded-full animate-spin mb-4" />
+      <p className="font-mono font-black text-primary uppercase tracking-[0.4em] text-[10px]">Loading Registry...</p>
+    </div>
+  );
+
   return (
-    <div className="flex h-full overflow-hidden bg-slate-50/50 font-body">
-      <aside className="w-80 border-r bg-white p-8 space-y-10 overflow-y-auto shrink-0 hidden lg:block shadow-sm">
-        <div className="space-y-8">
-          <div className="space-y-2">
-            <h2 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] font-headline">Segmentation</h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Master Identity Filtering</p>
-          </div>
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                <Search className="h-3 w-3" /> Master Search
-              </Label>
-              <Input 
-                placeholder="Name, ID or Email..." 
-                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold focus:bg-white transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
-                <Filter className="h-3 w-3" /> Academic Unit
-              </Label>
-              <Select value={selectedDept} onValueChange={setSelectedDept}>
-                <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold">
-                  <SelectValue placeholder="All Colleges" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Academic Units</SelectItem>
-                  {config?.departments?.map((d: any) => (
-                    <SelectItem key={d.id} value={d.name}>{d.code}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="flex flex-col h-full animate-fade-in font-body">
+      <header className="p-8 border-b bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter font-headline">Access Management</h1>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">High-Density Identity Control</p>
         </div>
-      </aside>
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Search Name or ID..." 
+              className="h-10 pl-10 rounded-xl border-slate-200 text-xs font-bold bg-slate-50 focus:bg-white transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Select value={selectedDept} onValueChange={setSelectedDept}>
+            <SelectTrigger className="h-10 w-full md:w-60 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold">
+              <SelectValue placeholder="All Academic Units" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Academic Units</SelectItem>
+              {DEPARTMENTS.map(d => (
+                <SelectItem key={d} value={d} className="text-xs font-bold">{d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </header>
 
-      <main className="flex-1 overflow-y-auto bg-white border-l">
+      <div className="flex-1 overflow-auto bg-white">
         <Table className="table-fixed w-full">
-          <TableHeader className="bg-white sticky top-0 z-20 shadow-sm">
-            <TableRow className="hover:bg-transparent border-b border-slate-100">
-              <TableHead className="pl-10 h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[25%]">Identity Name & Detail</TableHead>
-              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[8%]">Age</TableHead>
-              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Department</TableHead>
-              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Registry Detail</TableHead>
-              <TableHead className="h-10 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[12%]">Method</TableHead>
-              <TableHead className="h-10 pr-10 text-right font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[15%]">Actions</TableHead>
+          <TableHeader className="bg-slate-50/50 sticky top-0 z-20 border-b">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="pl-10 h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[25%]">Student Name & Registry ID</TableHead>
+              <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[10%] text-center">Age</TableHead>
+              <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Department / College</TableHead>
+              <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Registry Contact</TableHead>
+              <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[10%] text-center">Status</TableHead>
+              <TableHead className="h-12 pr-10 text-right font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[15%]">Quick Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPatrons?.map((patron) => {
-              const email = patron.email || 'EMAIL NOT READ';
-              
-              return (
-                <TableRow 
-                  key={patron.id} 
-                  className={cn(
-                    "group transition-colors h-9 border-slate-50",
-                    patron.isBlocked ? "bg-red-50/50 hover:bg-red-100/50" : "hover:bg-slate-50/80"
-                  )}
-                >
-                  <TableCell className="pl-10 py-0.5">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("w-1.5 h-1.5 rounded-full", patron.isBlocked ? "bg-red-500" : "bg-green-500")} />
+            {filteredPatrons?.map((patron) => (
+              <TableRow 
+                key={patron.id} 
+                className={cn(
+                  "group transition-colors h-14 border-slate-50",
+                  patron.isBlocked ? "bg-red-50/30" : "hover:bg-slate-50/80"
+                )}
+              >
+                <TableCell className="pl-10 py-1">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-1.5 h-1.5 rounded-full", patron.isBlocked ? "bg-red-500" : "bg-green-500")} />
+                    <div className="flex flex-col">
                       <span className={cn(
-                        "text-xs font-bold tracking-tight uppercase truncate max-w-[180px]", 
+                        "text-[11px] font-black tracking-tight uppercase truncate max-w-[200px]", 
                         patron.isBlocked ? "text-red-700" : "text-slate-900"
                       )}>
                         {patron.name}
                       </span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-tighter">
+                        ID: {patron.schoolId || 'UNREGISTERED'}
+                      </span>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-0.5">
-                    <span className="text-[10px] font-mono font-bold text-slate-500">{patron.age}</span>
-                  </TableCell>
-                  <TableCell className="py-0.5">
-                    <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase border border-slate-100 text-slate-500 bg-slate-50/50 truncate block max-w-[140px]">
-                      {patron.departments?.[0]}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-0.5">
-                    <span className="text-[9px] font-mono font-bold text-slate-400 uppercase truncate block max-w-[160px]">
-                      {email}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-0.5">
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter h-5 border-slate-200 text-slate-400">
-                      {patron.schoolId ? 'RF-ID' : 'SSO'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right pr-10 py-0.5">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-7 px-3 border-primary/20 text-primary hover:bg-primary/5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
-                        onClick={() => { setEditingPatron(patron); setIsEditSheetOpen(true); }}
-                      >
-                        <Edit3 className="h-3 w-3" /> Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-7 px-3 border-red-200 text-red-500 hover:bg-red-50 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
-                        onClick={() => { setPatronToDelete(patron); setIsDeleteDialogOpen(true); }}
-                      >
-                        <Trash2 className="h-3 w-3" /> Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center py-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-500">{patron.age || 'N/A'}</span>
+                </TableCell>
+                <TableCell className="py-1">
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase border border-slate-100 text-slate-500 bg-slate-50/50 truncate block max-w-[180px]">
+                    {patron.departments?.[0] || 'Unassigned'}
+                  </span>
+                </TableCell>
+                <TableCell className="py-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 truncate block max-w-[180px]">
+                    {patron.email}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center py-1">
+                   <Badge 
+                    onClick={() => toggleBlockStatus(patron)}
+                    className={cn(
+                      "cursor-pointer px-3 py-0.5 rounded-full font-black text-[8px] uppercase tracking-widest transition-all",
+                      patron.isBlocked ? "bg-red-600 text-white" : "bg-green-100 text-green-700 border-green-200"
+                    )}
+                  >
+                    {patron.isBlocked ? 'Blocked' : 'Active'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right pr-10 py-1">
+                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 border-slate-200 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg"
+                      onClick={() => { setEditingPatron(patron); setIsEditSheetOpen(true); }}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                      onClick={() => { setPatronToDelete(patron); setIsDeleteDialogOpen(true); }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
-      </main>
+        {filteredPatrons.length === 0 && (
+          <div className="p-32 text-center space-y-4">
+            <Search className="h-12 w-12 text-slate-100 mx-auto" />
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No identity records found matching your search</p>
+          </div>
+        )}
+      </div>
 
       <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
         <SheetContent className="sm:max-w-md p-0 border-none shadow-2xl overflow-hidden font-body">
@@ -305,6 +314,24 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
               </div>
 
               <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Institutional Role</Label>
+                <Select 
+                  value={editingPatron?.role || 'Student'} 
+                  onValueChange={(v) => setEditingPatron({ ...editingPatron, role: v })}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-100 font-bold">
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Student">Student</SelectItem>
+                    <SelectItem value="Faculty">Faculty</SelectItem>
+                    <SelectItem value="Staff">Staff</SelectItem>
+                    <SelectItem value="Visitor">Visitor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Academic Unit</Label>
                 <Select 
                   value={editingPatron?.departments?.[0] || ''} 
@@ -314,32 +341,16 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                     <SelectValue placeholder="Select Unit" />
                   </SelectTrigger>
                   <SelectContent>
-                    {config?.departments?.map((d: any) => (
-                      <SelectItem key={d.id} value={d.name} className="text-xs font-bold">{d.name}</SelectItem>
+                    {DEPARTMENTS.map(d => (
+                      <SelectItem key={d} value={d} className="text-xs font-bold">{d}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="space-y-1">
-                  <Label className="text-xs font-black text-slate-800 uppercase tracking-tight">Security Access</Label>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Restrict Terminal Entry</p>
-                </div>
-                <Badge 
-                  onClick={() => setEditingPatron({ ...editingPatron, isBlocked: !editingPatron.isBlocked })}
-                  className={cn(
-                    "cursor-pointer px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-widest transition-all",
-                    editingPatron?.isBlocked ? "bg-red-600 text-white" : "bg-green-600 text-white"
-                  )}
-                >
-                  {editingPatron?.isBlocked ? 'BLOCKED' : 'GRANTED'}
-                </Badge>
-              </div>
             </div>
           </div>
-          <SheetFooter className="p-8 bg-slate-50 gap-3 border-t absolute bottom-0 w-full">
-            <Button variant="ghost" onClick={() => setIsEditSheetOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12">Cancel</Button>
+          <SheetFooter className="p-8 bg-slate-50 gap-3 border-t">
+            <Button variant="ghost" onClick={() => setIsEditSheetOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12 flex-1">Cancel</Button>
             <Button onClick={handleSaveChanges} className="bg-primary hover:bg-primary/90 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest h-12 shadow-lg flex-1">Save Corrections</Button>
           </SheetFooter>
         </SheetContent>
@@ -349,36 +360,21 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden font-body">
           <DialogHeader className="p-10 bg-red-600 text-white">
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3 text-white">
-              <AlertTriangle className="h-6 w-6" /> Safety Confirmation
+              <AlertTriangle className="h-6 w-6" /> Institutional Audit
             </DialogTitle>
           </DialogHeader>
           <div className="p-10 space-y-6">
             <div className="p-6 bg-red-50 rounded-2xl border border-red-100 space-y-3">
               <p className="text-sm font-bold text-red-900 leading-relaxed">
-                You are about to remove <span className="underline">{patronToDelete?.name}</span> from the active institutional registry.
+                You are about to permanently remove <span className="underline font-black">{patronToDelete?.name}</span> from the active institutional registry.
+              </p>
+              <p className="text-[10px] font-bold text-red-600/70 uppercase tracking-widest leading-relaxed">
+                Warning: This action will purge all historical identity markers for this user and cannot be undone.
               </p>
             </div>
-
-            {config?.requireDeleteReason && (
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Reason for Deletion</Label>
-                <Select value={deleteReason} onValueChange={setDeleteReason}>
-                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-100 font-bold">
-                    <SelectValue placeholder="Select Reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Duplicate Entry">Duplicate Entry</SelectItem>
-                    <SelectItem value="Test Data">Test Data / Simulation</SelectItem>
-                    <SelectItem value="Incorrect Identity Method">Incorrect Identity Method</SelectItem>
-                    <SelectItem value="System Error">Terminal System Error</SelectItem>
-                    <SelectItem value="Graduated/Left">Institutional Exit</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
           <DialogFooter className="p-8 bg-slate-50 gap-3 border-t">
-            <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12">Cancel</Button>
+            <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12">Cancel Action</Button>
             <Button onClick={handleDeletePatron} className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest h-12 shadow-lg">Confirm Removal</Button>
           </DialogFooter>
         </DialogContent>

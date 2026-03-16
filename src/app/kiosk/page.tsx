@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -15,6 +16,9 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
+// Institutional ID format: 24-12345-123
+const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
+
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
   const [rfid, setRfid] = useState('');
@@ -27,7 +31,6 @@ export default function KioskAuthPage() {
 
   const [startOfToday, setStartOfToday] = useState<string | null>(null);
 
-  // Maintain reactive today's timestamp for daily occupancy reset
   useEffect(() => {
     const updateStartOfToday = () => {
       const d = new Date();
@@ -78,19 +81,34 @@ export default function KioskAuthPage() {
     try {
       const patronsRef = collection(db, 'patrons');
       const authMethod = activeTab === 'rfid' ? 'RF-ID Login' : 'SSO Login';
-      const field = activeTab === 'rfid' ? 'schoolId' : 'email';
-      const value = activeTab === 'rfid' ? rfid : email;
+      
+      if (activeTab === 'rfid') {
+        if (!SCHOOL_ID_REGEX.test(rfid)) {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Invalid ID Format",
+            description: "Please use the format: 24-12345-123",
+          });
+          return;
+        }
+      }
 
       const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
-      if (activeTab === 'email' && !email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Invalid Domain",
-          description: `Only @${enforcedDomain} emails are accepted.`,
-        });
-        return;
+      if (activeTab === 'email') {
+        if (!email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: `Only @${enforcedDomain} accounts are authorized.`,
+          });
+          return;
+        }
       }
+
+      const field = activeTab === 'rfid' ? 'schoolId' : 'email';
+      const value = activeTab === 'rfid' ? rfid : email;
 
       const q = query(patronsRef, where(field, '==', value), limit(1));
       const querySnapshot = await getDocs(q).catch(async (error) => {
@@ -103,21 +121,12 @@ export default function KioskAuthPage() {
 
       if (querySnapshot.empty) {
         setIsLoading(false);
-        if (activeTab === 'rfid' && rfid.length >= 3) {
-          router.push(`/kiosk/register?schoolId=${encodeURIComponent(rfid)}&authMethod=${authMethod}`);
-          return;
-        }
+        const params = new URLSearchParams();
+        params.set('authMethod', authMethod);
+        if (activeTab === 'rfid') params.set('schoolId', rfid);
+        if (activeTab === 'email') params.set('email', email);
         
-        if (activeTab === 'email') {
-          router.push(`/kiosk/register?email=${encodeURIComponent(email)}&authMethod=${authMethod}`);
-          return;
-        }
-
-        toast({
-          variant: "destructive",
-          title: "Profile Not Found",
-          description: "Please register your school credentials at the terminal.",
-        });
+        router.push(`/kiosk/register?${params.toString()}`);
         return;
       }
 
@@ -170,7 +179,7 @@ export default function KioskAuthPage() {
           </Button>
         </div>
 
-        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30 glass-overlay">
+        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30 bg-white/95 backdrop-blur-xl">
           <div className="absolute top-8 left-10">
             <span className="font-headline font-black text-primary text-xs tracking-[0.3em] uppercase">PatronPoint</span>
           </div>
@@ -209,27 +218,27 @@ export default function KioskAuthPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleAuth} className="space-y-8">
-                    <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-primary/20 rounded-[3rem] bg-white/40 group transition-all">
-                      <div className="relative p-10 bg-white rounded-full shadow-xl">
+                    <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-primary/20 rounded-[3rem] bg-white group transition-all">
+                      <div className="relative p-10 bg-slate-50 rounded-full shadow-inner border border-slate-100">
                         <ContactRound className="h-16 w-16 text-primary" />
                       </div>
                       <div className="mt-10 text-center space-y-2">
                         <p className="text-2xl font-headline font-black text-slate-800 uppercase tracking-tight">Scanner Active</p>
                         <p className="text-base font-semibold text-slate-500 tracking-tight">Tap your NEU RF-ID card</p>
                       </div>
-                      <div className="mt-8 w-full max-w-xs px-6 opacity-0 focus-within:opacity-100 transition-opacity">
+                      <div className="mt-8 w-full max-w-xs px-6">
                          <Input 
                           ref={rfidInputRef}
-                          placeholder="..."
+                          placeholder="24-XXXXX-XXX"
                           autoFocus 
                           autoComplete="off"
                           value={rfid}
                           onChange={(e) => setRfid(e.target.value)}
-                          className="h-14 text-center text-2xl font-mono border-white/50 focus-visible:ring-primary rounded-xl bg-white/80"
+                          className="h-14 text-center text-2xl font-mono border-slate-200 focus-visible:ring-primary rounded-xl bg-slate-50"
                         />
                       </div>
                     </div>
-                    <Button disabled={isLoading || rfid.length < 3 || isAtCapacity} className="w-full h-18 text-lg font-headline font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl shadow-xl py-6">
+                    <Button disabled={isLoading || isAtCapacity} className="w-full h-18 text-lg font-headline font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl shadow-xl py-6">
                       {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : isAtCapacity ? "Capacity Reached" : "Initiate Check-in"}
                     </Button>
                   </form>
@@ -249,12 +258,12 @@ export default function KioskAuthPage() {
                       <div className="relative">
                         <Mail className="absolute left-5 top-5 h-5 w-5 text-muted-foreground" />
                         <Input 
-                          placeholder={`student@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
+                          placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
                           type="email" 
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-16 pl-14 rounded-2xl text-lg border-white/50 bg-white/40 focus-visible:ring-primary"
+                          className="h-16 pl-14 rounded-2xl text-lg border-slate-200 bg-slate-50 focus-visible:ring-primary"
                         />
                       </div>
                     </div>

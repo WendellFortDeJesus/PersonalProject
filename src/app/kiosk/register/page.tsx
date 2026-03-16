@@ -30,15 +30,16 @@ const formSchema = z.object({
   age: z.string().min(1, "Age index is required").refine((val) => !isNaN(parseInt(val)), "Age must be a numeric value"),
   purposeId: z.string().min(1, "Select your primary purpose of visit"),
   role: z.string().min(1, "Institutional role is required"),
-  schoolIdOverride: z.string().regex(SCHOOL_ID_REGEX, "Format mismatch (Expected: 24-12345-123)")
+  schoolId: z.string().optional(),
+  email: z.string().optional(),
 });
 
 function RegistrationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const schoolId = searchParams.get('schoolId') || "";
-  const email = searchParams.get('email') || "";
-  const authMethod = searchParams.get('authMethod') || (schoolId ? 'RF-ID Login' : 'SSO Login');
+  const initialSchoolId = searchParams.get('schoolId') || "";
+  const initialEmail = searchParams.get('email') || "";
+  const authMethod = searchParams.get('authMethod') || (initialSchoolId ? 'RF-ID Login' : 'SSO Login');
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
 
@@ -47,6 +48,8 @@ function RegistrationContent() {
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
+
+  const isRfidAuth = authMethod === 'RF-ID Login';
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,17 +60,37 @@ function RegistrationContent() {
       age: '',
       purposeId: '',
       role: 'Student',
-      schoolIdOverride: schoolId
+      schoolId: initialSchoolId,
+      email: initialEmail,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db) return;
+
+    // Manual validation for cross-verification fields
+    const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
+    
+    if (isRfidAuth) {
+      if (!values.email || !values.email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+        form.setError('email', { message: `Verification requires a valid @${enforcedDomain} email` });
+        return;
+      }
+    } else {
+      if (!values.schoolId || !SCHOOL_ID_REGEX.test(values.schoolId)) {
+        form.setError('schoolId', { message: "Verification requires valid School ID (24-12345-123)" });
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
+      const finalSchoolId = isRfidAuth ? initialSchoolId : values.schoolId;
+      const finalEmail = isRfidAuth ? values.email : initialEmail;
+
       const patronData = {
-        schoolId: values.schoolIdOverride,
-        email,
+        schoolId: finalSchoolId,
+        email: finalEmail,
         name: values.name.toUpperCase(),
         gender: values.gender,
         departments: [values.department],
@@ -90,8 +113,8 @@ function RegistrationContent() {
       const purpose = (settings?.purposes || PURPOSES).find((p: any) => p.id === values.purposeId)?.label || "Other";
       const visitData = {
         patronId: patronDoc.id,
-        schoolId: values.schoolIdOverride,
-        patronEmail: email,
+        schoolId: finalSchoolId,
+        patronEmail: finalEmail,
         authMethod,
         patronName: values.name.toUpperCase(),
         patronGender: values.gender,
@@ -154,7 +177,7 @@ function RegistrationContent() {
             </div>
             <CardTitle className="text-3xl font-headline font-black text-primary uppercase tracking-tight">Identity Registration</CardTitle>
             <CardDescription className="text-base font-bold text-slate-700 uppercase tracking-tight mt-1">
-              {email || schoolId}
+              {isRfidAuth ? `RFID: ${initialSchoolId}` : `EMAIL: ${initialEmail}`}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4">
@@ -175,19 +198,35 @@ function RegistrationContent() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="schoolIdOverride"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Verify School ID (24-12345-123)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="24-12345-123" {...field} className="h-12 rounded-xl font-bold border-slate-200" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {isRfidAuth ? (
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Verify Institutional Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} type="email" {...field} className="h-12 rounded-xl font-bold border-slate-200" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormField
+                      control={form.control}
+                      name="schoolId"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Verify School ID (24-12345-123)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="24-12345-123" {...field} className="h-12 rounded-xl font-bold border-slate-200" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}

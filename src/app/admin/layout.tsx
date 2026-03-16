@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -21,7 +22,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { ShieldCheck, LayoutDashboard, FileBarChart, LogOut, Users, Settings } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, FileBarChart, LogOut, Users, Settings, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -85,6 +86,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
+                  
+                  <div className="my-4 border-t border-slate-100" />
+                  
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      className="h-11 rounded-xl transition-all duration-200 hover:bg-accent hover:text-accent-foreground text-slate-600"
+                    >
+                      <Link href="/" className="flex items-center gap-3">
+                        <Monitor className="h-4 w-4 text-primary" />
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-primary">Open Kiosk</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

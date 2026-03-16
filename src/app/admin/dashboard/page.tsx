@@ -256,9 +256,6 @@ export default function DashboardPage() {
       
       {/* Enlarged Registration Activity Section */}
       <div className="bg-primary p-12 md:p-16 lg:p-20 rounded-[3rem] shadow-xl border-none text-white overflow-hidden relative group transition-all duration-500 hover:shadow-primary/20">
-        <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700">
-          <UserPlus className="h-64 w-64" />
-        </div>
         <div className="relative z-10 space-y-10">
           <div className="flex items-center gap-6">
             <div className="p-5 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 shadow-lg">

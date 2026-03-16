@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useMemo, useEffect } from 'react';
@@ -20,15 +19,20 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
+// Institutional ID format: 24-11225-213
+const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
+
 const createFormSchema = (requireAge: boolean) => {
   return z.object({
-    name: z.string().min(1, "Name is required"),
-    gender: z.string().min(1, "Select your gender"),
-    department: z.string().min(1, "Select your department"),
+    name: z.string().min(1, "Full legal name is required"),
+    gender: z.string().min(1, "Select your gender identity"),
+    department: z.string().min(1, "Select your academic unit"),
     age: requireAge 
-      ? z.string().min(1, "Age is required").refine((val) => !isNaN(parseInt(val)), "Age must be a number")
+      ? z.string().min(1, "Age index is required").refine((val) => !isNaN(parseInt(val)), "Age must be a numeric value")
       : z.string().optional(),
-    purposeId: z.string().min(1, "Select purpose of visit"),
+    purposeId: z.string().min(1, "Select your primary purpose of visit"),
+    // If a schoolId is present, we validate its format for data integrity
+    schoolIdOverride: z.string().optional()
   });
 };
 
@@ -58,14 +62,19 @@ function RegistrationContent() {
       department: '',
       age: '',
       purposeId: '',
+      schoolIdOverride: schoolId
     },
   });
 
+  // Dynamic validation for School ID if it's RF-ID method
   useEffect(() => {
-    if (!isSettingsLoading) {
-      form.trigger();
+    if (schoolId && !SCHOOL_ID_REGEX.test(schoolId)) {
+      form.setError('schoolIdOverride', { 
+        type: 'manual', 
+        message: "Warning: ID format mismatch (Expected: 24-11225-213)" 
+      });
     }
-  }, [isSettingsLoading, form]);
+  }, [schoolId, form]);
 
   const activeDepartments = useMemo(() => {
     if (!settings?.departments || settings.departments.length === 0) return DEPARTMENTS;
@@ -79,7 +88,7 @@ function RegistrationContent() {
     setIsLoading(true);
     try {
       const patronData = {
-        schoolId,
+        schoolId: values.schoolIdOverride || schoolId,
         email,
         name: values.name.toUpperCase(),
         gender: values.gender,
@@ -103,7 +112,7 @@ function RegistrationContent() {
       const purpose = (settings?.purposes || PURPOSES).find((p: any) => p.id === values.purposeId)?.label || "Unknown";
       const visitData = {
         patronId: patronDoc.id,
-        schoolId,
+        schoolId: values.schoolIdOverride || schoolId,
         patronEmail: email,
         authMethod,
         patronName: values.name.toUpperCase(),
@@ -202,6 +211,22 @@ function RegistrationContent() {
                       </FormItem>
                     )}
                   />
+
+                  {schoolId && (
+                    <FormField
+                      control={form.control}
+                      name="schoolIdOverride"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="text-primary font-black uppercase tracking-widest text-[10px]">Verify School ID (Format: 24-11225-213)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="24-11225-213" {...field} className="h-14 rounded-xl bg-white/50 border-white/50 focus:bg-white font-bold" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}

@@ -2,8 +2,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Broad read/write access for institutional records to resolve terminal sync errors.
-    // In production, these should be restricted further.
+    // Explicit rules for institutional collections to ensure terminal reliability and resolve listing errors.
+    // Deployment Trigger: Institutional Policy Update - 2026-02-21
+    
+    match /patrons/{patronId} {
+      allow read, write: if true;
+    }
+    
+    match /visits/{visitId} {
+      allow read, write: if true;
+    }
+    
+    match /system_config/{configId} {
+      allow read, write: if true;
+    }
+
+    // Broad fallback for nested paths if required during terminal sync
     match /{document=**} {
       allow read, write: if true;
     }

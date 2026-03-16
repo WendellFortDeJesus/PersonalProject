@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { use } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -20,16 +20,14 @@ import {
   SidebarGroupContent
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { LogOut, ShieldCheck, LayoutDashboard, Users, FileBarChart, Settings, Activity } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, FileBarChart, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardLayout(props: { children: React.ReactNode; params: Promise<any> }) {
   const pathname = usePathname();
   const auth = useAuth();
-  const db = useFirestore();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -37,17 +35,9 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
     router.push('/admin/login');
   };
 
-  const tickerQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(10));
-  }, [db]);
-  const { data: tickerVisits } = useCollection(tickerQuery);
-
   const navItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-    { title: "User Management", href: "/admin/users", icon: Users },
     { title: "Analytics & Reports", href: "/admin/reports", icon: FileBarChart },
-    { title: "System Settings", href: "/admin/settings", icon: Settings },
   ];
 
   return (
@@ -128,25 +118,9 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
             </div>
           </header>
           
-          <main className="flex-1 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
             {props.children}
           </main>
-
-          <footer className="h-8 bg-primary flex items-center overflow-hidden shrink-0 no-print">
-            <div className="flex animate-marquee whitespace-nowrap gap-12 px-6 items-center">
-              <span className="text-[8px] font-black text-accent uppercase tracking-widest border-r border-white/20 pr-12 h-3 flex items-center">LIVE IDENTITY FEED:</span>
-              {tickerVisits?.map((v, i) => (
-                <div key={v.id} className="flex items-center gap-3">
-                  <span className="text-[9px] font-bold text-white uppercase tracking-tight">
-                    {v.patronName}
-                  </span>
-                  <span className="text-[8px] font-medium text-white/40 font-mono">[{v.schoolId || 'SSO'}]</span>
-                  <span className="text-[8px] font-black text-accent uppercase tracking-tighter">({v.purpose})</span>
-                  <span className="text-white/20">|</span>
-                </div>
-              ))}
-            </div>
-          </footer>
         </SidebarInset>
       </div>
     </SidebarProvider>

@@ -361,7 +361,7 @@ export default function UserManagementPage(props: { params: Promise<any>; search
           <DialogHeader className="p-10 bg-red-600 text-white">
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3 text-white">
               <AlertTriangle className="h-6 w-6" /> Institutional Audit
-            </AlertTitle>
+            </DialogTitle>
           </DialogHeader>
           <div className="p-10 space-y-6">
             <div className="p-6 bg-red-50 rounded-2xl border border-red-100 space-y-3">

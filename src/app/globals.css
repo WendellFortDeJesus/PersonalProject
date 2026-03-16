@@ -5,36 +5,36 @@
 
 @layer base {
   :root {
-    /* Paper White: #F8FAFC, NEU Green: #006837, Accent Gold: #FFD700 */
+    /* Deep Professional Blue: #355872, Calming Light Blue: #7AAACE, Accent Light Blue: #9CD5FF */
     --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --foreground: 205 37% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 205 37% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 152 100% 20%;
-    --primary-foreground: 51 100% 90%;
-    --secondary: 152 30% 94%;
-    --secondary-foreground: 152 100% 10%;
+    --popover-foreground: 205 37% 20%;
+    --primary: 205 37% 33%;
+    --primary-foreground: 205 100% 95%;
+    --secondary: 205 45% 65%;
+    --secondary-foreground: 205 37% 10%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 48 100% 50%;
-    --accent-foreground: 152 100% 5%;
+    --accent: 205 100% 81%;
+    --accent-foreground: 205 37% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 152 100% 20%;
+    --ring: 205 37% 33%;
     --radius: 0.75rem;
     
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 152 100% 20%;
-    --sidebar-primary-foreground: 51 100% 90%;
+    --sidebar-foreground: 205 37% 20%;
+    --sidebar-primary: 205 37% 33%;
+    --sidebar-primary-foreground: 205 100% 95%;
     --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-accent-foreground: 205 37% 20%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 152 100% 20%;
+    --sidebar-ring: 205 37% 33%;
   }
 }
 
@@ -68,20 +68,14 @@
   100% { transform: translateX(-50%); }
 }
 
-.report-container {
-  font-family: 'Inter', sans-serif;
-}
-
-.report-container h2, .report-container h3 {
-  font-family: 'Montserrat', sans-serif;
-}
-
 @media print {
-  body {
-    background-color: white !important;
-    color: black !important;
-  }
   .no-print {
     display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: white !important;
   }
 }

@@ -14,17 +14,19 @@ import {
   SidebarMenuButton, 
   SidebarFooter,
   SidebarInset,
-  SidebarTrigger
+  SidebarTrigger,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { LogOut, ShieldCheck } from 'lucide-react';
+import { LogOut, ShieldCheck, LayoutDashboard, Users, FileBarChart, Settings, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardLayout(props: { children: React.ReactNode; params: Promise<any> }) {
-  const params = use(props.params);
   const pathname = usePathname();
   const auth = useAuth();
   const db = useFirestore();
@@ -41,10 +43,17 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
   }, [db]);
   const { data: tickerVisits } = useCollection(tickerQuery);
 
+  const navItems = [
+    { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { title: "User Management", href: "/admin/users", icon: Users },
+    { title: "Analytics & Reports", href: "/admin/reports", icon: FileBarChart },
+    { title: "System Settings", href: "/admin/settings", icon: Settings },
+  ];
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-slate-50 font-body">
-        <Sidebar variant="sidebar" collapsible="icon" className="border-r border-slate-200">
+        <Sidebar variant="sidebar" collapsible="icon" className="border-r border-slate-200 shadow-xl">
           <SidebarHeader className="p-6 border-b border-slate-100 bg-white">
             <div className="flex items-center gap-3 group-data-[collapsible=icon]:hidden">
               <div className="p-2 bg-primary rounded-lg shadow-sm">
@@ -57,11 +66,30 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
             </div>
           </SidebarHeader>
           <SidebarContent className="px-3 py-6 bg-white">
-            <div className="px-4 py-8 text-center space-y-4 group-data-[collapsible=icon]:hidden">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                System Active
-              </p>
-            </div>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Main Menu</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={pathname === item.href}
+                        className={cn(
+                          "h-11 rounded-xl transition-all duration-200",
+                          pathname === item.href ? "bg-primary text-white shadow-lg" : "hover:bg-slate-50 text-slate-600"
+                        )}
+                      >
+                        <Link href={item.href} className="flex items-center gap-3">
+                          <item.icon className={cn("h-4 w-4", pathname === item.href ? "text-white" : "text-primary")} />
+                          <span className="font-bold text-[10px] uppercase tracking-widest">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="p-4 border-t border-slate-100 bg-white">
             <SidebarMenu>
@@ -81,10 +109,10 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
         <SidebarInset className="bg-[#F8FAFC]">
           <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-white px-8 sticky top-0 z-50 shadow-sm">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="h-9 w-9 hover:bg-slate-100 rounded-lg" />
+              <SidebarTrigger className="h-9 w-9 hover:bg-slate-100 rounded-lg text-primary" />
               <div className="h-4 w-px bg-slate-200 mx-2" />
               <h2 className="text-[10px] font-black text-slate-900 tracking-[0.3em] uppercase font-headline">
-                Admin Terminal
+                {navItems.find(i => i.href === pathname)?.title || 'Admin Terminal'}
               </h2>
             </div>
             
@@ -93,7 +121,7 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
                 <p className="text-[9px] font-black text-slate-900 leading-none uppercase tracking-tighter">SECURE NODE</p>
                 <p className="text-[8px] font-bold text-primary uppercase tracking-widest mt-1">jcesperanza@neu.edu.ph</p>
               </div>
-              <Avatar className="h-9 w-9 border-2 border-primary/10">
+              <Avatar className="h-9 w-9 border-2 border-primary/10 ring-2 ring-primary/5">
                 <AvatarImage src="https://picsum.photos/seed/admin/100/100" />
                 <AvatarFallback className="bg-primary/5 text-primary text-xs font-black">AD</AvatarFallback>
               </Avatar>
@@ -104,11 +132,11 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
             {props.children}
           </main>
 
-          <footer className="h-8 bg-primary flex items-center overflow-hidden shrink-0">
+          <footer className="h-8 bg-primary flex items-center overflow-hidden shrink-0 no-print">
             <div className="flex animate-marquee whitespace-nowrap gap-12 px-6 items-center">
-              <span className="text-[8px] font-black text-accent uppercase tracking-widest border-r border-white/20 pr-12 h-3 flex items-center">LIVE FEED:</span>
+              <span className="text-[8px] font-black text-accent uppercase tracking-widest border-r border-white/20 pr-12 h-3 flex items-center">LIVE IDENTITY FEED:</span>
               {tickerVisits?.map((v, i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div key={v.id} className="flex items-center gap-3">
                   <span className="text-[9px] font-bold text-white uppercase tracking-tight">
                     {v.patronName}
                   </span>

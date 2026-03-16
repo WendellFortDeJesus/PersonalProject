@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -8,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ContactRound, ArrowLeft, Loader2, ShieldAlert } from 'lucide-react';
+import { Mail, ContactRound, ArrowLeft, Loader2, ShieldAlert, Cpu, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -29,35 +28,11 @@ export default function KioskAuthPage() {
   const { toast } = useToast();
   const db = useFirestore();
 
-  const [startOfToday, setStartOfToday] = useState<string | null>(null);
-
-  useEffect(() => {
-    const updateStartOfToday = () => {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      setStartOfToday(d.toISOString());
-    };
-    updateStartOfToday();
-    const interval = setInterval(updateStartOfToday, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
-
-  const visitsQuery = useMemoFirebase(() => {
-    if (!db || !startOfToday) return null;
-    return query(collection(db, 'visits'), where('timestamp', '>=', startOfToday));
-  }, [db, startOfToday]);
-  const { data: visits } = useCollection(visitsQuery);
-
-  const occupancy = useMemo(() => {
-    if (!visits) return 0;
-    return visits.filter(v => v.status === 'granted').length;
-  }, [visits]);
 
   useEffect(() => {
     if (settings && !settings.allowRfidScan && activeTab === 'rfid') {
@@ -88,7 +63,7 @@ export default function KioskAuthPage() {
           toast({
             variant: "destructive",
             title: "Invalid ID Format",
-            description: "Please use the format: 24-12345-123",
+            description: "Format required: 2 digits, dash, 5 digits, dash, 3 digits (e.g., 24-12345-123)",
           });
           return;
         }
@@ -100,8 +75,8 @@ export default function KioskAuthPage() {
           setIsLoading(false);
           toast({
             variant: "destructive",
-            title: "Access Denied",
-            description: `Only @${enforcedDomain} accounts are authorized.`,
+            title: "Access Restricted",
+            description: `Authentication only allowed for @${enforcedDomain} institutional accounts.`,
           });
           return;
         }
@@ -142,139 +117,153 @@ export default function KioskAuthPage() {
       console.error(err);
       toast({
         variant: "destructive",
-        title: "System Error",
-        description: "Communication with server failed. Please try again.",
+        title: "Node Sync Error",
+        description: "Communication with institutional registry failed. Retrying connection...",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
-  const textColor = settings?.welcomeTextColor === 'black' ? 'text-slate-900' : 'text-white';
-  const isAtCapacity = occupancy >= (settings?.capacityLimit || 200);
+  const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/kiosk-bg/1920/1080";
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image 
           src={backgroundUrl} 
-          alt="Library Background" 
+          alt="Kiosk Background" 
           fill 
-          className="object-cover"
+          className="object-cover scale-110"
           priority
+          data-ai-hint="futuristic library"
         />
-        <div className="absolute inset-0 bg-primary/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-primary/40 backdrop-blur-[3px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-xl space-y-6 animate-fade-in">
-        <div className="flex justify-start items-end mb-2 px-2">
+      <div className="relative z-10 w-full max-w-2xl space-y-6 animate-fade-in">
+        <div className="flex justify-between items-center px-4">
           <Button 
             variant="ghost" 
             onClick={() => router.push('/')}
-            className={cn("hover:bg-white/10 font-headline uppercase tracking-[0.2em] text-[10px] mb-2", textColor)}
+            className="text-white hover:bg-white/10 font-headline uppercase tracking-[0.3em] text-[10px] h-10 px-6 border border-white/20 backdrop-blur-md rounded-2xl"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Exit Terminal
+            Abort Entry
           </Button>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_green]" />
+            <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Secure Terminal Alpha</span>
+          </div>
         </div>
 
-        <Card className="shadow-2xl border-none overflow-hidden rounded-[2.5rem] border border-white/30 bg-white/95 backdrop-blur-xl">
-          <div className="absolute top-8 left-10">
-            <span className="font-headline font-black text-primary text-xs tracking-[0.3em] uppercase">PatronPoint</span>
+        <Card className="shadow-2xl border-none overflow-hidden rounded-[3rem] border border-white/20 bg-white/95 backdrop-blur-2xl transition-all">
+          <div className="absolute top-10 right-10 flex gap-2">
+             <Cpu className="h-4 w-4 text-slate-200" />
+             <Lock className="h-4 w-4 text-slate-200" />
           </div>
           
-          <CardHeader className="text-center space-y-2 pb-2 pt-20">
-            <CardTitle className="text-4xl font-headline font-black text-primary tracking-tight uppercase">Identity Hub</CardTitle>
-            <CardDescription className="text-lg font-semibold text-slate-700 tracking-tight">
-              Verify your institutional access
+          <CardHeader className="text-center space-y-2 pb-6 pt-16">
+            <CardTitle className="text-5xl font-headline font-black text-primary tracking-tighter uppercase">Identity Hub</CardTitle>
+            <CardDescription className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">
+              Verify Institutional Credentials
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="p-10 pt-6">
+          <CardContent className="p-12 pt-4">
             <Tabs defaultValue="rfid" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-10 h-16 bg-black/5 p-1.5 rounded-2xl">
+              <TabsList className="grid w-full grid-cols-2 mb-12 h-18 bg-slate-100 p-2 rounded-2xl border border-slate-200/50">
                 <TabsTrigger 
                   value="rfid" 
                   disabled={settings && !settings.allowRfidScan}
-                  className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary rounded-xl transition-all font-headline uppercase tracking-widest"
+                  className="text-[11px] font-black data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg rounded-xl transition-all font-headline uppercase tracking-widest"
                 >
-                  RF-ID Login
+                  RF-ID Terminal
                 </TabsTrigger>
                 <TabsTrigger 
                   value="email" 
                   disabled={settings && !settings.allowEmailLogin}
-                  className="text-sm font-bold data-[state=active]:bg-white data-[state=active]:text-primary rounded-xl transition-all font-headline uppercase tracking-widest"
+                  className="text-[11px] font-black data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg rounded-xl transition-all font-headline uppercase tracking-widest"
                 >
-                  SSO Login
+                  Institutional SSO
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="rfid" className="mt-0">
+              <TabsContent value="rfid" className="mt-0 outline-none">
                 {settings && !settings.allowRfidScan ? (
-                  <div className="py-12 text-center space-y-4">
-                    <ShieldAlert className="h-12 w-12 text-red-400 mx-auto" />
-                    <p className="text-sm font-black text-slate-500 uppercase tracking-widest">RF-ID Login is Disabled</p>
+                  <div className="py-20 text-center space-y-6">
+                    <ShieldAlert className="h-16 w-16 text-red-500 mx-auto opacity-50" />
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">Hardware Scanner Restricted</p>
                   </div>
                 ) : (
-                  <form onSubmit={handleAuth} className="space-y-8">
-                    <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-primary/20 rounded-[3rem] bg-white group transition-all">
-                      <div className="relative p-10 bg-slate-50 rounded-full shadow-inner border border-slate-100">
-                        <ContactRound className="h-16 w-16 text-primary" />
+                  <form onSubmit={handleAuth} className="space-y-10">
+                    <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-primary/20 rounded-[3.5rem] bg-slate-50/50 group transition-all hover:bg-white hover:border-primary/40 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+                      <div className="relative p-12 bg-white rounded-full shadow-2xl border border-slate-100 mb-8 animate-pulse">
+                        <ContactRound className="h-20 w-20 text-primary" />
                       </div>
-                      <div className="mt-10 text-center space-y-2">
-                        <p className="text-2xl font-headline font-black text-slate-800 uppercase tracking-tight">Scanner Active</p>
-                        <p className="text-base font-semibold text-slate-500 tracking-tight">Tap your NEU RF-ID card</p>
+                      <div className="text-center space-y-3 px-10">
+                        <p className="text-3xl font-headline font-black text-primary uppercase tracking-tight">Scanner Active</p>
+                        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest leading-relaxed">Place your identity card <br /> on the proximity sensor</p>
                       </div>
-                      <div className="mt-8 w-full max-w-xs px-6">
+                      <div className="mt-10 w-full max-w-xs px-6 relative">
+                         <div className="absolute inset-0 bg-primary/5 blur-xl rounded-full" />
                          <Input 
                           ref={rfidInputRef}
-                          placeholder="24-XXXXX-XXX"
+                          placeholder="00-00000-000"
                           autoFocus 
                           autoComplete="off"
                           value={rfid}
                           onChange={(e) => setRfid(e.target.value)}
-                          className="h-14 text-center text-2xl font-mono border-slate-200 focus-visible:ring-primary rounded-xl bg-slate-50"
+                          className="h-16 text-center text-3xl font-mono font-black border-slate-200 focus-visible:ring-primary rounded-2xl bg-white shadow-xl placeholder:opacity-20"
                         />
                       </div>
                     </div>
-                    <Button disabled={isLoading || isAtCapacity} className="w-full h-18 text-lg font-headline font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl shadow-xl py-6">
-                      {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : isAtCapacity ? "Capacity Reached" : "Initiate Check-in"}
+                    <Button disabled={isLoading} className="w-full h-20 text-xl font-headline font-black uppercase tracking-[0.3em] bg-primary hover:bg-primary/95 rounded-3xl shadow-2xl shadow-primary/30 py-8 transition-all hover:scale-[1.02]">
+                      {isLoading ? <Loader2 className="mr-2 h-8 w-8 animate-spin" /> : "Initiate Verification"}
                     </Button>
                   </form>
                 )}
               </TabsContent>
               
-              <TabsContent value="email" className="mt-0">
+              <TabsContent value="email" className="mt-0 outline-none">
                 {settings && !settings.allowEmailLogin ? (
-                  <div className="py-12 text-center space-y-4">
-                    <ShieldAlert className="h-12 w-12 text-red-400 mx-auto" />
-                    <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Email SSO is Disabled</p>
+                  <div className="py-20 text-center space-y-6">
+                    <ShieldAlert className="h-16 w-16 text-red-500 mx-auto opacity-50" />
+                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">Cloud Identity Restricted</p>
                   </div>
                 ) : (
-                  <form onSubmit={handleAuth} className="space-y-8">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-headline font-black uppercase tracking-[0.3em] text-primary ml-1">Official Institutional Email</label>
+                  <form onSubmit={handleAuth} className="space-y-10">
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-headline font-black uppercase tracking-[0.4em] text-primary ml-2">Official Credentials</label>
                       <div className="relative">
-                        <Mail className="absolute left-5 top-5 h-5 w-5 text-muted-foreground" />
+                        <div className="absolute left-6 top-6 z-10">
+                           <Mail className="h-6 w-6 text-primary" />
+                        </div>
                         <Input 
-                          placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
+                          placeholder={`staff@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
                           type="email" 
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-16 pl-14 rounded-2xl text-lg border-slate-200 bg-slate-50 focus-visible:ring-primary"
+                          className="h-20 pl-16 rounded-[2rem] text-xl font-bold border-slate-200 bg-white focus-visible:ring-primary shadow-xl"
                         />
                       </div>
+                      <div className="px-6 py-4 bg-primary/5 rounded-2xl border border-primary/10">
+                        <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest text-center">
+                          Network strictly enforces @{settings?.enforcedDomain || 'neu.edu.ph'} verification
+                        </p>
+                      </div>
                     </div>
-                    <Button disabled={isLoading || isAtCapacity} className="w-full h-18 text-lg font-headline font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl shadow-xl py-6">
-                      {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : isAtCapacity ? "Capacity Reached" : "Access Hub"}
+                    <Button disabled={isLoading} className="w-full h-20 text-xl font-headline font-black uppercase tracking-[0.3em] bg-primary hover:bg-primary/95 rounded-[2rem] shadow-2xl shadow-primary/30 py-8 transition-all hover:scale-[1.02]">
+                      {isLoading ? <Loader2 className="mr-2 h-8 w-8 animate-spin" /> : "Access System Hub"}
                     </Button>
                   </form>
                 )}
               </TabsContent>
             </Tabs>
           </CardContent>
+          <div className="h-2 bg-accent/30" />
         </Card>
       </div>
     </div>

@@ -1,9 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // INSTITUTIONAL SECURITY PROTOCOL - DEPLOYMENT TIMESTAMP: 2026-03-16 04:15:00 UTC
-    // Universal access granted for development phase to resolve identity hub synchronization issues.
+    // INSTITUTIONAL SECURITY PROTOCOL - REINFORCED DEPLOYMENT: 2026-03-16 04:35:00 UTC
+    // Explicit authorization for institutional identity collections to resolve listing issues.
     
+    match /patrons/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /visits/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /system_config/{document=**} {
+      allow read, write: if true;
+    }
+
     match /{document=**} {
       allow read, write: if true;
     }

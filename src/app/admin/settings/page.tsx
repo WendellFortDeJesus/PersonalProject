@@ -14,16 +14,10 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Trash2, 
-  Palette, 
-  Settings2, 
   ShieldAlert, 
   Zap, 
   Loader2, 
   ShieldCheck, 
-  ToggleLeft, 
-  Smartphone, 
-  CreditCard,
   Lock,
   Database
 } from 'lucide-react';
@@ -55,7 +49,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
   };
 
   const handlePurgeLiveVisitors = async () => {
-    if (!db || !confirm("CRITICAL: This will permanently and instantly delete ALL visitor records from the dashboard. This action cannot be undone. Proceed?")) return;
+    if (!db || !confirm("CRITICAL: This will permanently and instantly delete ALL visitor records from the live dashboard. This action cannot be undone. Proceed?")) return;
     setIsResetting(true);
     
     try {
@@ -64,11 +58,11 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
       
       if (snapshot.empty) {
         setIsResetting(false);
-        toast({ title: "System Ready", description: "No visitor records found to purge." });
+        toast({ title: "System Ready", description: "No active visitor records found to purge." });
         return;
       }
 
-      // Use a batch for faster, more "instant" deletion
+      // Execute live bulk deletion
       const batch = writeBatch(db);
       snapshot.docs.forEach((docSnap) => {
         batch.delete(docSnap.ref);
@@ -82,14 +76,14 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
       });
 
       setIsResetting(false);
-      toast({ title: "Dashboard Cleared", description: "All information has been instantly deleted from the live dashboard." });
+      toast({ title: "Terminal Purged", description: "Dashboard information has been instantly deleted." });
     } catch (err) {
       console.error(err);
       setIsResetting(false);
       toast({ 
         variant: "destructive", 
-        title: "Purge Failed", 
-        description: "Communication with the identity hub failed. Please check permissions." 
+        title: "Purge Error", 
+        description: "Communication with the identity hub failed." 
       });
     }
   };
@@ -125,15 +119,17 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
           <CardContent className="p-8">
             <div className="p-10 bg-red-50 rounded-[2.5rem] border border-red-100 flex flex-col md:flex-row items-center justify-between gap-10">
               <div className="space-y-3 text-center md:text-left">
-                <span className="text-2xl font-black text-red-900 uppercase tracking-tighter">Emergency Reset</span>
-                <p className="text-[11px] font-bold text-red-600/70 uppercase tracking-widest leading-relaxed">Instantly and permanently delete all active visitor information from the dashboard.</p>
+                <span className="text-2xl font-black text-red-900 uppercase tracking-tighter">Emergency Hub Reset</span>
+                <p className="text-[11px] font-bold text-red-600/70 uppercase tracking-widest leading-relaxed">
+                  Perform a live purge of all active visitor data. Changes reflect instantly on all dashboards.
+                </p>
               </div>
               <Button 
                 onClick={handlePurgeLiveVisitors} 
                 disabled={isResetting}
-                className="h-16 px-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 transition-transform active:scale-95 min-w-[320px]"
+                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg flex items-center justify-center gap-3 transition-transform active:scale-95"
               >
-                {isResetting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldAlert className="h-5 w-5" />}
+                {isResetting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
                 Delete all visitor information from the dashboard
               </Button>
             </div>

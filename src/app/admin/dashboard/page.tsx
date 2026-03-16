@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -233,32 +232,38 @@ export default function DashboardPage() {
         </Card>
       </div>
       
-      <div className="bg-primary p-4 rounded-[1.5rem] shadow-md border-none text-white overflow-hidden relative group">
-        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
-          <UserPlus className="h-24 w-24" />
+      <div className="bg-primary p-10 rounded-[2.5rem] shadow-xl border-none text-white overflow-hidden relative group transition-all duration-500 hover:shadow-primary/20">
+        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700">
+          <UserPlus className="h-48 w-48" />
         </div>
-        <div className="relative z-10 space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-md">
-              <UserCheck className="h-4 w-4 text-accent" />
+        <div className="relative z-10 space-y-8">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 shadow-lg">
+              <UserCheck className="h-8 w-8 text-accent" />
             </div>
-            <div>
-              <h3 className="text-base font-black uppercase tracking-tighter leading-none">New Registration Activity</h3>
-              <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.25em] mt-1">Total Growth Today: {stats?.newVisitorsToday} Identities</p>
+            <div className="space-y-1">
+              <h3 className="text-3xl font-headline font-black uppercase tracking-tighter leading-none">New Registration Activity</h3>
+              <p className="text-xs font-black text-white/50 uppercase tracking-[0.3em] mt-2">
+                Total Institutional Growth Today: <span className="text-accent">{stats?.newVisitorsToday}</span> Active Identities
+              </p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats?.newVisitorsList && stats.newVisitorsList.length > 0 ? (
               stats.newVisitorsList.slice(0, 4).map((v: any, idx: number) => (
-                <div key={idx} className="p-3 bg-white/5 rounded-xl border border-white/10 backdrop-blur-xl flex flex-col justify-center">
-                  <p className="text-[8px] font-black text-accent uppercase tracking-widest leading-none mb-1 truncate">{v.patronName}</p>
-                  <p className="text-[7px] font-bold text-white/60 uppercase tracking-tighter truncate">{v.patronDepartments?.[0] || 'Unit Unassigned'}</p>
-                  <p className="text-[6px] font-mono text-white/30 mt-1">ID: {v.schoolId}</p>
+                <div key={idx} className="p-6 bg-white/5 rounded-[1.5rem] border border-white/10 backdrop-blur-xl flex flex-col justify-center transition-all hover:bg-white/10 hover:scale-[1.02]">
+                  <p className="text-lg font-black text-accent uppercase tracking-tight leading-none mb-2 truncate">{v.patronName}</p>
+                  <p className="text-xs font-bold text-white/70 uppercase tracking-tighter truncate">{v.patronDepartments?.[0] || 'Unit Unassigned'}</p>
+                  <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
+                    <p className="text-[9px] font-mono font-bold text-white/30 tracking-widest uppercase">ID Node</p>
+                    <p className="text-[10px] font-mono font-black text-white/40">{v.schoolId}</p>
+                  </div>
                 </div>
               ))
             ) : (
-              <div className="col-span-full p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-xl text-center">
-                <p className="text-[8px] font-black text-white/40 uppercase tracking-widest">No new visitor registrations recorded for current cycle</p>
+              <div className="col-span-full py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/20 backdrop-blur-xl text-center flex flex-col items-center justify-center gap-4">
+                <UserPlus className="h-12 w-12 text-white/10" />
+                <p className="text-xs font-black text-white/30 uppercase tracking-[0.4em]">No new visitor registrations recorded for current cycle</p>
               </div>
             )}
           </div>

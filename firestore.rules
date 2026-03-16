@@ -2,8 +2,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Explicit rules for institutional collections to ensure terminal reliability and resolve listing errors.
-    // Deployment Trigger: Institutional Policy Update - 2026-02-21
+    // SECURITY OVERRIDE: 2026-02-21 16:10:00 UTC
+    // Explicitly authorizing institutional collections for the terminal identity hub.
     
     match /patrons/{patronId} {
       allow read, write: if true;
@@ -17,7 +17,7 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Broad fallback for nested paths if required during terminal sync
+    // Broad fallback for nested terminal paths
     match /{document=**} {
       allow read, write: if true;
     }

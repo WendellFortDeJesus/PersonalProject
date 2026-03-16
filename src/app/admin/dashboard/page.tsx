@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
 
   useEffect(() => {
+    // Stability fix: Only set time on client mount to avoid hydration mismatch
     setCurrentTime(format(new Date(), 'HH:mm:ss'));
     const timer = setInterval(() => {
       setCurrentTime(format(new Date(), 'HH:mm:ss'));
@@ -40,6 +41,7 @@ export default function DashboardPage() {
     const todayVisits = visits.filter(v => isToday(new Date(v.timestamp)));
     const weekVisits = visits.filter(v => isThisWeek(new Date(v.timestamp)));
     
+    // Logic to identify "New Visitors Today" (first ever visit is today)
     const firstVisits = new Map<string, any>();
     const sortedVisits = [...visits].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
@@ -127,6 +129,7 @@ export default function DashboardPage() {
         ))}
       </div>
       
+      {/* Enlarged Registration Activity Section */}
       <div className="bg-primary p-10 rounded-[2.5rem] shadow-xl border-none text-white overflow-hidden relative group transition-all duration-500 hover:shadow-primary/20">
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700">
           <UserPlus className="h-48 w-48" />
@@ -156,8 +159,8 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="col-span-full py-16 bg-white/5 rounded-[2rem] border border-dashed border-white/20 backdrop-blur-xl text-center flex flex-col items-center justify-center gap-4">
-                <UserPlus className="h-12 w-12 text-white/10" />
+              <div className="col-span-full py-24 bg-white/5 rounded-[2.5rem] border border-dashed border-white/20 backdrop-blur-xl text-center flex flex-col items-center justify-center gap-6 min-h-[300px]">
+                <UserPlus className="h-16 w-16 text-white/10" />
                 <p className="text-xs font-black text-white/30 uppercase tracking-[0.4em]">No new visitor registrations recorded for current cycle</p>
               </div>
             )}

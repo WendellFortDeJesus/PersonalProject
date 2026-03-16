@@ -15,16 +15,11 @@ import {
   UserCheck
 } from 'lucide-react';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as ChartTooltip, 
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Tooltip as ChartTooltip
 } from 'recharts';
 import { format, isToday, isThisWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -151,47 +146,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <Card className="xl:col-span-2 border-none shadow-md rounded-[1.5rem] bg-white">
-          <CardHeader className="p-4 pb-0 flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-sm font-black uppercase tracking-tighter text-primary">Visit Intent Analytics</CardTitle>
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Cross-sectional visitor motivation</p>
-            </div>
-            <Activity className="h-4 w-4 text-primary/20" />
-          </CardHeader>
-          <CardContent className="p-4 h-[180px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats?.purposeData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 8, fontWeight: 700, fill: '#64748b' }} 
-                  interval={0}
-                />
-                <YAxis hide />
-                <ChartTooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-primary p-2 shadow-lg rounded-lg border-none">
-                          <p className="text-[7px] font-black text-white/60 uppercase mb-0.5 tracking-widest">{payload[0].name}</p>
-                          <p className="text-sm font-black text-white tracking-tighter">{payload[0].value} Visits</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar dataKey="value" fill="#355872" radius={[6, 6, 0, 0]} barSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-md rounded-[1.5rem] bg-white">
+        <Card className="xl:col-span-1 border-none shadow-md rounded-[1.5rem] bg-white">
           <CardHeader className="p-4 pb-0 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-sm font-black uppercase tracking-tighter text-primary">Department Reach</CardTitle>

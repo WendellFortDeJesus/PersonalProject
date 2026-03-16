@@ -32,7 +32,7 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
 
   const menuItems = [
     { label: 'DASHBOARD', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'ACCESS MANAGEMENT', href: '/admin/users', icon: Users },
+    { label: 'USER MANAGEMENT', href: '/admin/users', icon: Users },
     { label: 'ANALYTICS & REPORTS', href: '/admin/reports', icon: BarChart3 },
     { label: 'CONTROL ROOM', href: '/admin/settings', icon: Settings },
   ];

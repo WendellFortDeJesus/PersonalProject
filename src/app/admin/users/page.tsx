@@ -42,7 +42,7 @@ import { cn } from '@/lib/utils';
 import { ShieldAlert, Trash2, Edit3, Search, Filter, AlertTriangle, UserCircle, ShieldCheck, ShieldOff } from 'lucide-react';
 import { DEPARTMENTS } from '@/lib/data';
 
-export default function AccessManagementPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
+export default function UserManagementPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
   const params = use(props.params);
   const searchParams = use(props.searchParams);
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +88,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
     updateDoc(patronRef, updateData)
       .then(() => {
         setIsEditSheetOpen(false);
-        toast({ title: "Registry Updated", description: "Identity profile has been saved successfully." });
+        toast({ title: "Registry Updated", description: "User profile has been saved successfully." });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -126,7 +126,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
 
     deleteDoc(patronRef).then(() => {
       setIsDeleteDialogOpen(false);
-      toast({ title: "Permanently Erased", description: "Identity record has been removed from the institutional registry." });
+      toast({ title: "Permanently Erased", description: "User record has been removed from the institutional registry." });
     }).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: patronRef.path,
@@ -146,7 +146,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
     <div className="flex flex-col h-full animate-fade-in font-body">
       <header className="p-8 border-b bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter font-headline">Access Management</h1>
+          <h1 className="text-3xl font-black text-primary uppercase tracking-tighter font-headline">User Management</h1>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">High-Density Identity Control</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4">
@@ -177,7 +177,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         <Table className="table-fixed w-full">
           <TableHeader className="bg-slate-50/50 sticky top-0 z-20 border-b">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="pl-10 h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[25%]">Student Name & Registry ID</TableHead>
+              <TableHead className="pl-10 h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[25%]">Name & Registry ID</TableHead>
               <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[10%] text-center">Age</TableHead>
               <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Department / College</TableHead>
               <TableHead className="h-12 font-black text-[9px] uppercase tracking-[0.2em] text-slate-400 w-[20%]">Registry Contact</TableHead>
@@ -261,7 +261,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         {filteredPatrons.length === 0 && (
           <div className="p-32 text-center space-y-4">
             <Search className="h-12 w-12 text-slate-100 mx-auto" />
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No identity records found matching your search</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No user records found matching your search</p>
           </div>
         )}
       </div>
@@ -361,7 +361,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
           <DialogHeader className="p-10 bg-red-600 text-white">
             <DialogTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3 text-white">
               <AlertTriangle className="h-6 w-6" /> Institutional Audit
-            </DialogTitle>
+            </AlertTitle>
           </DialogHeader>
           <div className="p-10 space-y-6">
             <div className="p-6 bg-red-50 rounded-2xl border border-red-100 space-y-3">

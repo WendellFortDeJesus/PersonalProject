@@ -13,7 +13,8 @@ import {
   BookOpen, 
   UserCheck,
   PieChart as PieIcon,
-  BarChart as BarIcon
+  BarChart as BarIcon,
+  Database
 } from 'lucide-react';
 import { format, isToday, isThisWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,6 @@ import {
   Tooltip, 
   Legend 
 } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 export default function DashboardPage() {
   const db = useFirestore();
@@ -67,7 +67,6 @@ export default function DashboardPage() {
     });
     
     const newVisitorsTodayList = Array.from(firstVisits.values()).filter(v => isToday(new Date(v.timestamp)));
-    const newVisitorsTodayCount = newVisitorsTodayList.length;
 
     const hourCounts = todayVisits.reduce((acc: any, v) => {
       const h = new Date(v.timestamp).getHours();
@@ -107,7 +106,6 @@ export default function DashboardPage() {
 
     return {
       todayCount: todayVisits.length,
-      newVisitorsToday: newVisitorsTodayCount,
       newVisitorsList: newVisitorsTodayList,
       weekCount: weekVisits.length,
       peakHour: `${peakHour}:00`,
@@ -144,7 +142,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {[
           { title: "Visitors Today", value: stats?.todayCount, icon: Users, color: "text-primary", bg: "bg-primary/5" },
-          { title: "New Visitors Today", value: stats?.newVisitorsToday, icon: UserPlus, color: "text-green-600", bg: "bg-green-50" },
+          { title: "All Time Visitors", value: visits?.length, icon: Database, color: "text-green-600", bg: "bg-green-50" },
           { title: "Visitors This Week", value: stats?.weekCount, icon: Calendar, color: "text-secondary", bg: "bg-secondary/10" },
           { title: "Peak Hour Today", value: stats?.peakHour, icon: Clock, color: "text-blue-500", bg: "bg-blue-50" },
           { title: "Common Reason", value: stats?.mostCommonPurpose, icon: BookOpen, color: "text-slate-700", bg: "bg-slate-100" },
@@ -274,7 +272,7 @@ export default function DashboardPage() {
             <div className="space-y-1">
               <h3 className="text-3xl font-headline font-black uppercase tracking-tighter leading-none">New Registration Activity</h3>
               <p className="text-xs font-black text-white/50 uppercase tracking-[0.3em] mt-2">
-                Total Institutional Growth Today: <span className="text-accent">{stats?.newVisitorsToday}</span> Active Identities
+                Total Institutional Growth Today: <span className="text-accent">{stats?.newVisitorsList.length || 0}</span> Active Identities
               </p>
             </div>
           </div>

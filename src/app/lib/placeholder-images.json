@@ -18,6 +18,12 @@
       "description": "University Library Entrance",
       "imageUrl": "https://picsum.photos/seed/welcome/800/400",
       "imageHint": "library entrance"
+    },
+    {
+      "id": "university-campus",
+      "description": "University Campus Main Building",
+      "imageUrl": "https://picsum.photos/seed/campus/1920/1080",
+      "imageHint": "university campus"
     }
   ]
 }

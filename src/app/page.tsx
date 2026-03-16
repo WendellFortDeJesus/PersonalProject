@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -8,16 +9,16 @@ import Image from 'next/image';
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50">
-      {/* Background with soft overlay */}
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-6 bg-white">
+      {/* Background with subtle overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://picsum.photos/seed/library-minimal/1920/1080"
-          alt="Library Background"
+          src="https://picsum.photos/seed/campus/1920/1080"
+          alt="University Campus Background"
           fill
-          className="object-cover opacity-20 grayscale"
+          className="object-cover opacity-[0.15] grayscale"
           priority
-          data-ai-hint="clean library"
+          data-ai-hint="university campus"
         />
       </div>
 
@@ -34,44 +35,41 @@ export default function HomePage() {
         <Link href="/admin/login">
           <Button 
             variant="ghost" 
-            className="text-slate-500 hover:text-primary hover:bg-white text-[10px] font-bold uppercase tracking-widest gap-2"
+            className="text-slate-400 hover:text-primary hover:bg-transparent text-[9px] font-black uppercase tracking-widest gap-2"
           >
             <ShieldCheck className="h-3.5 w-3.5" />
-            Staff
+            Authorized Personnel
           </Button>
         </Link>
       </div>
 
-      <div className="relative z-10 w-full max-w-xl text-center space-y-12 animate-fade-in">
-        <div className="space-y-4">
-          <h1 className="text-5xl font-headline font-bold text-slate-900 tracking-tight leading-tight">
-            Institutional <span className="text-primary">Gateway</span>
+      <div className="relative z-10 w-full max-w-lg text-center space-y-16 animate-fade-in">
+        <div className="space-y-6">
+          <h1 className="text-4xl font-headline font-black text-slate-900 tracking-tighter leading-none uppercase">
+            Institutional <br />
+            <span className="text-primary">Registry Gateway</span>
           </h1>
-          <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed text-sm">
-            Welcome to the NEU Central Library. Please verify your identity to access our facilities and research resources.
+          <div className="h-0.5 w-12 bg-primary/20 mx-auto" />
+          <p className="text-slate-400 font-bold max-w-xs mx-auto leading-relaxed text-[10px] uppercase tracking-widest">
+            Identity Verification Required <br />
+            Access Node Alpha
           </p>
         </div>
 
-        <Card className="bg-white/80 backdrop-blur-md shadow-sm border-slate-100 rounded-[2rem] overflow-hidden">
-          <CardContent className="p-10 space-y-8">
+        <Card className="bg-transparent border-none shadow-none overflow-hidden">
+          <CardContent className="p-0">
             <Link href="/kiosk" className="block">
-              <Button className="w-full h-16 text-sm font-bold uppercase tracking-widest gap-3 rounded-2xl bg-primary hover:bg-primary/90 transition-all shadow-none">
+              <Button className="w-full h-16 text-[11px] font-black uppercase tracking-[0.2em] gap-3 rounded-none bg-primary hover:bg-primary/90 transition-all shadow-xl shadow-primary/10">
                 <LogIn className="h-4 w-4" />
-                Start Check-in
+                Initiate Check-in
               </Button>
             </Link>
-            
-            <div className="pt-4 border-t border-slate-50">
-              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                By entering, you agree to the library code of conduct.
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
       
-      <footer className="absolute bottom-8 text-slate-300 text-[9px] font-bold uppercase tracking-widest">
-        &copy; 2026 PatronPoint
+      <footer className="absolute bottom-8 text-slate-300 text-[8px] font-black uppercase tracking-[0.4em]">
+        &copy; 2026 PatronPoint Secure Node
       </footer>
     </div>
   );

@@ -2,7 +2,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // UNIVERSAL ACCESS PROTOCOL - REINFORCED DEPLOYMENT: 2026-03-16 08:00:00 UTC
+    // UNIVERSAL ACCESS PROTOCOL - REINFORCED DEPLOYMENT: 2026-03-16 08:30:00 UTC
     // Explicitly authorizing collection-level operations to resolve 'list' permission errors.
     
     match /patrons {

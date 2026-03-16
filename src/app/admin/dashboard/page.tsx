@@ -7,6 +7,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { 
   Users, 
+  UserPlus,
   Calendar, 
   Clock, 
   TrendingUp, 
@@ -26,7 +27,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { format, isToday, isThisWeek } from 'date-fns';
+import { format, isToday, isThisWeek, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
@@ -51,9 +52,22 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     if (!visits) return null;
     
-    const today = visits.filter(v => isToday(new Date(v.timestamp)));
-    const week = visits.filter(v => isThisWeek(new Date(v.timestamp)));
+    const todayVisits = visits.filter(v => isToday(new Date(v.timestamp)));
+    const weekVisits = visits.filter(v => isThisWeek(new Date(v.timestamp)));
     
+    // Calculate New Visitors Today: 
+    // Patrons whose first visit EVER is today.
+    const firstVisits = new Map<string, Date>();
+    visits.forEach(v => {
+      const vDate = new Date(v.timestamp);
+      const currentMin = firstVisits.get(v.patronId);
+      if (!currentMin || vDate < currentMin) {
+        firstVisits.set(v.patronId, vDate);
+      }
+    });
+
+    const newVisitorsToday = Array.from(firstVisits.values()).filter(d => isToday(d)).length;
+
     // Peak Hour calculation
     const hours = visits.map(v => new Date(v.timestamp).getHours());
     const hourCounts = hours.reduce((acc: any, h) => {
@@ -85,8 +99,9 @@ export default function DashboardPage() {
       : 'None';
 
     return {
-      todayCount: today.length,
-      weekCount: week.length,
+      todayCount: todayVisits.length,
+      newVisitorsToday,
+      weekCount: weekVisits.length,
       peakHour: `${peakHour}:00`,
       peakCollege,
       mostCommonPurpose,
@@ -120,9 +135,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {[
           { title: "Visitors Today", value: stats?.todayCount, icon: Users, color: "text-primary", bg: "bg-primary/5" },
+          { title: "New Visitors Today", value: stats?.newVisitorsToday, icon: UserPlus, color: "text-green-600", bg: "bg-green-50" },
           { title: "Visitors This Week", value: stats?.weekCount, icon: Calendar, color: "text-secondary", bg: "bg-secondary/10" },
           { title: "Peak Hour Today", value: stats?.peakHour, icon: Clock, color: "text-blue-500", bg: "bg-blue-50" },
           { title: "Common Reason", value: stats?.mostCommonPurpose, icon: BookOpen, color: "text-accent-foreground", bg: "bg-accent/20" },

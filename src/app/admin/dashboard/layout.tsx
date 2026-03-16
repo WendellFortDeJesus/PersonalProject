@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { LayoutDashboard, Users, BarChart3, Settings, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Settings, LogOut, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardLayout(props: { children: React.ReactNode; params: Promise<any> }) {
@@ -32,7 +32,6 @@ export default function AdminDashboardLayout(props: { children: React.ReactNode;
 
   const menuItems = [
     { label: 'DASHBOARD', href: '/admin/dashboard', icon: LayoutDashboard },
-    { label: 'USER MANAGEMENT', href: '/admin/users', icon: Users },
     { label: 'ANALYTICS & REPORTS', href: '/admin/reports', icon: BarChart3 },
     { label: 'CONTROL ROOM', href: '/admin/settings', icon: Settings },
   ];

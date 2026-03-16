@@ -11,15 +11,12 @@ import {
   Clock,
   Building2,
   TrendingUp,
-  ShieldAlert,
-  ArrowRight,
-  Monitor,
-  Search
+  Monitor
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { format, startOfDay, startOfWeek, isToday, isThisWeek } from 'date-fns';
+import { format, startOfWeek, isToday, isThisWeek } from 'date-fns';
 
 export default function DashboardPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
   const params = use(props.params);
@@ -43,7 +40,6 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
   const stats = useMemo(() => {
     if (!visits) return null;
 
-    const today = new Date();
     const todayVisits = visits.filter(v => isToday(new Date(v.timestamp)));
     const weekVisits = visits.filter(v => isThisWeek(new Date(v.timestamp)));
 
@@ -78,7 +74,7 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
       peakHour: peakHourDisplay,
       peakCollege: peakCollege ? peakCollege[0] : 'N/A',
       topReason: topReason ? topReason[0] : 'N/A',
-      recent: visits.slice(0, 10)
+      recent: visits.slice(0, 12)
     };
   }, [visits]);
 
@@ -99,9 +95,6 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Institutional Access Intelligence</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="h-9 rounded-xl px-4 font-bold text-[9px] tracking-widest uppercase" onClick={() => router.push('/admin/users')}>
-            <Users className="mr-2 h-3.5 w-3.5" /> User Registry
-          </Button>
           <Button size="sm" className="h-9 rounded-xl px-4 font-bold text-[9px] tracking-widest uppercase bg-primary shadow-lg" onClick={() => router.push('/admin/reports')}>
             <Monitor className="mr-2 h-3.5 w-3.5" /> Reports Hub
           </Button>
@@ -169,9 +162,6 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
               <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
               <h2 className="text-[9px] font-black text-primary uppercase tracking-widest font-headline">Live Identity Registry</h2>
             </div>
-            <Button variant="ghost" size="sm" className="h-7 text-[8px] font-black uppercase tracking-widest text-slate-400" onClick={() => router.push('/admin/users')}>
-              View Full Audit <ArrowRight className="ml-2 h-3 w-3" />
-            </Button>
           </div>
           <div className="flex-1 overflow-auto">
             <table className="w-full text-left border-collapse">
@@ -226,20 +216,6 @@ export default function DashboardPage(props: { params: Promise<any>; searchParam
               <p className="text-[8px] font-bold text-white/40 leading-relaxed uppercase tracking-wider">
                 Trend based on {stats?.today} verified entries in last 24h.
               </p>
-            </div>
-          </Card>
-
-          <Card className="p-6 border-none shadow-sm bg-white rounded-2xl space-y-4">
-            <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest font-headline">Quick Navigation</h3>
-            <div className="grid grid-cols-1 gap-2">
-              <Button variant="outline" size="sm" className="h-11 justify-start rounded-xl px-4 border-slate-100 hover:border-primary/20 hover:bg-slate-50 transition-all group" onClick={() => router.push('/admin/users')}>
-                <Search className="mr-3 h-3.5 w-3.5 text-slate-400 group-hover:text-primary" />
-                <span className="font-bold text-[9px] uppercase tracking-widest text-slate-600">User Management</span>
-              </Button>
-              <Button variant="outline" size="sm" className="h-11 justify-start rounded-xl px-4 border-slate-100 hover:border-red-100 hover:bg-red-50 transition-all group" onClick={() => router.push('/admin/users')}>
-                <ShieldAlert className="mr-3 h-3.5 w-3.5 text-slate-400 group-hover:text-red-500" />
-                <span className="font-bold text-[9px] uppercase tracking-widest text-slate-600">Identity Audit</span>
-              </Button>
             </div>
           </Card>
         </div>

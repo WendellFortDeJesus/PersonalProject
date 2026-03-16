@@ -4,7 +4,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { 
   Users, 
   Calendar, 
@@ -26,7 +26,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { format, startOfDay, startOfWeek, isToday, isThisWeek } from 'date-fns';
+import { format, isToday, isThisWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set initial time and update every second
+    // Sync time after mount to avoid hydration mismatch
     setCurrentTime(format(new Date(), 'HH:mm:ss'));
     const timer = setInterval(() => {
       setCurrentTime(format(new Date(), 'HH:mm:ss'));
@@ -54,29 +54,35 @@ export default function DashboardPage() {
     const today = visits.filter(v => isToday(new Date(v.timestamp)));
     const week = visits.filter(v => isThisWeek(new Date(v.timestamp)));
     
-    // Peak Hour
+    // Peak Hour calculation
     const hours = visits.map(v => new Date(v.timestamp).getHours());
     const hourCounts = hours.reduce((acc: any, h) => {
       acc[h] = (acc[h] || 0) + 1;
       return acc;
     }, {});
-    const peakHour = Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b, '0');
+    const peakHour = Object.keys(hourCounts).length > 0 
+      ? Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b, '0')
+      : '0';
 
-    // Peak College
+    // Peak College calculation
     const colleges = visits.map(v => v.patronDepartments?.[0] || 'Unknown');
     const collegeCounts = colleges.reduce((acc: any, c) => {
       acc[c] = (acc[c] || 0) + 1;
       return acc;
     }, {});
-    const peakCollege = Object.keys(collegeCounts).reduce((a, b) => collegeCounts[a] > collegeCounts[b] ? a : b, 'None');
+    const peakCollege = Object.keys(collegeCounts).length > 0
+      ? Object.keys(collegeCounts).reduce((a, b) => collegeCounts[a] > collegeCounts[b] ? a : b, 'None')
+      : 'None';
 
-    // Most Common Purpose
+    // Most Common Purpose calculation
     const purposes = visits.map(v => v.purpose);
     const purposeCounts = purposes.reduce((acc: any, p) => {
       acc[p] = (acc[p] || 0) + 1;
       return acc;
     }, {});
-    const mostCommonPurpose = Object.keys(purposeCounts).reduce((a, b) => purposeCounts[a] > purposeCounts[b] ? a : b, 'None');
+    const mostCommonPurpose = Object.keys(purposeCounts).length > 0
+      ? Object.keys(purposeCounts).reduce((a, b) => purposeCounts[a] > purposeCounts[b] ? a : b, 'None')
+      : 'None';
 
     return {
       todayCount: today.length,
@@ -98,7 +104,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in max-w-[1400px] mx-auto">
+    <div className="p-6 space-y-6 animate-fade-in max-w-[1400px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Institutional Pulse</h1>
@@ -140,13 +146,13 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 border-none shadow-xl rounded-[2.5rem]">
-          <CardHeader className="p-10 pb-0">
+          <CardHeader className="p-8 pb-0">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-black uppercase tracking-tighter text-primary">Visit Intent Analytics</CardTitle>
               <Activity className="h-5 w-5 text-slate-200" />
             </div>
           </CardHeader>
-          <CardContent className="p-10 h-[400px]">
+          <CardContent className="p-8 h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats?.purposeData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -179,18 +185,18 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="border-none shadow-xl rounded-[2.5rem]">
-          <CardHeader className="p-10 pb-0">
+          <CardHeader className="p-8 pb-0">
             <CardTitle className="text-xl font-black uppercase tracking-tighter text-primary">Department Reach</CardTitle>
           </CardHeader>
-          <CardContent className="p-10 h-[400px] flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height={250}>
+          <CardContent className="p-8 h-[350px] flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
                   data={stats?.collegeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={50}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
                 >
@@ -201,12 +207,12 @@ export default function DashboardPage() {
                 <ChartTooltip />
               </PieChart>
             </ResponsiveContainer>
-            <div className="w-full space-y-3 mt-6">
+            <div className="w-full space-y-2 mt-4">
               {stats?.collegeData.slice(0, 3).map((item: any, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                    <span className="text-[10px] font-black uppercase text-slate-500 truncate max-w-[150px]">{item.name}</span>
+                    <span className="text-[9px] font-black uppercase text-slate-500 truncate max-w-[120px]">{item.name}</span>
                   </div>
                   <span className="text-xs font-black text-primary">{item.value}</span>
                 </div>
@@ -216,17 +222,17 @@ export default function DashboardPage() {
         </Card>
       </div>
       
-      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border-none">
-        <div className="flex items-center justify-between mb-8">
+      <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border-none">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-xl font-black text-primary uppercase tracking-tighter">Peak College Impact</h3>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Institutional Lead: {stats?.peakCollege}</p>
           </div>
           <Building2 className="h-6 w-6 text-primary/20" />
         </div>
-        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
           <p className="text-sm font-bold text-slate-600 leading-relaxed italic">
-            "The {stats?.peakCollege} currently leads institutional engagement with {visits?.filter(v => v.patronDepartments?.[0] === stats?.peakCollege).length} recorded sessions this term."
+            "The {stats?.peakCollege} currently leads institutional engagement with active sessions this term."
           </p>
         </div>
       </div>

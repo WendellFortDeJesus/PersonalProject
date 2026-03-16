@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, use } from 'react';
@@ -54,7 +53,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
 
   const patronsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Exclude archived if hardDelete is false but soft deletion is happening
     return query(collection(db, 'patrons'), where('isArchived', '==', false), orderBy('name', 'asc'));
   }, [db]);
 
@@ -67,20 +65,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
     const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
     return matchesSearch && matchesDept;
   });
-
-  const handleToggleBlock = (patron: any) => {
-    if (!db) return;
-    const patronRef = doc(db, 'patrons', patron.id);
-    const update = { isBlocked: !patron.isBlocked, updatedAt: new Date().toISOString() };
-    
-    updateDoc(patronRef, update).catch(async (error) => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: patronRef.path,
-        operation: 'update',
-        requestResourceData: update,
-      }));
-    });
-  };
 
   const handleSaveChanges = async () => {
     if (!db || !editingPatron) return;
@@ -113,7 +97,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
     const patronRef = doc(db, 'patrons', patronToDelete.id);
 
     if (config?.hardDelete) {
-      // Hard Delete
       deleteDoc(patronRef).then(() => {
         setIsDeleteDialogOpen(false);
         toast({ title: "Permanently Erased", description: "Record has been removed from the server." });
@@ -124,7 +107,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         }));
       });
     } else {
-      // Soft Delete (Archive)
       const update = { 
         isArchived: true, 
         archiveReason: deleteReason, 
@@ -145,7 +127,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
 
   return (
     <div className="flex h-full overflow-hidden bg-slate-50/50">
-      {/* Left Sidebar (Segmentation) */}
       <aside className="w-80 border-r bg-white p-8 space-y-10 overflow-y-auto shrink-0 hidden lg:block shadow-sm">
         <div className="space-y-8">
           <div className="space-y-2">
@@ -184,19 +165,8 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
             </div>
           </div>
         </div>
-
-        <div className="pt-8 border-t border-slate-100">
-          <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">Registry Summary</p>
-            <div className="flex justify-between items-baseline">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Visible Identities:</span>
-              <span className="text-lg font-mono font-bold text-primary">{filteredPatrons?.length || 0}</span>
-            </div>
-          </div>
-        </div>
       </aside>
 
-      {/* Main Content (High-Density Registry) */}
       <main className="flex-1 overflow-y-auto bg-white border-l">
         <Table className="table-fixed w-full">
           <TableHeader className="bg-white sticky top-0 z-20 shadow-sm">
@@ -211,9 +181,8 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
           </TableHeader>
           <TableBody>
             {filteredPatrons?.map((patron) => {
-              const isFlagged = (!patron.email && !patron.schoolId) || patron.name === 'UNKNOWN';
-              const detail = patron.schoolId || 'N/A';
-              const email = patron.email || 'N/A';
+              const detail = patron.schoolId || (patron.email ? 'SSO LOGGED' : 'ID NOT READ');
+              const email = patron.email || 'EMAIL NOT READ';
               
               return (
                 <TableRow 
@@ -232,7 +201,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                       )}>
                         {patron.name}
                       </span>
-                      {isFlagged && <ShieldAlert className="h-3 w-3 text-red-500" />}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -278,23 +246,8 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
             })}
           </TableBody>
         </Table>
-        
-        {isLoading && (
-          <div className="p-32 text-center">
-            <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Synchronizing Registry...</p>
-          </div>
-        )}
-
-        {!isLoading && filteredPatrons?.length === 0 && (
-          <div className="p-32 text-center space-y-4">
-            <Search className="h-10 w-10 text-slate-200 mx-auto" />
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No matching identities found</p>
-          </div>
-        )}
       </main>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
           <DialogHeader className="p-10 bg-primary text-white">
@@ -314,6 +267,14 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">School ID / RFID</Label>
+                  <Input 
+                    value={editingPatron?.schoolId || ''} 
+                    onChange={(e) => setEditingPatron({ ...editingPatron, schoolId: e.target.value })}
+                    className="h-12 rounded-xl font-bold bg-slate-50 border-slate-100" 
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Age Index</Label>
                   <Input 
                     type="number" 
@@ -321,22 +282,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                     onChange={(e) => setEditingPatron({ ...editingPatron, age: Number(e.target.value) })}
                     className="h-12 rounded-xl font-bold bg-slate-50 border-slate-100" 
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Gender</Label>
-                  <Select 
-                    value={editingPatron?.gender || ''} 
-                    onValueChange={(val) => setEditingPatron({ ...editingPatron, gender: val })}
-                  >
-                    <SelectTrigger className="h-12 rounded-xl font-bold bg-slate-50 border-slate-100">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               <div className="space-y-2">
@@ -356,7 +301,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
           <DialogHeader className="p-10 bg-red-600 text-white">
@@ -369,7 +313,6 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
               <p className="text-sm font-bold text-red-900 leading-relaxed">
                 You are about to remove <span className="underline">{patronToDelete?.name}</span> from the active institutional registry.
               </p>
-              <p className="text-[10px] font-medium text-red-700/70 uppercase">This will immediately update all live occupancy trackers.</p>
             </div>
 
             {config?.requireDeleteReason && (
@@ -392,12 +335,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
           </div>
           <DialogFooter className="p-8 bg-slate-50 gap-3 border-t">
             <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12">Cancel</Button>
-            <Button 
-              onClick={handleDeletePatron} 
-              className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest h-12 shadow-lg"
-            >
-              Confirm Removal
-            </Button>
+            <Button onClick={handleDeletePatron} className="bg-red-600 hover:bg-red-700 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest h-12 shadow-lg">Confirm Removal</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

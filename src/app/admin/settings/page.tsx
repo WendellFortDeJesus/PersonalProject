@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, use } from 'react';
@@ -59,37 +58,8 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
     });
   };
 
-  const handleAddDept = () => {
-    if (!newDeptName || !newDeptCode || !settingsRef) return;
-    
-    const newDept = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newDeptName.toUpperCase(),
-      code: newDeptCode.toUpperCase(),
-      isActive: true,
-      color: newDeptColor
-    };
-
-    const updatedDepts = [...(settings?.departments || []), newDept];
-    handleSaveSettings({ departments: updatedDepts });
-    setNewDeptName('');
-    setNewDeptCode('');
-  };
-
-  const handleAddPurpose = () => {
-    if (!newPurposeLabel || !settingsRef) return;
-    const newPurpose = {
-      id: Math.random().toString(36).substr(2, 9),
-      label: newPurposeLabel.toUpperCase(),
-      icon: 'HelpCircle'
-    };
-    const updatedPurposes = [...(settings?.purposes || []), newPurpose];
-    handleSaveSettings({ purposes: updatedPurposes });
-    setNewPurposeLabel('');
-  };
-
   const handlePurgeLiveVisitors = async () => {
-    if (!db || !confirm("CRITICAL: This will permanently delete ALL visitor records from the dashboard. This action cannot be undone. Proceed?")) return;
+    if (!db || !confirm("CRITICAL: This will permanently and instantly delete ALL visitor records from the dashboard. This action cannot be undone. Proceed?")) return;
     setIsResetting(true);
     
     try {
@@ -98,7 +68,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
       
       if (snapshot.empty) {
         setIsResetting(false);
-        toast({ title: "System Ready", description: "No active occupancy records found to purge." });
+        toast({ title: "System Ready", description: "No visitor records found to purge." });
         return;
       }
 
@@ -113,7 +83,7 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
 
       await Promise.all(deletePromises);
       setIsResetting(false);
-      toast({ title: "System Cleared", description: "All visitor information has been instantly deleted from the dashboard." });
+      toast({ title: "Dashboard Cleared", description: "All information has been instantly deleted from the live dashboard." });
     } catch (err) {
       console.error(err);
       setIsResetting(false);
@@ -146,7 +116,31 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Security Policy Manager */}
+        <Card className="lg:col-span-12 border-none shadow-sm rounded-3xl bg-white overflow-hidden border-t-4 border-red-500">
+          <div className="p-6 border-b bg-red-50/30 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <Zap className="h-4 w-4 text-red-500" />
+              <h2 className="text-[10px] font-black text-red-900 uppercase tracking-widest font-headline">Emergency Operations</h2>
+            </div>
+          </div>
+          <CardContent className="p-8">
+            <div className="p-10 bg-red-50 rounded-[2.5rem] border border-red-100 flex flex-col md:flex-row items-center justify-between gap-10">
+              <div className="space-y-3 text-center md:text-left">
+                <span className="text-2xl font-black text-red-900 uppercase tracking-tighter">Emergency Reset</span>
+                <p className="text-[11px] font-bold text-red-600/70 uppercase tracking-widest leading-relaxed">Instantly and permanently delete all active visitor information from the dashboard.</p>
+              </div>
+              <Button 
+                onClick={handlePurgeLiveVisitors} 
+                disabled={isResetting}
+                className="h-16 px-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 transition-transform active:scale-95 min-w-[320px]"
+              >
+                {isResetting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldAlert className="h-5 w-5" />}
+                Delete all visitor information from the dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="lg:col-span-12 border-none shadow-sm rounded-3xl bg-white overflow-hidden">
           <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
             <div className="flex items-center gap-3">
@@ -178,67 +172,6 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
             </div>
           </CardContent>
         </Card>
-
-        {/* Authentication Manager */}
-        <Card className="lg:col-span-12 border-none shadow-sm rounded-3xl bg-white overflow-hidden">
-          <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-            <div className="flex items-center gap-3">
-              <ToggleLeft className="h-4 w-4 text-primary" />
-              <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-headline">Authentication Logic</h2>
-            </div>
-          </div>
-          <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white rounded-xl shadow-sm"><CreditCard className="h-5 w-5 text-primary" /></div>
-                <div className="space-y-1">
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-tight">RF-ID Access Hub</span>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">Hardware Scanner Synchronization</p>
-                </div>
-              </div>
-              <Switch checked={settings?.allowRfidScan ?? true} onCheckedChange={(v) => handleSaveSettings({ allowRfidScan: v })} />
-            </div>
-
-            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white rounded-xl shadow-sm"><Smartphone className="h-5 w-5 text-blue-500" /></div>
-                <div className="space-y-1">
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-tight">Email SSO Integration</span>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase">Institutional Domain Verification</p>
-                </div>
-              </div>
-              <Switch checked={settings?.allowEmailLogin ?? true} onCheckedChange={(v) => handleSaveSettings({ allowEmailLogin: v })} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Operational Maintenance */}
-        <div className="lg:col-span-12">
-          <Card className="border-none shadow-sm rounded-3xl bg-white overflow-hidden border-t-4 border-red-500">
-            <div className="p-6 border-b bg-red-50/30 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <Zap className="h-4 w-4 text-red-500" />
-                <h2 className="text-[10px] font-black text-red-900 uppercase tracking-widest font-headline">Emergency Operations</h2>
-              </div>
-            </div>
-            <CardContent className="p-8">
-              <div className="p-8 bg-red-50 rounded-[2.5rem] border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="space-y-2 text-center md:text-left">
-                  <span className="text-lg font-black text-red-900 uppercase tracking-tighter">Institutional Reset</span>
-                  <p className="text-[10px] font-bold text-red-600/60 uppercase tracking-widest leading-relaxed">Instantly purge all active identity records from the live dashboard and tracking engine.</p>
-                </div>
-                <Button 
-                  onClick={handlePurgeLiveVisitors} 
-                  disabled={isResetting}
-                  className="h-14 px-10 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-xl flex items-center gap-3 transition-all active:scale-95"
-                >
-                  {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
-                  Purge Identity Hub
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );

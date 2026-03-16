@@ -1,8 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // INSTITUTIONAL TERMINAL OVERRIDE - TIMESTAMP: 2026-02-21 17:28:00 UTC
-    // This universal rule authorizes all terminal operations to resolve persistent listing errors.
+    // UNIVERSAL TERMINAL AUTHORIZATION - DEPLOYMENT TIMESTAMP: 2026-02-21 17:35:00 UTC
+    // This rule allows all read/write operations to ensure high-density terminal synchronization.
     
     match /{document=**} {
       allow read, write: if true;

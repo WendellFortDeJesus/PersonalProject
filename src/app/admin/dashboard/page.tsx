@@ -56,12 +56,15 @@ export default function DashboardPage() {
     
     // Logic for New Visitors: IDs whose first visit ever is today
     const firstVisits = new Map<string, Date>();
-    [...visits].reverse().forEach(v => {
-      const vDate = new Date(v.timestamp);
+    // Sort visits by timestamp ascending to find the true first visit
+    const sortedVisits = [...visits].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    sortedVisits.forEach(v => {
       if (!firstVisits.has(v.patronId)) {
-        firstVisits.set(v.patronId, vDate);
+        firstVisits.set(v.patronId, new Date(v.timestamp));
       }
     });
+    
     const newVisitorsToday = Array.from(firstVisits.values()).filter(d => isToday(d)).length;
 
     // Peak Analytics
@@ -108,28 +111,28 @@ export default function DashboardPage() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
     </div>
   );
 
   return (
-    <div className="p-8 space-y-8 animate-fade-in w-full">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-5xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Institutional Pulse</h1>
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em]">Strategic Analytics Dashboard</p>
+    <div className="p-6 space-y-6 animate-fade-in w-full max-w-full overflow-x-hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Institutional Pulse</h1>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Strategic Analytics Dashboard</p>
         </div>
-        <div className="bg-white border p-4 rounded-3xl flex items-center gap-6 shadow-xl border-slate-100">
+        <div className="bg-white border p-3 rounded-2xl flex items-center gap-4 shadow-md border-slate-100">
           <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Node Alpha</span>
-            <span className="text-lg font-black text-primary font-mono">{currentTime || '--:--:--'}</span>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">System Node Alpha</span>
+            <span className="text-sm font-black text-primary font-mono">{currentTime || '--:--:--'}</span>
           </div>
-          <div className="w-px h-10 bg-slate-100" />
-          <div className="h-4 w-4 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
+          <div className="w-px h-6 bg-slate-100" />
+          <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { title: "Visitors Today", value: stats?.todayCount, icon: Users, color: "text-primary", bg: "bg-primary/5" },
           { title: "New Visitors Today", value: stats?.newVisitorsToday, icon: UserPlus, color: "text-green-600", bg: "bg-green-50" },
@@ -137,35 +140,35 @@ export default function DashboardPage() {
           { title: "Peak Hour Today", value: stats?.peakHour, icon: Clock, color: "text-blue-500", bg: "bg-blue-50" },
           { title: "Common Reason", value: stats?.mostCommonPurpose, icon: BookOpen, color: "text-slate-700", bg: "bg-slate-100" },
         ].map((item, i) => (
-          <Card key={i} className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden group hover:translate-y-[-4px] transition-all duration-300 bg-white">
-            <CardContent className="p-8">
+          <Card key={i} className="border-none shadow-lg rounded-3xl overflow-hidden group hover:translate-y-[-2px] transition-all duration-300 bg-white">
+            <CardContent className="p-5">
               <div className="flex justify-between items-start">
-                <div className={cn("p-5 rounded-2xl transition-colors", item.bg)}>
-                  <item.icon className={cn("h-7 w-7", item.color)} />
+                <div className={cn("p-3 rounded-xl transition-colors", item.bg)}>
+                  <item.icon className={cn("h-5 w-5", item.color)} />
                 </div>
-                <TrendingUp className="h-5 w-5 text-slate-200 group-hover:text-primary transition-colors" />
+                <TrendingUp className="h-4 w-4 text-slate-200 group-hover:text-primary transition-colors" />
               </div>
-              <div className="mt-8 space-y-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.title}</p>
-                <h3 className="text-4xl font-black text-primary tracking-tighter truncate">{item.value ?? '0'}</h3>
+              <div className="mt-4 space-y-1">
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{item.title}</p>
+                <h3 className="text-2xl font-black text-primary tracking-tighter truncate">{item.value ?? '0'}</h3>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <Card className="xl:col-span-2 border-none shadow-2xl rounded-[3rem] bg-white">
-          <CardHeader className="p-10 pb-0">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <Card className="xl:col-span-2 border-none shadow-lg rounded-[2rem] bg-white">
+          <CardHeader className="p-6 pb-0">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-black uppercase tracking-tighter text-primary">Visit Intent Analytics</CardTitle>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cross-sectional visitor motivation</p>
+                <CardTitle className="text-lg font-black uppercase tracking-tighter text-primary">Visit Intent Analytics</CardTitle>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cross-sectional visitor motivation</p>
               </div>
-              <Activity className="h-6 w-6 text-primary/20" />
+              <Activity className="h-5 w-5 text-primary/20" />
             </div>
           </CardHeader>
-          <CardContent className="p-10 h-[400px]">
+          <CardContent className="p-6 h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats?.purposeData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -173,7 +176,7 @@ export default function DashboardPage() {
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} 
+                  tick={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} 
                   interval={0}
                 />
                 <YAxis hide />
@@ -182,36 +185,36 @@ export default function DashboardPage() {
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-primary p-5 shadow-2xl rounded-2xl border-none">
-                          <p className="text-[10px] font-black text-white/60 uppercase mb-2 tracking-widest">{payload[0].name}</p>
-                          <p className="text-2xl font-black text-white tracking-tighter">{payload[0].value} Visits</p>
+                        <div className="bg-primary p-3 shadow-xl rounded-xl border-none">
+                          <p className="text-[8px] font-black text-white/60 uppercase mb-1 tracking-widest">{payload[0].name}</p>
+                          <p className="text-lg font-black text-white tracking-tighter">{payload[0].value} Visits</p>
                         </div>
                       );
                     }
                     return null;
                   }}
                 />
-                <Bar dataKey="value" fill="#355872" radius={[15, 15, 0, 0]} barSize={50} />
+                <Bar dataKey="value" fill="#355872" radius={[10, 10, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-2xl rounded-[3rem] bg-white">
-          <CardHeader className="p-10 pb-0">
-            <CardTitle className="text-2xl font-black uppercase tracking-tighter text-primary">Department Reach</CardTitle>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Institutional engagement map</p>
+        <Card className="border-none shadow-lg rounded-[2rem] bg-white">
+          <CardHeader className="p-6 pb-0">
+            <CardTitle className="text-lg font-black uppercase tracking-tighter text-primary">Department Reach</CardTitle>
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Institutional engagement map</p>
           </CardHeader>
-          <CardContent className="p-10 h-[400px] flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height={240}>
+          <CardContent className="p-6 h-[300px] flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={stats?.collegeData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={65}
-                  outerRadius={95}
-                  paddingAngle={8}
+                  innerRadius={50}
+                  outerRadius={75}
+                  paddingAngle={5}
                   dataKey="value"
                 >
                   {stats?.collegeData.map((entry, index) => (
@@ -221,14 +224,14 @@ export default function DashboardPage() {
                 <ChartTooltip />
               </PieChart>
             </ResponsiveContainer>
-            <div className="w-full space-y-3 mt-8">
+            <div className="w-full space-y-2 mt-6">
               {stats?.collegeData.slice(0, 3).map((item: any, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                    <span className="text-[10px] font-black uppercase text-slate-600 truncate max-w-[150px] tracking-tight">{item.name}</span>
+                <div key={i} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+                    <span className="text-[9px] font-black uppercase text-slate-600 truncate max-w-[120px] tracking-tight">{item.name}</span>
                   </div>
-                  <span className="text-sm font-black text-primary">{item.value}</span>
+                  <span className="text-xs font-black text-primary">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -236,22 +239,22 @@ export default function DashboardPage() {
         </Card>
       </div>
       
-      <div className="bg-primary p-10 rounded-[3rem] shadow-2xl border-none text-white overflow-hidden relative group">
-        <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-700">
-          <Building2 className="h-48 w-48" />
+      <div className="bg-primary p-8 rounded-[2rem] shadow-lg border-none text-white overflow-hidden relative group">
+        <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+          <Building2 className="h-32 w-32" />
         </div>
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/10 rounded-xl backdrop-blur-md">
-              <Activity className="h-6 w-6 text-accent" />
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md">
+              <Activity className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="text-3xl font-black uppercase tracking-tighter">Strategic Insight</h3>
-              <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Institutional Lead: {stats?.peakCollege}</p>
+              <h3 className="text-xl font-black uppercase tracking-tighter">Strategic Insight</h3>
+              <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em]">Institutional Lead: {stats?.peakCollege}</p>
             </div>
           </div>
-          <div className="p-8 bg-white/5 rounded-[2rem] border border-white/10 backdrop-blur-xl">
-            <p className="text-xl font-bold leading-relaxed italic text-white/90">
+          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
+            <p className="text-sm font-bold leading-relaxed italic text-white/90">
               "The {stats?.peakCollege} currently maintains the highest engagement index within the library network, reflecting a strong trend in academic resource utilization."
             </p>
           </div>

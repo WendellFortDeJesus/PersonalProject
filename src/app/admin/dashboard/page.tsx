@@ -13,7 +13,8 @@ import {
   TrendingUp, 
   BookOpen, 
   Building2,
-  Activity
+  Activity,
+  UserCheck
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -55,17 +56,18 @@ export default function DashboardPage() {
     const weekVisits = visits.filter(v => isThisWeek(new Date(v.timestamp)));
     
     // Logic for New Visitors: IDs whose first visit ever is today
-    const firstVisits = new Map<string, Date>();
+    const firstVisits = new Map<string, any>();
     // Sort visits by timestamp ascending to find the true first visit
     const sortedVisits = [...visits].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     sortedVisits.forEach(v => {
       if (!firstVisits.has(v.patronId)) {
-        firstVisits.set(v.patronId, new Date(v.timestamp));
+        firstVisits.set(v.patronId, v);
       }
     });
     
-    const newVisitorsToday = Array.from(firstVisits.values()).filter(d => isToday(d)).length;
+    const newVisitorsTodayList = Array.from(firstVisits.values()).filter(v => isToday(new Date(v.timestamp)));
+    const newVisitorsTodayCount = newVisitorsTodayList.length;
 
     // Peak Analytics
     const hours = visits.map(v => new Date(v.timestamp).getHours());
@@ -97,7 +99,8 @@ export default function DashboardPage() {
 
     return {
       todayCount: todayVisits.length,
-      newVisitorsToday,
+      newVisitorsToday: newVisitorsTodayCount,
+      newVisitorsList: newVisitorsTodayList,
       weekCount: weekVisits.length,
       peakHour: `${peakHour}:00`,
       peakCollege,
@@ -239,24 +242,34 @@ export default function DashboardPage() {
         </Card>
       </div>
       
-      <div className="bg-primary p-8 rounded-[2rem] shadow-lg border-none text-white overflow-hidden relative group">
+      <div className="bg-primary p-6 rounded-[2rem] shadow-lg border-none text-white overflow-hidden relative group">
         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-          <Building2 className="h-32 w-32" />
+          <UserPlus className="h-32 w-32" />
         </div>
         <div className="relative z-10 space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md">
-              <Activity className="h-5 w-5 text-accent" />
+              <UserCheck className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="text-xl font-black uppercase tracking-tighter">Strategic Insight</h3>
-              <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em]">Institutional Lead: {stats?.peakCollege}</p>
+              <h3 className="text-xl font-black uppercase tracking-tighter">New Registration Activity</h3>
+              <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em]">Total Growth Today: {stats?.newVisitorsToday} Identities</p>
             </div>
           </div>
-          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
-            <p className="text-sm font-bold leading-relaxed italic text-white/90">
-              "The {stats?.peakCollege} currently maintains the highest engagement index within the library network, reflecting a strong trend in academic resource utilization."
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats?.newVisitorsList && stats.newVisitorsList.length > 0 ? (
+              stats.newVisitorsList.slice(0, 4).map((v: any, idx: number) => (
+                <div key={idx} className="p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col justify-center">
+                  <p className="text-[9px] font-black text-accent uppercase tracking-widest leading-none mb-1">{v.patronName}</p>
+                  <p className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">{v.patronDepartments?.[0] || 'Unit Unassigned'}</p>
+                  <p className="text-[7px] font-mono text-white/30 mt-2">ID: {v.schoolId}</p>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full p-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl text-center">
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">No new visitor registrations recorded for current cycle</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

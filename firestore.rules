@@ -1,23 +1,22 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // SECURITY OVERRIDE: 2026-02-21 16:10:00 UTC
-    // Explicitly authorizing institutional collections for the terminal identity hub.
+    // EMERGENCY SECURITY OVERRIDE: 2026-02-21 16:45:00 UTC
+    // Explicitly authorizing all operations for institutional terminal hubs to resolve listing errors.
     
     match /patrons/{patronId} {
-      allow read, write: if true;
+      allow get, list, create, update, delete: if true;
     }
     
     match /visits/{visitId} {
-      allow read, write: if true;
+      allow get, list, create, update, delete: if true;
     }
     
     match /system_config/{configId} {
-      allow read, write: if true;
+      allow get, list, create, update, delete: if true;
     }
 
-    // Broad fallback for nested terminal paths
+    // Broad fallback for secondary terminal paths
     match /{document=**} {
       allow read, write: if true;
     }

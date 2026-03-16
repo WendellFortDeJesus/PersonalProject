@@ -51,7 +51,8 @@ export default function UserManagementPage() {
 
   const patronsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, 'patrons'), orderBy('name', 'asc'));
+    // Sorted by createdAt descending so new visitors appear first
+    return query(collection(db, 'patrons'), orderBy('createdAt', 'desc'));
   }, [db]);
 
   const { data: patrons, isLoading } = useCollection(patronsQuery);

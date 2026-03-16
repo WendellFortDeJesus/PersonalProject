@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -23,8 +22,8 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate credentials using the generic institutional format
-    if (username === 'username@neu.edu.ph' && password === '12345') {
+    // Validate credentials using the secure institutional identity
+    if (username === 'jcesperanza@neu.edu.ph' && password === '12345') {
       try {
         // Perform real Firebase sign-in to satisfy security rules
         await signInAnonymously(auth);

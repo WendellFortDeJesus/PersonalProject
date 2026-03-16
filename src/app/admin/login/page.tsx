@@ -23,8 +23,8 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate credentials
-    if (username === 'admin123' && password === '12345') {
+    // Validate credentials using institutional email
+    if (username === 'jcesperanza@neu.edu.ph' && password === '12345') {
       try {
         // Perform real Firebase sign-in to satisfy security rules
         await signInAnonymously(auth);
@@ -67,8 +67,8 @@ export default function AdminLoginPage() {
                 <ShieldCheck className="h-8 w-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-headline font-bold text-primary tracking-tight">Staff Terminal</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-headline font-bold text-primary tracking-tight text-center">Staff Terminal</CardTitle>
+            <CardDescription className="text-center">
               Authorized library personnel only
             </CardDescription>
           </CardHeader>

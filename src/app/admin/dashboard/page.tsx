@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { 
@@ -11,17 +11,32 @@ import {
   Clock, 
   TrendingUp, 
   BookOpen, 
-  UserCheck
+  UserCheck,
+  PieChart as PieIcon,
+  BarChart as BarIcon
 } from 'lucide-react';
 import { format, isToday, isThisWeek } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend 
+} from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 export default function DashboardPage() {
   const db = useFirestore();
   const [currentTime, setCurrentTime] = useState<string | null>(null);
 
   useEffect(() => {
-    // Stability fix: Only set time on client mount to avoid hydration mismatch
     setCurrentTime(format(new Date(), 'HH:mm:ss'));
     const timer = setInterval(() => {
       setCurrentTime(format(new Date(), 'HH:mm:ss'));
@@ -71,13 +86,35 @@ export default function DashboardPage() {
       ? Object.keys(purposeCounts).reduce((a, b) => purposeCounts[a] > purposeCounts[b] ? a : b, 'None')
       : 'None';
 
+    // Chart Data: Intent (Purpose)
+    const intentData = Object.entries(purposeCounts).map(([name, value]) => ({
+      name,
+      value
+    }));
+
+    // Chart Data: Student Occupancy by Dept (Today)
+    const deptCounts = todayVisits.reduce((acc: any, v) => {
+      const dept = v.patronDepartments?.[0] || 'Unknown';
+      acc[dept] = (acc[dept] || 0) + 1;
+      return acc;
+    }, {});
+    const studentOccupancyData = Object.entries(deptCounts).map(([name, count]) => ({
+      name: name.replace('College of ', ''),
+      count
+    }));
+
+    const COLORS = ['#355872', '#7AAACE', '#9CD5FF', '#2D4356', '#A5C9CA'];
+
     return {
       todayCount: todayVisits.length,
       newVisitorsToday: newVisitorsTodayCount,
       newVisitorsList: newVisitorsTodayList,
       weekCount: weekVisits.length,
       peakHour: `${peakHour}:00`,
-      mostCommonPurpose
+      mostCommonPurpose,
+      intentData,
+      studentOccupancyData,
+      COLORS
     };
   }, [visits]);
 
@@ -127,6 +164,101 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Analytics Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Intent Distribution - Pie Chart */}
+        <Card className="border-none shadow-md rounded-2xl bg-white overflow-hidden">
+          <CardHeader className="p-4 pb-0 flex flex-row items-center gap-2">
+            <div className="p-1.5 bg-primary/5 rounded-lg">
+              <PieIcon className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Visit Intent Distribution</CardTitle>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Primary Purpose Breakdown</p>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 h-[240px]">
+            {stats?.intentData && stats.intentData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.intentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {stats.intentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={stats.COLORS[index % stats.COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                No intent data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Student Occupancy - Column Bar Chart */}
+        <Card className="border-none shadow-md rounded-2xl bg-white overflow-hidden">
+          <CardHeader className="p-4 pb-0 flex flex-row items-center gap-2">
+            <div className="p-1.5 bg-green-50 rounded-lg">
+              <BarIcon className="h-4 w-4 text-green-600" />
+            </div>
+            <div>
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Student Occupancy</CardTitle>
+              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Active Presence by Academic Unit</p>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 h-[240px]">
+            {stats?.studentOccupancyData && stats.studentOccupancyData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.studentOccupancyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 7, fontWeight: 'bold', fill: '#94a3b8' }}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 7, fontWeight: 'bold', fill: '#94a3b8' }}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    fill="#355872" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={24}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                No student occupancy recorded today
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
       
       {/* Enlarged Registration Activity Section */}

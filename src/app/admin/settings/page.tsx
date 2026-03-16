@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -68,16 +68,19 @@ export default function SystemSettingsPage(props: { params: Promise<any>; search
         return;
       }
 
-      const deletePromises = snapshot.docs.map((docSnap) => 
-        deleteDoc(docSnap.ref).catch(error => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: docSnap.ref.path,
-            operation: 'delete',
-          }));
-        })
-      );
+      // Use a batch for faster, more "instant" deletion
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((docSnap) => {
+        batch.delete(docSnap.ref);
+      });
 
-      await Promise.all(deletePromises);
+      await batch.commit().catch(error => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'visits/purge',
+          operation: 'delete',
+        }));
+      });
+
       setIsResetting(false);
       toast({ title: "Dashboard Cleared", description: "All information has been instantly deleted from the live dashboard." });
     } catch (err) {

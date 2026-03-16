@@ -20,6 +20,13 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter
+} from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
@@ -29,14 +36,14 @@ import { format } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
-import { ShieldAlert, Trash2, Edit3, Search, Filter, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit3, Search, Filter, AlertTriangle, UserCircle } from 'lucide-react';
 
 export default function AccessManagementPage(props: { params: Promise<any>; searchParams: Promise<any> }) {
   const params = use(props.params);
   const searchParams = use(props.searchParams);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingPatron, setEditingPatron] = useState<any>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [patronToDelete, setPatronToDelete] = useState<any>(null);
   const [deleteReason, setDeleteReason] = useState('');
@@ -77,7 +84,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
     
     updateDoc(patronRef, updateData)
       .then(() => {
-        setIsEditDialogOpen(false);
+        setIsEditSheetOpen(false);
         toast({ title: "Registry Updated", description: "Identity profile has been saved." });
       })
       .catch(async (error) => {
@@ -229,7 +236,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                         variant="outline" 
                         size="sm" 
                         className="h-8 px-3 border-primary/20 text-primary hover:bg-primary/5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
-                        onClick={() => { setEditingPatron(patron); setIsEditDialogOpen(true); }}
+                        onClick={() => { setEditingPatron(patron); setIsEditSheetOpen(true); }}
                       >
                         <Edit3 className="h-3 w-3" /> Edit
                       </Button>
@@ -250,15 +257,15 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
         </Table>
       </main>
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
-          <DialogHeader className="p-10 bg-primary text-white">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3">
-              <Edit3 className="h-6 w-6" /> Profile Management
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-10 space-y-6">
-            <div className="space-y-4">
+      <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
+        <SheetContent className="sm:max-w-md p-0 border-none shadow-2xl overflow-hidden font-body">
+          <SheetHeader className="p-10 bg-primary text-white">
+            <SheetTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3 text-white">
+              <UserCircle className="h-6 w-6" /> Profile Registry
+            </SheetTitle>
+          </SheetHeader>
+          <div className="p-10 space-y-8 h-[calc(100vh-200px)] overflow-y-auto">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Full Legal Identity</Label>
                 <Input 
@@ -267,7 +274,8 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                   className="h-12 rounded-xl font-bold uppercase bg-slate-50 border-slate-100" 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">School ID / RFID</Label>
                   <Input 
@@ -286,6 +294,7 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Registry Contact (Email)</Label>
                 <Input 
@@ -294,19 +303,52 @@ export default function AccessManagementPage(props: { params: Promise<any>; sear
                   className="h-12 rounded-xl font-mono font-bold bg-slate-50 border-slate-100" 
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Academic Unit</Label>
+                <Select 
+                  value={editingPatron?.departments?.[0] || ''} 
+                  onValueChange={(v) => setEditingPatron({ ...editingPatron, departments: [v] })}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-100 font-bold">
+                    <SelectValue placeholder="Select Unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {config?.departments?.map((d: any) => (
+                      <SelectItem key={d.id} value={d.name} className="text-xs font-bold">{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="space-y-1">
+                  <Label className="text-xs font-black text-slate-800 uppercase tracking-tight">Security Access</Label>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Restrict Terminal Entry</p>
+                </div>
+                <Badge 
+                  onClick={() => setEditingPatron({ ...editingPatron, isBlocked: !editingPatron.isBlocked })}
+                  className={cn(
+                    "cursor-pointer px-4 py-1 rounded-full font-black text-[9px] uppercase tracking-widest transition-all",
+                    editingPatron?.isBlocked ? "bg-red-600 text-white" : "bg-green-600 text-white"
+                  )}
+                >
+                  {editingPatron?.isBlocked ? 'BLOCKED' : 'GRANTED'}
+                </Badge>
+              </div>
             </div>
           </div>
-          <DialogFooter className="p-8 bg-slate-50 gap-3 border-t">
-            <Button variant="ghost" onClick={() => setIsEditDialogOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12">Cancel</Button>
-            <Button onClick={handleSaveChanges} className="bg-primary hover:bg-primary/90 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest h-12 shadow-lg">Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <SheetFooter className="p-8 bg-slate-50 gap-3 border-t absolute bottom-0 w-full">
+            <Button variant="ghost" onClick={() => setIsEditSheetOpen(false)} className="rounded-xl font-black uppercase text-[10px] tracking-widest h-12">Cancel</Button>
+            <Button onClick={handleSaveChanges} className="bg-primary hover:bg-primary/90 text-white rounded-xl px-10 font-black uppercase text-[10px] tracking-widest h-12 shadow-lg flex-1">Save Corrections</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
+        <DialogContent className="max-w-md rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden font-body">
           <DialogHeader className="p-10 bg-red-600 text-white">
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter font-headline flex items-center gap-3 text-white">
               <AlertTriangle className="h-6 w-6" /> Safety Confirmation
             </DialogTitle>
           </DialogHeader>

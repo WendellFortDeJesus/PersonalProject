@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useEffect, use } from 'react';
@@ -248,8 +247,6 @@ function RegistrationContent() {
                             </FormControl>
                             <SelectContent className="bg-[#0B1218] border-white/10 text-white">
                               <SelectItem value="Student" className="focus:bg-primary/20 focus:text-white font-bold">Student</SelectItem>
-                              <SelectItem value="Faculty" className="focus:bg-primary/20 focus:text-white font-bold">Faculty</SelectItem>
-                              <SelectItem value="Staff" className="focus:bg-primary/20 focus:text-white font-bold">Staff</SelectItem>
                               <SelectItem value="Visitor" className="focus:bg-primary/20 focus:text-white font-bold">Visitor</SelectItem>
                             </SelectContent>
                           </Select>

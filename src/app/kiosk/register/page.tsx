@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, Suspense, useEffect } from 'react';
@@ -9,7 +8,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { ArrowLeft, Loader2, ShieldCheck, Lock, UserCheck, Fingerprint, Database, GraduationCap } from 'lucide-react';
@@ -33,10 +32,10 @@ const formSchema = z.object({
 
 const CornerBrackets = () => (
   <>
-    <div className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-primary/40 rounded-tl-[2rem] pointer-events-none z-30" />
-    <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-primary/40 rounded-tr-[2rem] pointer-events-none z-30" />
-    <div className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-primary/40 rounded-bl-[2rem] pointer-events-none z-30" />
-    <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-primary/40 rounded-br-[2rem] pointer-events-none z-30" />
+    <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-primary/40 rounded-tl-[3rem] pointer-events-none z-30" />
+    <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-primary/40 rounded-tr-[3rem] pointer-events-none z-30" />
+    <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-primary/40 rounded-bl-[3rem] pointer-events-none z-30" />
+    <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-primary/40 rounded-br-[3rem] pointer-events-none z-30" />
   </>
 );
 
@@ -73,8 +72,7 @@ function RegistrationContent() {
   });
 
   useEffect(() => {
-    // Moving binary generation to useEffect to prevent hydration error
-    const bits = Array.from({ length: 60 }, () => Math.random() > 0.5 ? '1' : '0');
+    const bits = Array.from({ length: 80 }, () => Math.random() > 0.5 ? '1' : '0');
     setBinaryBits(bits);
   }, []);
 
@@ -174,7 +172,7 @@ function RegistrationContent() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl space-y-6 animate-fade-in px-4">
+      <div className="relative z-10 w-full max-w-6xl space-y-6 animate-fade-in px-4">
         <Button 
           variant="ghost" 
           onClick={handleBack}
@@ -193,7 +191,7 @@ function RegistrationContent() {
               </div>
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-4xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Record</CardTitle>
+              <CardTitle className="text-5xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Record</CardTitle>
               <CardDescription className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em]">
                 Registry Node Initialization
               </CardDescription>
@@ -204,37 +202,37 @@ function RegistrationContent() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
                 {/* Section 1: Personal Identity */}
-                <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10">
+                <div className="p-10 bg-black/40 rounded-[3rem] border border-white/5 space-y-8 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10">
                    <div className="flex items-center gap-3 mb-2">
-                    <Fingerprint className="h-5 w-5 text-primary shadow-[0_0_10px_rgba(53,88,114,0.5)]" />
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary">Personal Identity Node</h3>
+                    <Fingerprint className="h-6 w-6 text-primary shadow-[0_0_15px_rgba(53,88,114,0.5)]" />
+                    <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Personal Identity Node</h3>
                   </div>
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Full Legal Identity</FormLabel>
+                        <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Full Legal Identity</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="JUAN DELA CRUZ" 
                             {...field} 
-                            className="h-16 rounded-2xl border-none bg-black/40 font-black text-xl text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/60 focus:shadow-[0_0_20px_rgba(53,88,114,0.4)] transition-all shadow-inner uppercase" 
+                            className="h-20 rounded-3xl border-none bg-black/40 font-black text-2xl text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/60 focus:shadow-[0_0_20px_rgba(53,88,114,0.4)] transition-all shadow-inner uppercase px-8" 
                           />
                         </FormControl>
                         <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
                       </FormItem>
                     )}
                   />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-8">
                     <FormField
                       control={form.control}
                       name="age"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Bio-Metric Age</FormLabel>
+                          <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Bio-Metric Age</FormLabel>
                           <FormControl>
-                            <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-16 rounded-2xl border-none bg-black/40 font-black text-xl text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/60 transition-all shadow-inner" />
+                            <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-20 rounded-3xl border-none bg-black/40 font-black text-2xl text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/60 transition-all shadow-inner px-8" />
                           </FormControl>
                           <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
                         </FormItem>
@@ -245,10 +243,10 @@ function RegistrationContent() {
                       name="role"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Registry Role</FormLabel>
+                          <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Registry Role</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-16 rounded-2xl border-none bg-black/40 font-black text-xl text-white focus:ring-1 focus:ring-primary/60 shadow-inner">
+                              <SelectTrigger className="h-20 rounded-3xl border-none bg-black/40 font-black text-2xl text-white focus:ring-1 focus:ring-primary/60 shadow-inner px-8">
                                 <SelectValue placeholder="Select Role" />
                               </SelectTrigger>
                             </FormControl>
@@ -267,18 +265,18 @@ function RegistrationContent() {
                 </div>
 
                 {/* Section 2: Institutional Verification */}
-                <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10">
+                <div className="p-10 bg-black/40 rounded-[3rem] border border-white/5 space-y-8 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10">
                   <div className="flex items-center gap-3 mb-2">
-                    <ShieldCheck className="h-5 w-5 text-primary shadow-[0_0_10px_rgba(53,88,114,0.5)]" />
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary">Credential Verification Node</h3>
+                    <ShieldCheck className="h-6 w-6 text-primary shadow-[0_0_15px_rgba(53,88,114,0.5)]" />
+                    <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Credential Verification Node</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FormField
                       control={form.control}
                       name="schoolId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Registry ID</FormLabel>
+                          <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Registry ID</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input 
@@ -286,11 +284,11 @@ function RegistrationContent() {
                                 {...field} 
                                 readOnly={isRfidAuth}
                                 className={cn(
-                                  "h-16 rounded-2xl border-none bg-black/40 font-mono font-bold text-lg shadow-inner focus:ring-1 focus:ring-primary/60 transition-all",
+                                  "h-20 rounded-3xl border-none bg-black/40 font-mono font-bold text-xl shadow-inner focus:ring-1 focus:ring-primary/60 transition-all px-8",
                                   isRfidAuth ? "text-primary/70 border-l-4 border-primary/50" : "text-white"
                                 )} 
                               />
-                              {isRfidAuth && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />}
+                              {isRfidAuth && <Lock className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/40" />}
                             </div>
                           </FormControl>
                           <FormMessage className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2" />
@@ -303,7 +301,7 @@ function RegistrationContent() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Verified SSO Node</FormLabel>
+                          <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Verified SSO Node</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input 
@@ -312,11 +310,11 @@ function RegistrationContent() {
                                 {...field} 
                                 readOnly={!isRfidAuth}
                                 className={cn(
-                                  "h-16 rounded-2xl border-none bg-black/40 font-mono font-bold text-lg shadow-inner focus:ring-1 focus:ring-primary/60 transition-all",
+                                  "h-20 rounded-3xl border-none bg-black/40 font-mono font-bold text-xl shadow-inner focus:ring-1 focus:ring-primary/60 transition-all px-8",
                                   !isRfidAuth ? "text-primary/70 border-l-4 border-primary/50" : "text-white"
                                 )}
                               />
-                              {!isRfidAuth && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />}
+                              {!isRfidAuth && <Lock className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/40" />}
                             </div>
                           </FormControl>
                           <FormMessage className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2" />
@@ -327,26 +325,26 @@ function RegistrationContent() {
                 </div>
 
                 {/* Section 3: Academic Mapping */}
-                <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10">
+                <div className="p-10 bg-black/40 rounded-[3rem] border border-white/5 space-y-8 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10">
                   <div className="flex items-center gap-3 mb-2">
-                    <GraduationCap className="h-5 w-5 text-primary shadow-[0_0_10px_rgba(53,88,114,0.5)]" />
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary">Academic Mapping Node</h3>
+                    <GraduationCap className="h-6 w-6 text-primary shadow-[0_0_15px_rgba(53,88,114,0.5)]" />
+                    <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-primary">Academic Mapping Node</h3>
                   </div>
                   <FormField
                     control={form.control}
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">College / Department Unit</FormLabel>
+                        <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">College / Department Unit</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-16 rounded-2xl border-none bg-black/40 font-black text-lg text-white focus:ring-1 focus:ring-primary/60 shadow-inner transition-all">
+                            <SelectTrigger className="h-20 rounded-3xl border-none bg-black/40 font-black text-xl text-white focus:ring-1 focus:ring-primary/60 shadow-inner transition-all px-8">
                               <SelectValue placeholder="Select Unit" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[300px] bg-[#0B1218] border-white/10 text-white">
                             {DEPARTMENTS.map((dept) => (
-                              <SelectItem key={dept} value={dept} className="text-[10px] font-black uppercase tracking-tighter focus:bg-primary/20 focus:text-white">{dept}</SelectItem>
+                              <SelectItem key={dept} value={dept} className="text-[11px] font-black uppercase tracking-tighter focus:bg-primary/20 focus:text-white">{dept}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -360,12 +358,12 @@ function RegistrationContent() {
                     name="purposeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Node Activity Intent</FormLabel>
+                        <FormLabel className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300 ml-2">Node Activity Intent</FormLabel>
                         <div className="relative">
                           <Select onValueChange={field.onChange} value={field.value} disabled={!!initialPurposeId}>
                             <FormControl>
                               <SelectTrigger className={cn(
-                                "h-16 rounded-2xl border-none bg-black/40 font-black text-lg text-white shadow-inner focus:ring-1 focus:ring-primary/60 transition-all",
+                                "h-20 rounded-3xl border-none bg-black/40 font-black text-xl text-white shadow-inner focus:ring-1 focus:ring-primary/60 transition-all px-8",
                                 !!initialPurposeId && "opacity-80 border-l-4 border-primary/50"
                               )}>
                                 <SelectValue placeholder="Select Intent" />
@@ -377,7 +375,7 @@ function RegistrationContent() {
                               ))}
                             </SelectContent>
                           </Select>
-                          {!!initialPurposeId && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/40" />}
+                          {!!initialPurposeId && <Lock className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-primary/40" />}
                         </div>
                         <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
                       </FormItem>
@@ -385,22 +383,22 @@ function RegistrationContent() {
                   />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-6">
                   <Button 
                     type="button"
                     variant="ghost"
                     onClick={handleBack}
                     disabled={isLoading}
-                    className="h-24 px-12 text-[11px] font-black uppercase tracking-[0.4em] border border-white/5 bg-white/5 rounded-[2.5rem] text-slate-400 hover:text-white transition-all hover:bg-white/10"
+                    className="h-24 px-14 text-[12px] font-black uppercase tracking-[0.4em] border border-white/5 bg-white/5 rounded-[2.5rem] text-slate-400 hover:text-white transition-all hover:bg-white/10"
                   >
-                    <ArrowLeft className="mr-3 h-5 w-5" />
+                    <ArrowLeft className="mr-3 h-6 w-6" />
                     Back
                   </Button>
-                  <Button disabled={isLoading} className="flex-1 h-24 text-[12px] font-black uppercase tracking-[0.5em] bg-primary hover:bg-primary/90 text-white rounded-[2.5rem] shadow-[0_0_40px_rgba(53,88,114,0.4)] hover:shadow-[0_0_60px_rgba(53,88,114,0.6)] active:scale-[0.98] transition-all relative overflow-hidden group">
+                  <Button disabled={isLoading} className="flex-1 h-24 text-[14px] font-black uppercase tracking-[0.5em] bg-primary hover:bg-primary/90 text-white rounded-[2.5rem] shadow-[0_0_50px_rgba(53,88,114,0.4)] hover:shadow-[0_0_70px_rgba(53,88,114,0.6)] active:scale-[0.98] transition-all relative overflow-hidden group">
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : (
-                      <span className="flex items-center justify-center gap-4">
-                        <UserCheck className="h-5 w-5" />
+                    {isLoading ? <Loader2 className="h-10 w-10 animate-spin" /> : (
+                      <span className="flex items-center justify-center gap-6">
+                        <UserCheck className="h-6 w-6" />
                         Authorize Terminal Entry
                       </span>
                     )}
@@ -412,7 +410,7 @@ function RegistrationContent() {
         </Card>
 
         <div className="flex flex-col items-center gap-4 pt-4">
-           <span className="text-[9px] font-black text-primary/30 uppercase tracking-[0.6em]">Institutional Data Segment: Node Alpha Restricted</span>
+           <span className="text-[10px] font-black text-primary/30 uppercase tracking-[0.6em]">Institutional Data Segment: Node Alpha Restricted</span>
         </div>
       </div>
     </div>

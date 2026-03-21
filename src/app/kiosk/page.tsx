@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, Info, ScanLine, CornerDownLeft } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, Info, ScanLine, CornerDownLeft, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc, setDoc } from 'firebase/firestore';
@@ -116,112 +116,100 @@ export default function KioskAuthPage() {
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden p-6">
       <div className="absolute inset-0 z-0 opacity-10 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px]" />
       
-      <div className="relative z-10 w-full max-w-2xl animate-fade-in transition-all duration-500">
+      <div className="relative z-10 w-full max-w-lg animate-fade-in transition-all duration-500">
         <Card className="border-none shadow-[0_0_120px_rgba(0,0,0,0.9)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[820px] flex flex-col">
-          <CardHeader className="text-center pt-16 pb-8 px-8 space-y-6 shrink-0">
+          <CardHeader className="text-center pt-12 pb-6 px-8 space-y-4 shrink-0">
             <div className="flex justify-center">
-              <div className="p-6 bg-[#355872]/20 rounded-3xl ring-1 ring-[#355872]/40 shadow-[0_0_40px_rgba(53,88,114,0.4)]">
-                <ShieldCheck className="h-10 w-10 text-[#7AAACE]" />
+              <div className="p-2.5 bg-[#355872]/20 rounded-xl ring-1 ring-[#355872]/40 shadow-[0_0_20px_rgba(53,88,114,0.3)]">
+                <Shield className="h-6 w-6 text-[#7AAACE]" />
               </div>
             </div>
-            <div className="space-y-2">
-              <CardTitle className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY HUB</CardTitle>
-              <CardDescription className="text-[11px] font-mono font-black text-slate-500 uppercase tracking-[0.5em]">
+            <div className="space-y-1">
+              <CardTitle className="text-4xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY HUB</CardTitle>
+              <CardDescription className="text-[9px] font-mono font-black text-slate-500 uppercase tracking-[0.4em]">
                 INSTITUTIONAL ACCESS PROTOCOL
               </CardDescription>
             </div>
           </CardHeader>
 
-          <CardContent className="px-16 pb-12 space-y-12 flex-1 flex flex-col no-scrollbar overflow-y-auto">
-            <div className="bg-black/40 p-2.5 rounded-[2.5rem] border border-white/5 shadow-inner shrink-0">
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setActiveTab('rfid')} 
-                  className={cn(
-                    "flex-1 h-16 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all duration-300", 
-                    activeTab === 'rfid' ? "bg-[#355872] text-white shadow-xl" : "text-slate-600 hover:text-slate-400"
-                  )}
-                >
-                  RFID
-                </button>
-                <button 
-                  onClick={() => setActiveTab('email')} 
-                  className={cn(
-                    "flex-1 h-16 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all duration-300", 
-                    activeTab === 'email' ? "bg-[#355872] text-white shadow-xl" : "text-slate-600 hover:text-slate-400"
-                  )}
-                >
-                  EMAIL
-                </button>
-                <button 
-                  onClick={() => setActiveTab('google')} 
-                  className={cn(
-                    "flex-1 h-16 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all duration-300", 
-                    activeTab === 'google' ? "bg-[#355872] text-white shadow-xl" : "text-slate-600 hover:text-slate-400"
-                  )}
-                >
-                  GOOGLE
-                </button>
+          <CardContent className="px-10 pb-12 space-y-10 flex-1 flex flex-col no-scrollbar">
+            {/* Tab Navigation */}
+            <div className="bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
+              <div className="flex gap-1">
+                {(['rfid', 'email', 'google'] as const).map((tab) => (
+                  <button 
+                    key={tab}
+                    onClick={() => setActiveTab(tab)} 
+                    className={cn(
+                      "flex-1 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300", 
+                      activeTab === tab ? "bg-[#355872] text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                    )}
+                  >
+                    {tab === 'rfid' ? 'RFID' : tab === 'email' ? 'EMAIL' : 'GOOGLE'}
+                  </button>
+                ))}
               </div>
             </div>
             
-            <div className="flex flex-col items-center justify-center py-4 space-y-12 flex-1">
-              <div className="relative w-64 h-64 flex items-center justify-center mb-4 shrink-0">
-                <div className="absolute inset-0 rounded-full border-2 border-[#355872]/20 animate-pulse" />
-                <div className="absolute inset-8 rounded-full border border-[#355872]/10" />
-                <div className="relative p-16 bg-black/50 rounded-full ring-2 ring-[#355872]/30 shadow-inner overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#355872]/20 to-transparent" />
-                   <Scan className="h-20 w-20 text-[#355872]/80 relative z-10" />
+            {/* Central HUD Scanner */}
+            <div className="flex flex-col items-center justify-center py-2 space-y-10 flex-1">
+              <div className="relative w-44 h-44 flex items-center justify-center mb-2 shrink-0">
+                <div className="absolute inset-0 rounded-full border border-[#355872]/20 animate-pulse" />
+                <div className="absolute inset-4 rounded-full border border-[#355872]/10" />
+                <div className="relative p-10 bg-black/40 rounded-full ring-1 ring-[#355872]/20 shadow-inner overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-t from-[#355872]/10 to-transparent" />
+                   <Scan className="h-12 w-12 text-[#355872]/60 relative z-10" />
                 </div>
                 
-                <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-[#355872]/40 rounded-tl-3xl" />
-                <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-[#355872]/40 rounded-tr-3xl" />
-                <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-[#355872]/40 rounded-bl-3xl" />
-                <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-[#355872]/40 rounded-br-3xl" />
+                {/* Corner Frame Accents */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#355872]/40 rounded-tl-xl" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#355872]/40 rounded-tr-xl" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#355872]/40 rounded-bl-xl" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#355872]/40 rounded-br-xl" />
               </div>
 
-              <div className="text-center space-y-3 shrink-0">
-                <h3 className="text-base font-black text-white uppercase tracking-[0.5em] drop-shadow-[0_0_10px_rgba(53,88,114,0.5)]">SCANNER ACTIVE</h3>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">AWAITING IDENTITY CARD HANDSHAKE</p>
+              <div className="text-center space-y-2 shrink-0">
+                <h3 className="text-[11px] font-black text-white uppercase tracking-[0.4em]">SCANNER ACTIVE</h3>
+                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">AWAITING IDENTITY CARD</p>
               </div>
 
-              <div className="w-full space-y-8 flex-1 flex flex-col justify-end">
+              {/* Dynamic Input Forms */}
+              <div className="w-full space-y-6 flex-1 flex flex-col justify-center">
                 {activeTab === 'rfid' ? (
                   <form onSubmit={handleAuth} className="space-y-6 w-full">
-                    <div className="relative">
+                    <div className="relative group">
                       <Input 
                         placeholder="00-00000-000" 
                         value={rfid} 
                         onChange={(e) => setRfid(e.target.value)} 
-                        className="h-24 text-center text-3xl font-mono font-black border-none bg-black/50 rounded-[2rem] text-white focus:ring-2 focus:ring-[#355872]/60 transition-all shadow-inner placeholder:text-slate-800" 
+                        className="h-16 text-center text-xl font-mono font-bold border border-white/10 bg-black/40 rounded-2xl text-white focus:ring-1 focus:ring-white transition-all shadow-inner placeholder:text-slate-800" 
                       />
                     </div>
                     <Button 
                       type="submit" 
                       disabled={isLoading} 
-                      className="w-full h-24 bg-[#355872] hover:bg-[#355872]/90 text-white font-black text-sm uppercase tracking-[0.3em] rounded-[2rem] shadow-2xl shadow-black/40 transition-all active:scale-[0.98] group"
+                      className="w-full h-16 bg-[#355872] hover:bg-[#355872]/90 text-white font-black text-[10px] uppercase tracking-[0.3em] rounded-2xl shadow-xl transition-all active:scale-[0.98]"
                     >
-                      {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : "AUTHORIZE IDENTITY ENTRY"}
+                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "VERIFY IDENTITY"}
                     </Button>
                   </form>
                 ) : activeTab === 'email' ? (
-                  <form onSubmit={handleAuth} className="space-y-8 w-full">
+                  <form onSubmit={handleAuth} className="space-y-6 w-full">
                     <div className="space-y-4">
-                      <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] ml-6">INSTITUTIONAL NODE IDENTITY</p>
                       <Input 
                         placeholder={`username@${enforcedDomain}`} 
                         type="email" 
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)} 
-                        className="h-24 rounded-[2rem] border-none bg-black/50 font-bold text-2xl text-white px-12 focus:ring-2 focus:ring-[#355872]/60 transition-all shadow-inner" 
+                        className="h-16 rounded-2xl border border-white/10 bg-black/40 font-bold text-lg text-white px-8 focus:ring-1 focus:ring-white transition-all shadow-inner" 
                       />
                     </div>
                     <Button 
                       type="submit" 
                       disabled={isLoading} 
-                      className="w-full h-24 bg-[#355872] text-white font-black text-sm uppercase tracking-[0.3em] rounded-[2rem] shadow-xl transition-all active:scale-[0.98]"
+                      className="w-full h-16 bg-[#355872] text-white font-black text-[10px] uppercase tracking-[0.3em] rounded-2xl shadow-xl transition-all active:scale-[0.98]"
                     >
-                      {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : "VERIFY NODE PERMISSION"}
+                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "VERIFY IDENTITY"}
                     </Button>
                   </form>
                 ) : (
@@ -229,11 +217,11 @@ export default function KioskAuthPage() {
                     <Button 
                       onClick={handleGoogleLogin} 
                       disabled={isLoading} 
-                      className="w-full h-24 bg-white text-[#0B1218] hover:bg-slate-100 font-black text-sm uppercase tracking-[0.3em] rounded-[2rem] flex items-center justify-center gap-8 shadow-2xl transition-all active:scale-[0.98] group"
+                      className="w-full h-16 bg-white text-[#0B1218] hover:bg-slate-100 font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-4 shadow-xl transition-all active:scale-[0.98]"
                     >
-                      {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : (
+                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                         <>
-                          <svg className="h-8 w-8 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                          <svg className="h-5 w-5" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -248,20 +236,21 @@ export default function KioskAuthPage() {
               </div>
             </div>
 
-            <div className="space-y-8 pt-8 border-t border-white/5 shrink-0">
+            {/* Bottom Controls */}
+            <div className="space-y-6 pt-4 shrink-0">
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/')}
-                className="w-full h-20 text-slate-500 hover:text-white font-black text-[11px] uppercase tracking-[0.5em] rounded-[2rem] bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-6"
+                className="w-full h-14 text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.3em] rounded-2xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
               >
-                <ArrowLeft className="h-5 w-5" />
-                ABORT IDENTITY PROTOCOL
+                <ArrowLeft className="h-3.5 w-3.5" />
+                ABORT PROTOCOL
               </Button>
 
-              <div className="p-6 bg-yellow-500/5 rounded-[2rem] border border-yellow-500/10 flex gap-6 items-center">
-                <Info className="h-5 w-5 text-yellow-500/50 shrink-0" />
-                <p className="text-[9px] font-bold text-yellow-500/40 uppercase leading-relaxed tracking-[0.2em]">
-                  IF AUTHENTICATION FAILS, VERIFY THAT YOUR BROWSER IS NOT BLOCKING POPUPS AND THAT THE ORIGIN ABOVE IS WHITELISTED WITHIN THE UNIVERSITY FIREWALL.
+              <div className="p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 flex gap-4 items-center">
+                <Info className="h-4 w-4 text-yellow-500/40 shrink-0" />
+                <p className="text-[7px] font-bold text-yellow-500/30 uppercase leading-relaxed tracking-wider">
+                  IF AUTHENTICATION FAILS, VERIFY THAT YOUR BROWSER IS NOT BLOCKING POPUPS AND THAT THE ORIGIN ABOVE IS WHITELISTED.
                 </p>
               </div>
             </div>

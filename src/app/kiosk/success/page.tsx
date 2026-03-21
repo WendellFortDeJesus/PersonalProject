@@ -122,7 +122,6 @@ export default function SuccessPage(props: {
   params: Promise<any>;
   searchParams: Promise<any>;
 }) {
-  // Unwrap promises to satisfy Next.js 15 sync-dynamic-apis requirements
   use(props.params);
   use(props.searchParams);
 

@@ -48,7 +48,8 @@ function PurposeSelectionContent() {
       params.set('authMethod', authMethod);
       if (initialEmail) params.set('email', initialEmail);
       if (initialSchoolId) params.set('schoolId', initialSchoolId);
-      router.push(`/kiosk/purpose?${params.toString()}`);
+      // Fixed: Redirecting to registration for new users
+      router.push(`/kiosk/register?${params.toString()}`);
       return;
     }
 
@@ -128,9 +129,9 @@ function PurposeSelectionContent() {
           </Button>
           
           <div className="text-center space-y-4">
-            <h1 className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY INTENT</h1>
+            <h1 className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Intent</h1>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">
-              {isNew ? "Node Registration: Select primary node activity" : "Verification Step: Select node activity"}
+              {isNew ? "Node Registration: Select node activity" : "Verification Step: Select node activity"}
             </p>
           </div>
         </div>
@@ -201,7 +202,6 @@ export default function PurposeSelectionPage(props: {
   params: Promise<any>;
   searchParams: Promise<any>;
 }) {
-  // Unwrap promises to satisfy Next.js 15 sync-dynamic-apis requirements
   use(props.params);
   use(props.searchParams);
 

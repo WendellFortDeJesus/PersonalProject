@@ -73,8 +73,7 @@ function RegistrationContent() {
   });
 
   useEffect(() => {
-    const bits = Array.from({ length: 120 }, () => Math.random() > 0.5 ? '1' : '0');
-    setBinaryBits(bits);
+    setBinaryBits(Array.from({ length: 120 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -192,7 +191,7 @@ function RegistrationContent() {
               </div>
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY RECORD</CardTitle>
+              <CardTitle className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Record</CardTitle>
               <CardDescription className="text-sm font-medium text-slate-500 uppercase tracking-widest">
                 Registry Node Initialization
               </CardDescription>
@@ -422,7 +421,6 @@ export default function RegistrationPage(props: {
   params: Promise<any>;
   searchParams: Promise<any>;
 }) {
-  // Unwrap promises to satisfy Next.js 15 sync-dynamic-apis requirements
   use(props.params);
   use(props.searchParams);
 

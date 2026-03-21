@@ -34,7 +34,6 @@ export default function KioskAuthPage() {
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
 
   useEffect(() => {
-    // Hydration fix: generate binary bits only on client
     setBinaryBits(Array.from({ length: 60 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
@@ -169,7 +168,7 @@ export default function KioskAuthPage() {
   };
 
   return (
-    <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
+    <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
       {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
@@ -201,7 +200,7 @@ export default function KioskAuthPage() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-16 pb-16 space-y-12">
+          <CardContent className="px-16 pb-16 space-y-12 overflow-y-auto max-h-[60vh]">
             {/* Segmented Control */}
             <div className="relative bg-black/40 p-2 rounded-full h-18 border border-white/10 flex items-center shadow-inner">
               <div 
@@ -273,9 +272,19 @@ export default function KioskAuthPage() {
                       </div>
                     </div>
                   </div>
-                  <Button disabled={isLoading} className="w-full h-20 text-[13px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
-                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"}
-                  </Button>
+                  <div className="space-y-6">
+                    <Button disabled={isLoading} className="w-full h-20 text-[13px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
+                      {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => router.push('/')}
+                      className="w-full h-20 text-slate-500 hover:text-red-400 font-black text-[10px] uppercase tracking-[0.5em] bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-red-500/10"
+                    >
+                      <ArrowLeft className="mr-3 h-4 w-4" />
+                      Abort Protocol
+                    </Button>
+                  </div>
                 </form>
               ) : (
                 <form onSubmit={handleAuth} className="space-y-12 animate-fade-in pt-6">
@@ -308,7 +317,7 @@ export default function KioskAuthPage() {
                       onClick={handleGoogleLogin}
                       disabled={isLoading}
                       variant="outline" 
-                      className="w-full h-20 border-white/10 bg-white/5 rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] text-white flex items-center justify-center gap-6 hover:bg-white/10 hover:border-white/20 transition-all group shadow-2xl"
+                      className="w-full h-20 border-white/10 bg-white/5 rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] text-white flex items-center justify-center gap-6 hover:bg-white/10 transition-all group shadow-2xl"
                     >
                       <svg viewBox="0 0 24 24" className="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -318,23 +327,21 @@ export default function KioskAuthPage() {
                       </svg>
                       Continue with Google SSO
                     </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => router.push('/')}
+                      className="w-full h-20 text-slate-500 hover:text-red-400 font-black text-[10px] uppercase tracking-[0.5em] bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-red-500/10"
+                    >
+                      <ArrowLeft className="mr-3 h-4 w-4" />
+                      Abort Protocol
+                    </Button>
                   </div>
                 </form>
               )}
             </div>
 
             <div className="flex flex-col items-center gap-8 pt-8 border-t border-white/5">
-               <div className="flex items-center gap-4">
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => router.push('/')}
-                    className="text-slate-500 hover:text-red-400 font-black text-[10px] uppercase tracking-[0.5em] px-8 h-12 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-red-500/10 hover:border-red-500/20"
-                  >
-                    <ArrowLeft className="mr-3 h-4 w-4" />
-                    Abort Protocol
-                  </Button>
-                  <button className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] hover:text-primary transition-colors duration-300 px-8">Identity Access Assistance</button>
-               </div>
+               <button className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] hover:text-primary transition-colors duration-300">Identity Access Assistance</button>
                <div className="flex items-center gap-4 opacity-40">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   <span className="text-[8px] font-black text-primary uppercase tracking-[0.5em]">Institutional Data Clearance: Node Alpha Only</span>

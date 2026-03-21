@@ -18,8 +18,10 @@ export default function KioskAuthPage() {
   const [rfid, setRfid] = useState('');
   const [activeTab, setActiveTab] = useState<'rfid' | 'email'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [binaryBits, setBinaryBits] = useState<string[]>([]);
   const rfidInputRef = useRef<HTMLInputElement>(null);
+  const hasProcessedRedirect = useRef(false);
   const router = useRouter();
   const { toast } = useToast();
   const db = useFirestore();
@@ -39,55 +41,64 @@ export default function KioskAuthPage() {
 
   // Handle Redirect Result for Google SSO
   useEffect(() => {
-    if (!auth || !db) return;
+    if (!auth || !db || hasProcessedRedirect.current) return;
     
-    getRedirectResult(auth).then(async (result) => {
-      if (result?.user) {
-        const user = result.user;
-        const userEmail = user.email || "";
-        
-        if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-           toast({
-             variant: "destructive",
-             title: "ACCESS RESTRICTED",
-             description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
-           });
-           return;
-        }
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          hasProcessedRedirect.current = true;
+          setIsAuthenticating(true);
+          
+          const user = result.user;
+          const userEmail = user.email || "";
+          
+          if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+             toast({
+               variant: "destructive",
+               title: "ACCESS RESTRICTED",
+               description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
+             });
+             setIsAuthenticating(false);
+             return;
+          }
 
-        setIsLoading(true);
-        const patronsRef = collection(db, 'patrons');
-        const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
-        const querySnapshot = await getDocs(q);
+          const patronsRef = collection(db, 'patrons');
+          const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
+          const querySnapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
-          const params = new URLSearchParams();
-          params.set('isNew', 'true');
-          params.set('authMethod', 'SSO Login');
-          params.set('email', userEmail.toLowerCase());
-          params.set('name', user.displayName || "");
-          router.push(`/kiosk/purpose?${params.toString()}`);
-        } else {
-          const patronDoc = querySnapshot.docs[0];
-          const patronData = patronDoc.data();
-          if (patronData.isBlocked) {
-            router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
+          if (querySnapshot.empty) {
+            const params = new URLSearchParams();
+            params.set('isNew', 'true');
+            params.set('authMethod', 'SSO Login');
+            params.set('email', userEmail.toLowerCase());
+            params.set('name', user.displayName || "");
+            router.push(`/kiosk/purpose?${params.toString()}`);
           } else {
-            router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
+            const patronDoc = querySnapshot.docs[0];
+            const patronData = patronDoc.data();
+            if (patronData.isBlocked) {
+              router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
+            } else {
+              router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
+            }
           }
         }
-      }
-    }).catch((error) => {
-      if (error.code === 'auth/unauthorized-domain') {
+      } catch (error: any) {
+        console.error("Redirect Error:", error);
+        if (error.code === 'auth/unauthorized-domain') {
           toast({
             variant: "destructive",
             title: "GATEWAY REJECTED",
             description: "DOMAIN NOT AUTHORIZED. PLEASE ADD YOUR WORKSTATION URL TO FIREBASE AUTHORIZED DOMAINS.",
           });
+        }
+      } finally {
+        // Only set false if we haven't navigated away
       }
-    }).finally(() => {
-      setIsLoading(false);
-    });
+    };
+
+    checkRedirect();
   }, [auth, db, router, toast, enforcedDomain]);
 
   useEffect(() => {
@@ -196,7 +207,7 @@ export default function KioskAuthPage() {
         toast({
           variant: "destructive",
           title: "SSO INITIATION FAILED",
-          description: "PLEASE CHECK YOUR SYSTEM CONFIGURATION AND GOOGLE CLOUD CREDENTIALS.",
+          description: "PLEASE CHECK YOUR SYSTEM CONFIGURATION.",
         });
       }
     }
@@ -204,6 +215,19 @@ export default function KioskAuthPage() {
 
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
+      {isAuthenticating && (
+        <div className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-3xl flex flex-col items-center justify-center space-y-8 animate-fade-in">
+          <div className="relative">
+            <div className="h-24 w-24 rounded-full border-t-2 border-primary animate-spin" />
+            <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary" />
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Syncing Institutional Identity</h2>
+            <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] animate-pulse">Establishing Secure Session Gateway</p>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />

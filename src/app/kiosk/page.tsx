@@ -82,7 +82,13 @@ export default function KioskAuthPage() {
           toast({
             variant: "destructive",
             title: "DOMAIN NOT AUTHORIZED",
-            description: "Please authorize this workstation domain in Firebase Console.",
+            description: "PLEASE ADD YOUR CURRENT WORKSTATION URL TO FIREBASE AUTHORIZED DOMAINS.",
+          });
+      } else if (error.code === 'auth/operation-not-allowed') {
+          toast({
+            variant: "destructive",
+            title: "PROVIDER DISABLED",
+            description: "PLEASE ENABLE GOOGLE AUTH IN FIREBASE CONSOLE.",
           });
       }
     }).finally(() => {
@@ -187,6 +193,19 @@ export default function KioskAuthPage() {
     } catch (error: any) {
       setIsLoading(false);
       console.error("SSO Initiation Error:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        toast({
+          variant: "destructive",
+          title: "GATEWAY REJECTED",
+          description: "DOMAIN NOT AUTHORIZED. PLEASE UPDATE FIREBASE SETTINGS.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "SSO ERROR",
+          description: "GOOGLE HANDSHAKE FAILED. CHECK SYSTEM CONFIG.",
+        });
+      }
     }
   };
 
@@ -350,7 +369,7 @@ export default function KioskAuthPage() {
                     />
                   </svg>
                 </div>
-                CONTINUE WITH GOOGLE
+                {isLoading ? "INITIALIZING..." : "SIGN IN WITH GOOGLE"}
               </Button>
 
               <Button 

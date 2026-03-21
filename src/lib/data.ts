@@ -1,3 +1,4 @@
+
 export type UserStatus = 'active' | 'blocked';
 
 export interface Patron {
@@ -5,7 +6,7 @@ export interface Patron {
   schoolId: string;
   name: string;
   email: string;
-  role: 'Student' | 'Faculty' | 'Staff' | 'Visitor';
+  role: 'Admin' | 'Student' | 'Faculty' | 'Staff' | 'Visitor';
   departments: string[];
   age: number;
   gender: string;

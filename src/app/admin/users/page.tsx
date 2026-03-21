@@ -256,6 +256,7 @@ export default function UserManagementPage() {
                 <Select value={editingPatron?.role || 'Student'} onValueChange={(v) => setEditingPatron({ ...editingPatron, role: v })}>
                   <SelectTrigger className="h-14 font-bold border-slate-200 rounded-2xl text-base shadow-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Admin" className="text-xs font-bold">Admin</SelectItem>
                     <SelectItem value="Student" className="text-xs font-bold">Student</SelectItem>
                     <SelectItem value="Faculty" className="text-xs font-bold">Faculty</SelectItem>
                     <SelectItem value="Staff" className="text-xs font-bold">Staff</SelectItem>

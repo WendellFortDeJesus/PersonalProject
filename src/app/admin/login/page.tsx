@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     // SECURITY ENFORCEMENT: Hardcoded institutional credentials
-    if (username === 'jcesperanza@neu.edu.ph' && password === '12345') {
+    if (username.toLowerCase() === 'jcesperanza@neu.edu.ph' && password === '12345') {
       try {
         await signInAnonymously(auth);
         setIsLoading(false);

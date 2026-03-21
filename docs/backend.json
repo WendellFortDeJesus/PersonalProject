@@ -10,7 +10,7 @@
         "schoolId": { "type": "string", "description": "RFID or School ID" },
         "name": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["Student", "Faculty", "Staff", "Visitor"] },
+        "role": { "type": "string", "enum": ["Admin", "Student", "Faculty", "Staff", "Visitor"] },
         "departments": { "type": "array", "items": { "type": "string" } },
         "age": { "type": "number" },
         "isBlocked": { "type": "boolean" },

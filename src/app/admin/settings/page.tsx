@@ -18,14 +18,13 @@ import {
   Database, 
   Fingerprint, 
   Globe, 
-  Smartphone, 
   Eraser, 
-  Download, 
   Plus, 
   Trash2, 
   Save,
   AlertCircle,
-  Skull
+  Skull,
+  UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -60,6 +59,7 @@ export default function SettingsPage() {
   // Pillar 2
   const [depts, setDepts] = useState<any[]>([]);
   const [purposes, setPurposes] = useState<any[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
 
   useEffect(() => {
     if (settings) {
@@ -69,6 +69,7 @@ export default function SettingsPage() {
       setEnableSso(settings.allowEmailLogin ?? true);
       setDepts(settings.departments || []);
       setPurposes(settings.purposes || []);
+      setRoles(settings.roles || ['Student', 'Visitor']);
     }
   }, [settings]);
 
@@ -96,6 +97,14 @@ export default function SettingsPage() {
   const addPurpose = () => setPurposes([...purposes, { id: Date.now().toString(), label: '', icon: 'BookOpen' }]);
   const removePurpose = (id: string) => setPurposes(purposes.filter(p => p.id !== id));
 
+  const addRole = () => setRoles([...roles, '']);
+  const updateRole = (idx: number, val: string) => {
+    const newRoles = [...roles];
+    newRoles[idx] = val;
+    setRoles(newRoles);
+  };
+  const removeRole = (idx: number) => setRoles(roles.filter((_, i) => i !== idx));
+
   const handleSavePillar2 = async () => {
     if (!db) return;
     setIsSaving(true);
@@ -103,8 +112,9 @@ export default function SettingsPage() {
       await setDoc(settingsRef!, {
         departments: depts,
         purposes: purposes,
+        roles: roles.filter(r => r.trim() !== ''),
       }, { merge: true });
-      toast({ title: "Registry Synchronized", description: "Academic units and intents have been updated." });
+      toast({ title: "Registry Synchronized", description: "Academic units, intents, and roles have been updated." });
     } catch (e) {
       toast({ variant: "destructive", title: "Update Error", description: "Failed to save registry changes." });
     } finally {
@@ -326,30 +336,67 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-500">Visit Intents (Purposes)</h3>
-                  <Button onClick={addPurpose} variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-lg px-4 gap-2">
-                    <Plus className="h-3.5 w-3.5" /> Add Intent
-                  </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-500">Visit Intents (Purposes)</h3>
+                    <Button onClick={addPurpose} variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-lg px-4 gap-2">
+                      <Plus className="h-3.5 w-3.5" /> Add Intent
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {purposes.map((p, idx) => (
+                      <div key={p.id || idx} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-3 shadow-sm group">
+                        <Input 
+                          value={p.label} 
+                          onChange={(e) => {
+                            const newPurp = [...purposes];
+                            newPurp[idx].label = e.target.value;
+                            setPurposes(newPurp);
+                          }}
+                          className="h-10 font-bold text-xs rounded-xl flex-1 bg-white border-none shadow-inner" 
+                        />
+                        <Button variant="ghost" size="sm" onClick={() => removePurpose(p.id)} className="h-8 w-8 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {purposes.map((p, idx) => (
-                    <div key={p.id || idx} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-3 shadow-sm group">
-                      <Input 
-                        value={p.label} 
-                        onChange={(e) => {
-                          const newPurp = [...purposes];
-                          newPurp[idx].label = e.target.value;
-                          setPurposes(newPurp);
-                        }}
-                        className="h-10 font-bold text-xs rounded-xl flex-1 bg-white border-none shadow-inner" 
-                      />
-                      <Button variant="ghost" size="sm" onClick={() => removePurpose(p.id)} className="h-8 w-8 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <UserCog className="h-4 w-4 text-slate-500" />
+                      <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-500">Institutional Roles</h3>
                     </div>
-                  ))}
+                    <Button onClick={addRole} variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-lg px-4 gap-2">
+                      <Plus className="h-3.5 w-3.5" /> Add Role
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {roles.map((role, idx) => (
+                      <div key={idx} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-3 shadow-sm group">
+                        <Input 
+                          value={role} 
+                          onChange={(e) => updateRole(idx, e.target.value)}
+                          placeholder="Role Name"
+                          className="h-10 font-bold text-xs rounded-xl flex-1 bg-white border-none shadow-inner uppercase tracking-widest" 
+                        />
+                        <Button variant="ghost" size="sm" onClick={() => removeRole(idx)} className="h-8 w-8 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                    {roles.length === 0 && (
+                      <div className="text-center py-8 border border-dashed rounded-2xl border-slate-200">
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">No custom roles defined</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-tight italic">
+                    Note: Roles managed here are for kiosk visitor registration only. Administrative roles are managed through secure protocols.
+                  </p>
                 </div>
               </div>
             </CardContent>

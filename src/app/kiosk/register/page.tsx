@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useEffect, use } from 'react';
@@ -153,6 +154,8 @@ function RegistrationContent() {
     router.push(`/kiosk/purpose?${queryParams.toString()}`);
   };
 
+  const rolesToRender = settings?.roles || ['Student', 'Visitor'];
+
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
@@ -246,8 +249,9 @@ function RegistrationContent() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-[#0B1218] border-white/10 text-white">
-                              <SelectItem value="Student" className="focus:bg-primary/20 focus:text-white font-bold">Student</SelectItem>
-                              <SelectItem value="Visitor" className="focus:bg-primary/20 focus:text-white font-bold">Visitor</SelectItem>
+                              {rolesToRender.map(role => (
+                                <SelectItem key={role} value={role} className="focus:bg-primary/20 focus:text-white font-bold uppercase">{role}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage className="text-red-500 text-xs font-medium ml-4" />
@@ -306,7 +310,7 @@ function RegistrationContent() {
                                   !isRfidAuth ? "text-primary/70 border-l-8 border-primary/50" : "text-white"
                                 )}
                               />
-                              {!isRfidAuth && <Lock className="absolute right-10 top-1/2 -translate-y-1/2 h-6 w-6 text-primary/40" />}
+                              {!isRfidAuth && <Lock className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 text-primary/40" />}
                             </div>
                           </FormControl>
                           <FormMessage className="text-red-500 text-xs font-medium ml-4" />
@@ -414,7 +418,7 @@ export default function RegistrationPage(props: { params: Promise<any>, searchPa
   use(props.searchParams);
 
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Initializing Protocol Node...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing Protocol Node...</div>}>
       <RegistrationContent />
     </Suspense>
   );

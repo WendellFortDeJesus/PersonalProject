@@ -30,7 +30,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -47,7 +47,6 @@ import {
   ShieldX, 
   UserPlus, 
   Filter,
-  MoreVertical,
   CalendarDays,
   Fingerprint
 } from 'lucide-react';
@@ -60,9 +59,16 @@ export default function UserManagementPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [patronToDelete, setPatronToDelete] = useState<any>(null);
   const [selectedDept, setSelectedDept] = useState('all');
+  const [selectedRole, setSelectedRole] = useState('all');
 
   const db = useFirestore();
   const { toast } = useToast();
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   const patronsQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -78,9 +84,10 @@ export default function UserManagementPage() {
                            p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            p.email?.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
-      return matchesSearch && matchesDept;
+      const matchesRole = selectedRole === 'all' || p.role === selectedRole;
+      return matchesSearch && matchesDept && matchesRole;
     });
-  }, [patrons, searchTerm, selectedDept]);
+  }, [patrons, searchTerm, selectedDept, selectedRole]);
 
   const handleSaveChanges = async () => {
     if (!db || !editingPatron) return;
@@ -138,6 +145,10 @@ export default function UserManagementPage() {
     });
   };
 
+  const availableRoles = settings?.roles || ['Student', 'Visitor'];
+  // Include 'Admin' in the admin management UI regardless of kiosk roles
+  const allPossibleRoles = Array.from(new Set(['Admin', ...availableRoles]));
+
   if (isLoading) return (
     <div className="p-32 text-center h-[80vh] flex flex-col items-center justify-center bg-slate-50/50">
       <div className="relative">
@@ -152,7 +163,7 @@ export default function UserManagementPage() {
 
   return (
     <div className="flex flex-col h-full animate-fade-in font-body bg-slate-50/30">
-      <header className="p-8 border-b bg-white flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 shadow-sm sticky top-0 z-30">
+      <header className="p-8 border-b bg-white flex flex-col lg:flex-row lg:items-center justify-between gap-6 shrink-0 shadow-sm sticky top-0 z-30">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary rounded-lg text-white shadow-lg shadow-primary/20">
@@ -163,7 +174,7 @@ export default function UserManagementPage() {
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Institutional Visitor Access Control</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-3">
-          <div className="relative w-full md:w-80 group">
+          <div className="relative w-full md:w-64 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Search ID, Name, or Email..." 
@@ -172,19 +183,34 @@ export default function UserManagementPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="relative w-full md:w-64">
-             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />
-            <Select value={selectedDept} onValueChange={setSelectedDept}>
-              <SelectTrigger className="h-10 pl-10 rounded-xl bg-slate-50 border-slate-200 text-[10px] font-black uppercase tracking-widest">
-                <SelectValue placeholder="All Academic Units" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest">All Academic Units</SelectItem>
-                {DEPARTMENTS.map(d => (
-                  <SelectItem key={d} value={d} className="text-[10px] font-bold uppercase">{d}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:w-48">
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none z-10" />
+              <Select value={selectedDept} onValueChange={setSelectedDept}>
+                <SelectTrigger className="h-10 pl-10 rounded-xl bg-slate-50 border-slate-200 text-[10px] font-black uppercase tracking-widest">
+                  <SelectValue placeholder="All Units" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest">All Units</SelectItem>
+                  {DEPARTMENTS.map(d => (
+                    <SelectItem key={d} value={d} className="text-[10px] font-bold uppercase">{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="relative flex-1 md:w-40">
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-slate-200 text-[10px] font-black uppercase tracking-widest">
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest">All Roles</SelectItem>
+                  {allPossibleRoles.map(role => (
+                    <SelectItem key={role} value={role} className="text-[10px] font-bold uppercase">{role}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </header>
@@ -347,11 +373,9 @@ export default function UserManagementPage() {
                   <Select value={editingPatron?.role || 'Student'} onValueChange={(v) => setEditingPatron({ ...editingPatron, role: v })}>
                     <SelectTrigger className="h-12 font-bold border-none bg-white rounded-xl text-sm shadow-sm"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Admin" className="text-xs font-bold uppercase">Admin</SelectItem>
-                      <SelectItem value="Student" className="text-xs font-bold uppercase">Student</SelectItem>
-                      <SelectItem value="Faculty" className="text-xs font-bold uppercase">Faculty</SelectItem>
-                      <SelectItem value="Staff" className="text-xs font-bold uppercase">Staff</SelectItem>
-                      <SelectItem value="Visitor" className="text-xs font-bold uppercase">Visitor</SelectItem>
+                      {allPossibleRoles.map(role => (
+                        <SelectItem key={role} value={role} className="text-xs font-bold uppercase">{role}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

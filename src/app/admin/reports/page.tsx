@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 import { 
@@ -54,6 +54,12 @@ export default function ReportsPage() {
     setGeneratedOn(format(new Date(), 'MMMM dd, yyyy HH:mm'));
   }, []);
 
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, 'system_config', 'settings');
+  }, [db]);
+  const { data: settings } = useDoc(settingsRef);
+
   const visitsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return query(collection(db, 'visits'), orderBy('timestamp', 'desc'));
@@ -78,7 +84,7 @@ export default function ReportsPage() {
 
   const reportStats = useMemo(() => {
     const students = filteredVisits.filter(v => v.patronRole === 'Student').length;
-    const employees = filteredVisits.filter(v => v.patronRole === 'Faculty' || v.patronRole === 'Staff').length;
+    const employees = filteredVisits.filter(v => v.patronRole === 'Faculty' || v.patronRole === 'Staff' || v.patronRole === 'Admin').length;
     const external = filteredVisits.filter(v => v.patronRole === 'Visitor').length;
 
     const purposeMap = filteredVisits.reduce((acc, v) => {
@@ -125,6 +131,10 @@ export default function ReportsPage() {
   const handlePrint = () => {
     window.print();
   };
+
+  const availableRoles = settings?.roles || ['Student', 'Visitor'];
+  // Include 'Admin' in audit filters as some logs might contain it
+  const allPossibleRoles = Array.from(new Set(['Admin', ...availableRoles]));
 
   return (
     <div className="p-6 space-y-6 animate-fade-in max-w-[1400px] mx-auto overflow-x-hidden">
@@ -222,10 +232,9 @@ export default function ReportsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all" className="font-bold text-[10px]">All Roles</SelectItem>
-                <SelectItem value="Student" className="font-bold text-[10px]">Student</SelectItem>
-                <SelectItem value="Faculty" className="font-bold text-[10px]">Faculty</SelectItem>
-                <SelectItem value="Staff" className="font-bold text-[10px]">Staff</SelectItem>
-                <SelectItem value="Visitor" className="font-bold text-[10px]">Visitor</SelectItem>
+                {allPossibleRoles.map(r => (
+                  <SelectItem key={r} value={r} className="font-bold text-[10px]">{r}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -333,7 +342,7 @@ export default function ReportsPage() {
           </div>
           <div className="flex items-center gap-2 text-primary opacity-20 select-none">
             <ShieldCheck className="h-6 w-6" />
-            <span className="text-[8px] font-black uppercase tracking-[0.3em]">PATRONPOINT SECURE AUDIT</span>
+            <span className="text-[8px] font-black uppercase tracking-widest tracking-[0.3em]">PATRONPOINT SECURE AUDIT</span>
           </div>
         </div>
       </div>

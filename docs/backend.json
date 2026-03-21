@@ -10,7 +10,7 @@
         "schoolId": { "type": "string", "description": "RFID or School ID" },
         "name": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["Admin", "Student", "Faculty", "Staff", "Visitor"] },
+        "role": { "type": "string" },
         "departments": { "type": "array", "items": { "type": "string" } },
         "age": { "type": "number" },
         "isBlocked": { "type": "boolean" },
@@ -54,9 +54,8 @@
             "properties": {
               "id": { "type": "string" },
               "name": { "type": "string" },
-              "code": { "type": "string" },
-              "isActive": { "type": "boolean" },
-              "color": { "type": "string" }
+              "color": { "type": "string" },
+              "isActive": { "type": "boolean" }
             }
           }
         },
@@ -70,6 +69,10 @@
               "icon": { "type": "string" }
             }
           } 
+        },
+        "roles": {
+          "type": "array",
+          "items": { "type": "string" }
         },
         "capacityLimit": { "type": "number", "default": 200 },
         "allowEmailLogin": { "type": "boolean", "default": true },

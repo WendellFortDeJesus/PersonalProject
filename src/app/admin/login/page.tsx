@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -56,14 +57,15 @@ export default function AdminLoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Strict Domain Enforcement
-      if (!user.email?.endsWith('@neu.edu.ph')) {
+      // Secure Administrative Identity Verification
+      // Only the specific administrative account is permitted terminal entry
+      if (user.email !== 'jcesperanza@neu.edu.ph') {
         await signOut(auth);
         setIsLoading(false);
         toast({
           variant: "destructive",
           title: "Access Restricted",
-          description: "Only @neu.edu.ph accounts are authorized for terminal access.",
+          description: "This account is not authorized for administrative terminal access. Only jcesperanza@neu.edu.ph is permitted.",
         });
         return;
       }

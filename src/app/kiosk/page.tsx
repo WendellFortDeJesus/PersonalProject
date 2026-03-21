@@ -131,7 +131,7 @@ export default function KioskAuthPage() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12 space-y-8 flex-1 flex flex-col no-scrollbar">
+          <CardContent className="px-10 pb-12 space-y-6 flex-1 flex flex-col no-scrollbar overflow-hidden">
             {/* Tab Navigation */}
             <div className="bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
               <div className="flex gap-1">
@@ -149,15 +149,27 @@ export default function KioskAuthPage() {
                 ))}
               </div>
             </div>
+
+            {/* Abort Control - Moved up for better visibility */}
+            <div className="shrink-0">
+              <Button 
+                variant="ghost" 
+                onClick={() => router.push('/')}
+                className="w-full h-12 text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.3em] rounded-2xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                ABORT PROTOCOL
+              </Button>
+            </div>
             
             {/* Central HUD Scanner */}
-            <div className="flex flex-col items-center justify-center py-2 space-y-10 flex-1">
-              <div className="relative w-44 h-44 flex items-center justify-center mb-2 shrink-0">
+            <div className="flex flex-col items-center justify-center py-2 space-y-8 flex-1 overflow-hidden">
+              <div className="relative w-40 h-40 flex items-center justify-center mb-2 shrink-0">
                 <div className="absolute inset-0 rounded-full border border-[#355872]/20 animate-pulse" />
                 <div className="absolute inset-4 rounded-full border border-[#355872]/10" />
-                <div className="relative p-10 bg-black/40 rounded-full ring-1 ring-[#355872]/20 shadow-inner overflow-hidden">
+                <div className="relative p-8 bg-black/40 rounded-full ring-1 ring-[#355872]/20 shadow-inner overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-t from-[#355872]/10 to-transparent" />
-                   <Scan className="h-12 w-12 text-[#355872]/60 relative z-10" />
+                   <Scan className="h-10 w-10 text-[#355872]/60 relative z-10" />
                 </div>
                 
                 {/* Corner Frame Accents */}
@@ -167,13 +179,13 @@ export default function KioskAuthPage() {
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#355872]/40 rounded-br-xl" />
               </div>
 
-              <div className="text-center space-y-2 shrink-0">
-                <h3 className="text-[11px] font-black text-white uppercase tracking-[0.4em]">SCANNER ACTIVE</h3>
-                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">AWAITING IDENTITY CARD</p>
+              <div className="text-center space-y-1 shrink-0">
+                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">SCANNER ACTIVE</h3>
+                <p className="text-[7px] font-bold text-slate-500 uppercase tracking-[0.2em]">AWAITING IDENTITY CARD</p>
               </div>
 
               {/* Dynamic Input Forms */}
-              <div className="w-full space-y-6 flex-1 flex flex-col justify-center">
+              <div className="w-full space-y-6 flex-1 flex flex-col justify-center max-w-lg mx-auto">
                 {activeTab === 'rfid' ? (
                   <form onSubmit={handleAuth} className="space-y-6 w-full">
                     <div className="relative group">
@@ -233,18 +245,6 @@ export default function KioskAuthPage() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Bottom Controls */}
-            <div className="pt-4 shrink-0 flex flex-col items-center gap-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => router.push('/')}
-                className="w-full h-14 text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.3em] rounded-2xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                ABORT PROTOCOL
-              </Button>
             </div>
           </CardContent>
         </Card>

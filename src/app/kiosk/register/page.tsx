@@ -10,10 +10,10 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
-import { ArrowLeft, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Loader2, ShieldCheck, Lock } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -23,13 +23,12 @@ const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
 
 const formSchema = z.object({
   name: z.string().min(1, "Full legal name is required"),
-  gender: z.string().min(1, "Select your gender identity"),
   department: z.string().min(1, "Select your academic unit"),
   age: z.string().min(1, "Age index is required").refine((val) => !isNaN(parseInt(val)), "Age must be a numeric value"),
   purposeId: z.string().min(1, "Select your primary purpose of visit"),
   role: z.string().min(1, "Institutional role is required"),
-  schoolId: z.string().optional(),
-  email: z.string().optional(),
+  schoolId: z.string().min(1, "Verification requires valid School ID (24-12345-123)"),
+  email: z.string().email("Invalid institutional email format"),
 });
 
 function RegistrationContent() {
@@ -54,7 +53,6 @@ function RegistrationContent() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      gender: '',
       department: '',
       age: '',
       purposeId: initialPurposeId,
@@ -64,7 +62,6 @@ function RegistrationContent() {
     },
   });
 
-  // Keep purpose synchronized if it comes from URL
   useEffect(() => {
     if (initialPurposeId) {
       form.setValue('purposeId', initialPurposeId);
@@ -76,28 +73,22 @@ function RegistrationContent() {
 
     const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
     
-    if (isRfidAuth) {
-      if (!values.email || !values.email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-        form.setError('email', { message: `Verification requires a valid @${enforcedDomain} email` });
-        return;
-      }
-    } else {
-      if (!values.schoolId || !SCHOOL_ID_REGEX.test(values.schoolId)) {
-        form.setError('schoolId', { message: "Verification requires valid School ID (24-12345-123)" });
-        return;
-      }
+    if (!values.email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+      form.setError('email', { message: `Verification requires a valid @${enforcedDomain} email` });
+      return;
+    }
+
+    if (!SCHOOL_ID_REGEX.test(values.schoolId)) {
+      form.setError('schoolId', { message: "Format must be 24-12345-123" });
+      return;
     }
 
     setIsLoading(true);
     try {
-      const finalSchoolId = isRfidAuth ? initialSchoolId : values.schoolId;
-      const finalEmail = isRfidAuth ? values.email : initialEmail;
-
       const patronData = {
-        schoolId: finalSchoolId,
-        email: finalEmail,
+        schoolId: values.schoolId,
+        email: values.email,
         name: values.name.toUpperCase(),
-        gender: values.gender,
         departments: [values.department],
         age: Number(values.age),
         role: values.role,
@@ -118,11 +109,10 @@ function RegistrationContent() {
       const purpose = (settings?.purposes || PURPOSES).find((p: any) => p.id === values.purposeId)?.label || "Other";
       const visitData = {
         patronId: patronDoc.id,
-        schoolId: finalSchoolId,
-        patronEmail: finalEmail,
+        schoolId: values.schoolId,
+        patronEmail: values.email,
         authMethod,
         patronName: values.name.toUpperCase(),
-        patronGender: values.gender,
         patronDepartments: [values.department],
         patronAge: Number(values.age),
         patronRole: values.role,
@@ -203,35 +193,56 @@ function RegistrationContent() {
                     )}
                   />
 
-                  {isRfidAuth ? (
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Verify Institutional Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} type="email" {...field} className="h-12 rounded-xl font-bold border-slate-200" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ) : (
-                    <FormField
-                      control={form.control}
-                      name="schoolId"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Verify School ID (24-12345-123)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="24-12345-123" {...field} className="h-12 rounded-xl font-bold border-slate-200" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                  <FormField
+                    control={form.control}
+                    name="schoolId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">School ID (24-12345-123)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder="24-12345-123" 
+                              {...field} 
+                              readOnly={isRfidAuth}
+                              className={cn(
+                                "h-12 rounded-xl font-bold border-slate-200",
+                                isRfidAuth && "bg-slate-50 border-slate-100 pr-10"
+                              )} 
+                            />
+                            {isRfidAuth && <Lock className="absolute right-3 top-3.5 h-4 w-4 text-slate-300" />}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Institutional Email</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
+                              type="email" 
+                              {...field} 
+                              readOnly={!isRfidAuth}
+                              className={cn(
+                                "h-12 rounded-xl font-bold border-slate-200",
+                                !isRfidAuth && "bg-slate-50 border-slate-100 pr-10"
+                              )}
+                            />
+                            {!isRfidAuth && <Lock className="absolute right-3 top-3.5 h-4 w-4 text-slate-300" />}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}
@@ -273,32 +284,9 @@ function RegistrationContent() {
 
                   <FormField
                     control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Gender Identity</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl font-bold">
-                              <SelectValue placeholder="Select Gender" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="purposeId"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="md:col-span-2">
                         <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Visit Purpose</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>

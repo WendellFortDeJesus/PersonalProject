@@ -51,7 +51,6 @@ export default function UserManagementPage() {
 
   const patronsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    // Sorted by createdAt descending so new visitors appear first
     return query(collection(db, 'patrons'), orderBy('createdAt', 'desc'));
   }, [db]);
 
@@ -61,7 +60,8 @@ export default function UserManagementPage() {
     if (!patrons) return [];
     return patrons.filter(p => {
       const matchesSearch = (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()));
+                           p.schoolId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           p.email?.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesDept = selectedDept === 'all' || p.departments?.includes(selectedDept);
       return matchesSearch && matchesDept;
     });
@@ -141,7 +141,7 @@ export default function UserManagementPage() {
           <div className="relative w-full md:w-80">
             <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search Name or Registry ID..." 
+              placeholder="Search Name, ID, or Email..." 
               className="h-11 pl-11 rounded-2xl border-slate-200 text-sm font-bold bg-slate-50 focus-visible:ring-primary shadow-inner"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -178,7 +178,7 @@ export default function UserManagementPage() {
                   <TableCell className="pl-10 py-2">
                     <div className="flex flex-col">
                       <span className="text-[11px] font-black tracking-tight uppercase text-primary leading-tight">{patron.name}</span>
-                      <span className="text-[9px] font-mono font-bold text-slate-400">{patron.schoolId}</span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400">{patron.schoolId} | {patron.email}</span>
                     </div>
                   </TableCell>
                   <TableCell className="py-2">
@@ -235,8 +235,12 @@ export default function UserManagementPage() {
                 <Input value={editingPatron?.name || ''} onChange={(e) => setEditingPatron({ ...editingPatron, name: e.target.value.toUpperCase() })} className="h-14 font-black uppercase border-slate-200 rounded-2xl text-base shadow-sm" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">School Registry ID (24-12345-123)</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">School Registry ID</Label>
                 <Input value={editingPatron?.schoolId || ''} onChange={(e) => setEditingPatron({ ...editingPatron, schoolId: e.target.value })} className="h-14 font-bold border-slate-200 rounded-2xl text-base shadow-sm" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Email Address</Label>
+                <Input value={editingPatron?.email || ''} onChange={(e) => setEditingPatron({ ...editingPatron, email: e.target.value })} className="h-14 font-bold border-slate-200 rounded-2xl text-base shadow-sm" />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Institutional Unit</Label>

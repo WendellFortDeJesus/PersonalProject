@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, RefreshCw, Info, Globe, ExternalLink } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
@@ -18,7 +18,6 @@ export default function KioskAuthPage() {
   const [rfid, setRfid] = useState('');
   const [activeTab, setActiveTab] = useState<'rfid' | 'email' | 'google'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentOrigin, setCurrentOrigin] = useState('');
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -32,12 +31,6 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentOrigin(window.location.origin);
-    }
-  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,7 +147,6 @@ export default function KioskAuthPage() {
     } catch (error: any) {
       setIsLoading(false);
       
-      // Specifically handle common auth errors to prevent messy UI notifications
       if (error.code === 'auth/popup-blocked') {
         toast({
           variant: "destructive",
@@ -164,13 +156,7 @@ export default function KioskAuthPage() {
       } else if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: "SIGN-IN CANCELLED",
-          description: "THE AUTHENTICATION WINDOW WAS CLOSED BEFORE COMPLETION.",
-        });
-      } else if (error.code === 'auth/internal-error' || error.message?.includes('403')) {
-        toast({
-          variant: "destructive",
-          title: "403: GATEWAY BLOCKED",
-          description: "THE ORIGIN URL BELOW MUST BE ADDED TO GOOGLE CLOUD JS ORIGINS.",
+          description: "THE AUTHORIZATION WINDOW WAS CLOSED BEFORE COMPLETION.",
         });
       } else {
         toast({
@@ -307,30 +293,6 @@ export default function KioskAuthPage() {
                           )}
                         </Button>
                       </div>
-                   </div>
-                   
-                   <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-3 w-3 text-blue-400" />
-                        <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Diagnostic Origin</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <code className="text-[7px] font-mono text-white/60 truncate max-w-[200px]">{currentOrigin}</code>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 px-2 text-[7px] font-black uppercase text-blue-400 hover:bg-blue-400/10"
-                          onClick={() => {
-                            navigator.clipboard.writeText(currentOrigin);
-                            toast({ title: "Copied!", description: "Origin URL copied to clipboard." });
-                          }}
-                        >
-                          Copy URL
-                        </Button>
-                      </div>
-                      <p className="text-[7px] font-bold text-white/30 uppercase tracking-tighter text-left">
-                        * ENSURE THIS EXACT URL IS IN GOOGLE CLOUD JS ORIGINS
-                      </p>
                    </div>
                 </div>
               )}

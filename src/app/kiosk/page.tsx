@@ -31,6 +31,7 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
+  const ADMIN_EMAIL = 'jcesperanza@neu.edu.ph';
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,14 +55,26 @@ export default function KioskAuthPage() {
         return;
       }
 
-      if (activeTab === 'email' && !email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "ACCESS RESTRICTED",
-          description: `ONLY @${enforcedDomain} ACCOUNTS ARE ALLOWED.`,
-        });
-        return;
+      if (activeTab === 'email') {
+        const lowerEmail = email.toLowerCase();
+        if (lowerEmail === ADMIN_EMAIL) {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "RESTRICTED NODE",
+            description: "ADMIN IDENTITY DETECTED. PLEASE USE STAFF TERMINAL.",
+          });
+          return;
+        }
+        if (!lowerEmail.endsWith(`@${enforcedDomain}`)) {
+          setIsLoading(false);
+          toast({
+            variant: "destructive",
+            title: "ACCESS RESTRICTED",
+            description: `ONLY @${enforcedDomain} ACCOUNTS ARE ALLOWED.`,
+          });
+          return;
+        }
       }
 
       const field = activeTab === 'rfid' ? 'schoolId' : 'email';
@@ -112,9 +125,19 @@ export default function KioskAuthPage() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      const userEmail = user.email || "";
+      const userEmail = (user.email || "").toLowerCase();
 
-      if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+      if (userEmail === ADMIN_EMAIL) {
+        toast({
+          variant: "destructive",
+          title: "RESTRICTED IDENTITY",
+          description: "ADMIN ACCESS IS ONLY PERMITTED VIA STAFF TERMINAL.",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!userEmail.endsWith(`@${enforcedDomain}`)) {
         toast({
           variant: "destructive",
           title: "DOMAIN REJECTED",
@@ -125,15 +148,14 @@ export default function KioskAuthPage() {
       }
 
       const patronsRef = collection(db, 'patrons');
-      const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
+      const q = query(patronsRef, where('email', '==', userEmail), limit(1));
       const querySnapshot = await getDocs(q);
 
-      // Standard flow for ALL users (including admin) in Kiosk mode
       if (querySnapshot.empty) {
         const params = new URLSearchParams();
         params.set('isNew', 'true');
         params.set('authMethod', 'SSO Login');
-        params.set('email', userEmail.toLowerCase());
+        params.set('email', userEmail);
         params.set('name', user.displayName || "");
         router.push(`/kiosk/purpose?${params.toString()}`);
       } else {
@@ -157,7 +179,7 @@ export default function KioskAuthPage() {
       } else if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: "SIGN-IN CANCELLED",
-          description: "THE AUTHORIZATION WINDOW WAS CLOSED BEFORE COMPLETION.",
+          description: "THE AUTHORIZATION WINDOW WAS CLOSED.",
         });
       } else {
         toast({
@@ -313,7 +335,7 @@ export default function KioskAuthPage() {
               <div className="p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 flex items-start gap-3">
                  <Info className="h-4 w-4 text-yellow-500/40 shrink-0 mt-0.5" />
                  <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-relaxed">
-                   If authentication fails, verify that your browser is not blocking popups and that the origin above is whitelisted.
+                   Admin access is restricted to the staff terminal node. Student kiosk is for general campus identity verification only.
                  </p>
               </div>
             </div>

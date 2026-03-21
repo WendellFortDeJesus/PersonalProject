@@ -42,6 +42,7 @@ function PurposeSelectionContent() {
     if (isSubmitting) return;
     setSelected(id);
 
+    // If this is a new identity, proceed to registration node
     if (isNew) {
       const queryParams = new URLSearchParams();
       queryParams.set('purposeId', id);
@@ -52,32 +53,52 @@ function PurposeSelectionContent() {
       return;
     }
 
-    if (!patronId || !db) return;
+    // Safety check for existing identity reference
+    if (!patronId || !db) {
+      toast({
+        variant: "destructive",
+        title: "IDENTITY SYNC ERROR",
+        description: "SYSTEM FAILED TO RESOLVE PATRON NODE. PLEASE RE-SCAN.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       const patronRef = doc(db, 'patrons', patronId);
       const patronSnap = await getDoc(patronRef);
-      if (!patronSnap.exists()) throw new Error("Patron not found");
+      
+      if (!patronSnap.exists()) {
+        toast({
+          variant: "destructive",
+          title: "REGISTRY MISMATCH",
+          description: "NO IDENTITY FOUND FOR THE PROVIDED TOKEN.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
       const patronData = patronSnap.data();
       const currentPurposes = settings?.purposes || PURPOSES;
       const purposeLabel = currentPurposes.find((p: any) => p.id === id)?.label || "Other";
 
+      // Construct institutional visit record
       const visitData = {
         patronId,
         schoolId: patronData.schoolId,
         patronEmail: patronData.email,
         authMethod: authMethod,
         patronName: patronData.name.toUpperCase(),
-        patronDepartments: patronData.departments,
-        patronAge: patronData.age,
+        patronDepartments: patronData.departments || [],
+        patronAge: patronData.age || 0,
         patronRole: patronData.role || 'Student',
         purpose: purposeLabel,
         timestamp: new Date().toISOString(),
         status: "granted"
       };
 
+      // Log activity to the audit trail
       addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'visits',
@@ -86,16 +107,21 @@ function PurposeSelectionContent() {
         }));
       });
 
+      // Synchronize terminal UI to success state
       router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}&name=${encodeURIComponent(patronData.name)}`);
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Log Entry Error",
-        description: "Failed to record visit. Please try again.",
+        title: "PROTOCOL AUDIT ERROR",
+        description: "FAILED TO SYNCHRONIZE LOG ENTRY. RETRYING...",
       });
       setIsSubmitting(false);
     }
   };
+
+  const purposesToRender = settings?.purposes && settings.purposes.length > 0 
+    ? settings.purposes 
+    : PURPOSES;
 
   return (
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
@@ -127,13 +153,13 @@ function PurposeSelectionContent() {
           <div className="text-center space-y-4">
             <h1 className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Intent</h1>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">
-              {isNew ? "Node Registration: Select node activity" : "Verification Step: Select node activity"}
+              {isNew ? "Node Registration: Select activity" : "Verification Step: Select activity"}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {(settings?.purposes || PURPOSES).map((purpose: any) => {
+          {purposesToRender.map((purpose: any) => {
             const IconComponent = (Icons as any)[purpose.icon] || Icons.HelpCircle;
             const isActive = selected === purpose.id;
             const isPending = isActive && isSubmitting;
@@ -197,7 +223,7 @@ function PurposeSelectionContent() {
 export default function PurposeSelectionPage(props: { params: Promise<any>, searchParams: Promise<any> }) {
   // Explicitly unwrap Next.js 15 async dynamic props to avoid Proxy enumeration warnings
   use(props.params);
-  use(props.searchParams);
+  const searchParams = use(props.searchParams);
 
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Segment Node...</div>}>

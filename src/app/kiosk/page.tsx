@@ -10,7 +10,7 @@ import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { cn } from '@/lib/utils';
 
 export default function KioskAuthPage() {
@@ -18,6 +18,7 @@ export default function KioskAuthPage() {
   const [rfid, setRfid] = useState('');
   const [activeTab, setActiveTab] = useState<'rfid' | 'email' | 'google'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [binaryBits, setBinaryBits] = useState<string[]>([]);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -32,6 +33,67 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
+
+  // Handle Google Redirect Result
+  useEffect(() => {
+    if (!auth || !db) return;
+
+    const handleRedirect = async () => {
+      setIsSyncing(true);
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+          const userEmail = user.email || "";
+
+          if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+            toast({
+              variant: "destructive",
+              title: "ACCESS RESTRICTED",
+              description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
+            });
+            setIsSyncing(false);
+            return;
+          }
+
+          const patronsRef = collection(db, 'patrons');
+          const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
+          const querySnapshot = await getDocs(q);
+
+          if (querySnapshot.empty) {
+            const params = new URLSearchParams();
+            params.set('isNew', 'true');
+            params.set('authMethod', 'SSO Login');
+            params.set('email', userEmail.toLowerCase());
+            params.set('name', user.displayName || "");
+            router.push(`/kiosk/purpose?${params.toString()}`);
+          } else {
+            const patronDoc = querySnapshot.docs[0];
+            const patronData = patronDoc.data();
+            if (patronData.isBlocked) {
+              router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
+            } else {
+              router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
+            }
+          }
+        } else {
+          setIsSyncing(false);
+        }
+      } catch (error: any) {
+        setIsSyncing(false);
+        console.error("SSO Handshake Error:", error);
+        if (error.code !== 'auth/no-auth-event') {
+          toast({
+            variant: "destructive",
+            title: "SSO SYNC FAILED",
+            description: error.message || "COULD NOT VALIDATE IDENTITY.",
+          });
+        }
+      }
+    };
+
+    handleRedirect();
+  }, [auth, db, enforcedDomain, router, toast]);
 
   useEffect(() => {
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
@@ -122,7 +184,7 @@ export default function KioskAuthPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth || !db) return;
+    if (!auth) return;
     setIsLoading(true);
     
     const provider = new GoogleAuthProvider();
@@ -132,69 +194,34 @@ export default function KioskAuthPage() {
     });
     
     try {
-      // Use signInWithPopup for better reliability in workstations
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const userEmail = user.email || "";
-      
-      if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-        toast({
-          variant: "destructive",
-          title: "ACCESS RESTRICTED",
-          description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const patronsRef = collection(db, 'patrons');
-      const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        const params = new URLSearchParams();
-        params.set('isNew', 'true');
-        params.set('authMethod', 'SSO Login');
-        params.set('email', userEmail.toLowerCase());
-        params.set('name', user.displayName || "");
-        router.push(`/kiosk/purpose?${params.toString()}`);
-      } else {
-        const patronDoc = querySnapshot.docs[0];
-        const patronData = patronDoc.data();
-        if (patronData.isBlocked) {
-          router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
-        } else {
-          router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
-        }
-      }
+      // Use Redirect instead of Popup to avoid browser blocking
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
-      console.error("SSO Error:", error);
-      
-      if (error.code === 'auth/unauthorized-domain') {
-        toast({
-          variant: "destructive",
-          title: "GATEWAY BLOCKED",
-          description: `PLEASE ADD "${window.location.hostname}" TO FIREBASE AUTHORIZED DOMAINS.`,
-        });
-      } else if (error.code === 'auth/popup-blocked') {
-        toast({
-          variant: "destructive",
-          title: "POPUP BLOCKED",
-          description: "CLICK THE 'WINDOW WITH RED X' ICON IN YOUR ADDRESS BAR (NEXT TO THE STAR) TO ALLOW POPUPS.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "SSO INITIATION FAILED",
-          description: error.message || "PLEASE CHECK YOUR SYSTEM CONFIGURATION.",
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "GATEWAY ERROR",
+        description: error.message || "FAILED TO INITIATE SSO.",
+      });
     }
   };
 
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
+      {/* Syncing Overlay */}
+      {isSyncing && (
+        <div className="absolute inset-0 z-[100] bg-[#0B1218]/90 backdrop-blur-xl flex flex-col items-center justify-center space-y-6">
+          <div className="relative">
+            <div className="h-24 w-24 rounded-full border-t-2 border-primary animate-spin" />
+            <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary" />
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-headline font-black text-white uppercase tracking-tighter">Synchronizing Identity</h2>
+            <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Linking Institutional Registry Node</p>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />

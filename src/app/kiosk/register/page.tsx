@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, Suspense, useEffect, use } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -157,13 +156,11 @@ function RegistrationContent() {
 
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
-      {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
-      {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.05}s` }}>
@@ -201,7 +198,6 @@ function RegistrationContent() {
           <CardContent className="px-16 pb-16 overflow-y-auto max-h-[75vh] no-scrollbar">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-                {/* Section 1: Personal Identity */}
                 <div className="p-12 bg-black/40 rounded-[4rem] border border-white/5 space-y-10 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10 shadow-2xl">
                    <div className="flex items-center gap-4 mb-2">
                     <Fingerprint className="h-8 w-8 text-primary shadow-[0_0_20px_rgba(53,88,114,0.6)]" />
@@ -264,7 +260,6 @@ function RegistrationContent() {
                   </div>
                 </div>
 
-                {/* Section 2: Institutional Verification */}
                 <div className="p-12 bg-black/40 rounded-[4rem] border border-white/5 space-y-10 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <ShieldCheck className="h-8 w-8 text-primary shadow-[0_0_20px_rgba(53,88,114,0.6)]" />
@@ -324,7 +319,6 @@ function RegistrationContent() {
                   </div>
                 </div>
 
-                {/* Section 3: Academic Mapping */}
                 <div className="p-12 bg-black/40 rounded-[4rem] border border-white/5 space-y-10 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <GraduationCap className="h-8 w-8 text-primary shadow-[0_0_20px_rgba(53,88,114,0.6)]" />
@@ -417,13 +411,7 @@ function RegistrationContent() {
   );
 }
 
-export default function RegistrationPage(props: {
-  params: Promise<any>;
-  searchParams: Promise<any>;
-}) {
-  use(props.params);
-  use(props.searchParams);
-
+export default function RegistrationPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Initializing Protocol Node...</div>}>
       <RegistrationContent />

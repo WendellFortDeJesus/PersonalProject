@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, Suspense, useState, use } from 'react';
+import { useEffect, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,13 +40,11 @@ function SuccessContent() {
 
   return (
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
-      {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
-      {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
@@ -118,13 +115,7 @@ function SuccessContent() {
   );
 }
 
-export default function SuccessPage(props: {
-  params: Promise<any>;
-  searchParams: Promise<any>;
-}) {
-  use(props.params);
-  use(props.searchParams);
-
+export default function SuccessPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#0B1218] flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest animate-pulse">Updating Registry...</div>}>
       <SuccessContent />

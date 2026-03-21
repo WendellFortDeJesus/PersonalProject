@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PURPOSES } from '@/lib/data';
 import * as Icons from 'lucide-react';
-import { useState, useEffect, Suspense, use } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +47,6 @@ function PurposeSelectionContent() {
       params.set('authMethod', authMethod);
       if (initialEmail) params.set('email', initialEmail);
       if (initialSchoolId) params.set('schoolId', initialSchoolId);
-      // Fixed: Redirecting to registration for new users
       router.push(`/kiosk/register?${params.toString()}`);
       return;
     }
@@ -101,13 +99,11 @@ function PurposeSelectionContent() {
 
   return (
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
-      {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
-      {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.15}s` }}>
@@ -121,7 +117,7 @@ function PurposeSelectionContent() {
           <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-500 hover:text-white font-medium text-sm h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
+            className="text-slate-500 hover:text-white font-bold text-sm h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
             onClick={() => router.push('/kiosk')}
           >
             <Icons.ArrowLeft className="mr-3 h-4 w-4" />
@@ -198,13 +194,7 @@ function PurposeSelectionContent() {
   );
 }
 
-export default function PurposeSelectionPage(props: {
-  params: Promise<any>;
-  searchParams: Promise<any>;
-}) {
-  use(props.params);
-  use(props.searchParams);
-
+export default function PurposeSelectionPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Segment Node...</div>}>
       <PurposeSelectionContent />

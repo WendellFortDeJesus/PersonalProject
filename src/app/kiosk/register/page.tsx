@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, Suspense, useEffect } from 'react';
@@ -8,10 +9,10 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
-import { ArrowLeft, Loader2, ShieldCheck, Lock, UserCheck } from 'lucide-react';
+import { ArrowLeft, Loader2, ShieldCheck, Lock, UserCheck, Fingerprint, Database, GraduationCap } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -29,6 +30,15 @@ const formSchema = z.object({
   schoolId: z.string().min(1, "Verification requires valid School ID (24-12345-123)"),
   email: z.string().email("Invalid institutional email format"),
 });
+
+const CornerBrackets = () => (
+  <>
+    <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary/30 rounded-tl-3xl pointer-events-none" />
+    <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary/30 rounded-tr-3xl pointer-events-none" />
+    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary/30 rounded-bl-3xl pointer-events-none" />
+    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary/30 rounded-br-3xl pointer-events-none" />
+  </>
+);
 
 function RegistrationContent() {
   const router = useRouter();
@@ -63,15 +73,8 @@ function RegistrationContent() {
   });
 
   useEffect(() => {
-    // Client-side only generation to prevent hydration errors
-    setBinaryBits(Array.from({ length: 48 }, () => Math.random() > 0.5 ? '1' : '0'));
+    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
-
-  useEffect(() => {
-    if (initialPurposeId) {
-      form.setValue('purposeId', initialPurposeId);
-    }
-  }, [initialPurposeId, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db) return;
@@ -153,11 +156,12 @@ function RegistrationContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-y-auto no-scrollbar py-12">
+    <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
       {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
       </div>
 
       {/* Floating Binary Bits Decoration */}
@@ -179,11 +183,12 @@ function RegistrationContent() {
           Abort Registration Protocol
         </Button>
 
-        <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
+        <Card className="relative border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
+          <CornerBrackets />
           <CardHeader className="text-center pt-12 pb-6 px-12 space-y-3">
             <div className="flex justify-center mb-2">
               <div className="relative p-5 bg-primary/20 rounded-[2rem] ring-1 ring-primary/40 shadow-[0_0_30px_rgba(53,88,114,0.3)]">
-                <ShieldCheck className="h-8 w-8 text-primary" />
+                <Database className="h-8 w-8 text-primary" />
               </div>
             </div>
             <div className="space-y-1">
@@ -194,120 +199,157 @@ function RegistrationContent() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12">
+          <CardContent className="px-10 pb-12 overflow-y-auto max-h-[60vh] no-scrollbar">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+                {/* Section 1: Personal Identity */}
+                <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 relative overflow-hidden group transition-all hover:bg-black/50">
+                   <div className="flex items-center gap-3 mb-2">
+                    <Fingerprint className="h-4 w-4 text-primary" />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Personal Identity Node</h3>
+                  </div>
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-4">Full Legal Identity</FormLabel>
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Full Legal Identity</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="JUAN DELA CRUZ" 
                             {...field} 
-                            className="h-14 rounded-2xl border-none bg-black/40 font-black text-lg text-white focus:bg-black/60 focus:ring-primary transition-all shadow-inner uppercase" 
+                            className="h-14 rounded-2xl border-none bg-black/40 font-black text-lg text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/50 focus:shadow-[0_0_15px_rgba(53,88,114,0.4)] transition-all shadow-inner uppercase" 
                           />
                         </FormControl>
-                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4" />
+                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
                       </FormItem>
                     )}
                   />
-
-                  <div className="md:col-span-2 p-6 bg-black/40 rounded-[2rem] border border-white/5 space-y-4">
-                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-primary flex items-center gap-3">
-                      <UserCheck className="h-3.5 w-3.5" /> Institutional Credential Verification
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="schoolId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Registry ID</FormLabel>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="age"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Bio-Metric Age</FormLabel>
+                          <FormControl>
+                            <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-14 rounded-2xl border-none bg-black/40 font-black text-lg text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/50 transition-all shadow-inner" />
+                          </FormControl>
+                          <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Registry Role</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  placeholder="24-12345-123" 
-                                  {...field} 
-                                  readOnly={isRfidAuth}
-                                  className={cn(
-                                    "h-12 rounded-xl border-none bg-black/20 font-mono font-bold text-white shadow-inner",
-                                    isRfidAuth ? "text-primary/80" : "text-white"
-                                  )} 
-                                />
-                                {isRfidAuth && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary/30" />}
-                              </div>
+                              <SelectTrigger className="h-14 rounded-2xl border-none bg-black/40 font-black text-white focus:ring-1 focus:ring-primary/50 shadow-inner">
+                                <SelectValue placeholder="Select Role" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage className="text-red-500 text-[9px] font-black uppercase tracking-widest" />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[9px] font-black uppercase tracking-widest text-slate-600 ml-2">Verified Email</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  placeholder={`user@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
-                                  type="email" 
-                                  {...field} 
-                                  readOnly={!isRfidAuth}
-                                  className={cn(
-                                    "h-12 rounded-xl border-none bg-black/20 font-bold text-white shadow-inner",
-                                    !isRfidAuth ? "text-primary/80" : "text-white"
-                                  )}
-                                />
-                                {!isRfidAuth && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary/30" />}
-                              </div>
-                            </FormControl>
-                            <FormMessage className="text-red-500 text-[9px] font-black uppercase tracking-widest" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                            <SelectContent className="bg-[#0B1218] border-white/10 text-white">
+                              <SelectItem value="Student" className="focus:bg-primary/20 focus:text-white">Student</SelectItem>
+                              <SelectItem value="Faculty" className="focus:bg-primary/20 focus:text-white">Faculty</SelectItem>
+                              <SelectItem value="Staff" className="focus:bg-primary/20 focus:text-white">Staff</SelectItem>
+                              <SelectItem value="Visitor" className="focus:bg-primary/20 focus:text-white">Visitor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
+                        </FormItem>
+                      )}
+                    />
                   </div>
+                </div>
 
+                {/* Section 2: Institutional Verification */}
+                <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 relative overflow-hidden group transition-all hover:bg-black/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Credential Verification Node</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="schoolId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Registry ID</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                placeholder="24-12345-123" 
+                                {...field} 
+                                readOnly={isRfidAuth}
+                                className={cn(
+                                  "h-14 rounded-2xl border-none bg-black/40 font-mono font-bold text-white shadow-inner focus:ring-1 focus:ring-primary/50 transition-all",
+                                  isRfidAuth ? "text-primary/60 border-l-2 border-primary/40" : "text-white"
+                                )} 
+                              />
+                              {isRfidAuth && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary/30" />}
+                            </div>
+                          </FormControl>
+                          <FormMessage className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Verified SSO Node</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                placeholder={`user@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
+                                type="email" 
+                                {...field} 
+                                readOnly={!isRfidAuth}
+                                className={cn(
+                                  "h-14 rounded-2xl border-none bg-black/40 font-mono font-bold text-white shadow-inner focus:ring-1 focus:ring-primary/50 transition-all",
+                                  !isRfidAuth ? "text-primary/60 border-l-2 border-primary/40" : "text-white"
+                                )}
+                              />
+                              {!isRfidAuth && <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary/30" />}
+                            </div>
+                          </FormControl>
+                          <FormMessage className="text-red-500 text-[9px] font-black uppercase tracking-widest ml-2" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Section 3: Academic Mapping */}
+                <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 space-y-6 relative overflow-hidden group transition-all hover:bg-black/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Academic Mapping Node</h3>
+                  </div>
                   <FormField
                     control={form.control}
-                    name="role"
+                    name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-4">Registry Role</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">College / Department Unit</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="h-14 rounded-2xl border-none bg-black/40 font-black text-white focus:ring-primary shadow-inner">
-                              <SelectValue placeholder="Select Role" />
+                            <SelectTrigger className="h-14 rounded-2xl border-none bg-black/40 font-black text-white focus:ring-1 focus:ring-primary/50 shadow-inner transition-all">
+                              <SelectValue placeholder="Select Unit" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-[#0B1218] border-white/10 text-white">
-                            <SelectItem value="Student" className="focus:bg-primary/20 focus:text-white">Student</SelectItem>
-                            <SelectItem value="Faculty" className="focus:bg-primary/20 focus:text-white">Faculty</SelectItem>
-                            <SelectItem value="Staff" className="focus:bg-primary/20 focus:text-white">Staff</SelectItem>
-                            <SelectItem value="Visitor" className="focus:bg-primary/20 focus:text-white">Visitor</SelectItem>
+                          <SelectContent className="max-h-[300px] bg-[#0B1218] border-white/10 text-white">
+                            {DEPARTMENTS.map((dept) => (
+                              <SelectItem key={dept} value={dept} className="text-[10px] font-black uppercase tracking-tighter focus:bg-primary/20 focus:text-white">{dept}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
-                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-4">Age Index</FormLabel>
-                        <FormControl>
-                          <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-14 rounded-2xl border-none bg-black/40 font-black text-lg text-white focus:bg-black/60 focus:ring-primary shadow-inner" />
-                        </FormControl>
-                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4" />
+                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
                       </FormItem>
                     )}
                   />
@@ -316,14 +358,14 @@ function RegistrationContent() {
                     control={form.control}
                     name="purposeId"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-4">Node Activity Intent</FormLabel>
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Node Activity Intent</FormLabel>
                         <div className="relative">
                           <Select onValueChange={field.onChange} value={field.value} disabled={!!initialPurposeId}>
                             <FormControl>
                               <SelectTrigger className={cn(
-                                "h-14 rounded-2xl border-none bg-black/40 font-black text-white shadow-inner",
-                                !!initialPurposeId && "opacity-80"
+                                "h-14 rounded-2xl border-none bg-black/40 font-black text-white shadow-inner focus:ring-1 focus:ring-primary/50 transition-all",
+                                !!initialPurposeId && "opacity-80 border-l-2 border-primary/40"
                               )}>
                                 <SelectValue placeholder="Select Intent" />
                               </SelectTrigger>
@@ -336,37 +378,20 @@ function RegistrationContent() {
                           </Select>
                           {!!initialPurposeId && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/30" />}
                         </div>
-                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-4">College/Department</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 rounded-2xl border-none bg-black/40 font-black text-white focus:ring-primary shadow-inner">
-                              <SelectValue placeholder="Select Unit" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[300px] bg-[#0B1218] border-white/10 text-white">
-                            {DEPARTMENTS.map((dept) => (
-                              <SelectItem key={dept} value={dept} className="text-[10px] font-black uppercase tracking-tighter focus:bg-primary/20 focus:text-white">{dept}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-4" />
+                        <FormMessage className="text-red-500 text-[10px] font-black uppercase tracking-widest ml-2" />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <Button disabled={isLoading} className="w-full h-20 text-[11px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-[2rem] shadow-2xl active:scale-[0.98] transition-all mt-6">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Authorize Terminal Entry"}
+                <Button disabled={isLoading} className="w-full h-20 text-[11px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-[2rem] shadow-[0_0_40px_rgba(53,88,114,0.3)] hover:shadow-[0_0_60px_rgba(53,88,114,0.5)] active:scale-[0.98] transition-all relative overflow-hidden group">
+                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                    <span className="flex items-center gap-3">
+                      <UserCheck className="h-4 w-4" />
+                      Authorize Terminal Entry
+                    </span>
+                  )}
                 </Button>
               </form>
             </Form>

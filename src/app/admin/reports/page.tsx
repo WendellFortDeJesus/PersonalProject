@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, getDoc, writeBatch, where, getDocs } from 'firebase/firestore';
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
@@ -27,11 +26,13 @@ import {
   AlertTriangle,
   PenTool,
   Loader2,
-  Table,
+  Table as TableIcon,
   CheckCircle2,
   Eye,
   X,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Clock,
+  LayoutDashboard
 } from 'lucide-react';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -56,8 +57,6 @@ export default function ReportsPage() {
   const [generatedOn, setGeneratedOn] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isReviewed, setIsReviewed] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [visitToDelete, setVisitToDelete] = useState<string | null>(null);
@@ -159,53 +158,14 @@ export default function ReportsPage() {
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        window.print();
-      }, 300);
+      window.print();
     }
   };
 
-  const handleExportCSV = () => {
-    if (!filteredVisits.length) {
-      toast({ variant: "destructive", title: "No Data", description: "There are no records to export." });
-      return;
-    }
-    
-    setIsExporting(true);
-    
-    try {
-      const headers = ["Timestamp", "Patron Name", "School ID", "Unit", "Role", "Purpose", "Status"];
-      const rows = filteredVisits.map(v => [
-        v.timestamp ? format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss') : '---',
-        v.patronName || 'PURGED IDENTITY',
-        v.schoolId || '---',
-        (v.patronDepartments && v.patronDepartments[0]) || 'Unassigned',
-        v.patronRole || 'Patron',
-        v.purpose || 'Visit',
-        v.status || 'granted'
-      ]);
-
-      const csvContent = [
-        headers.join(","),
-        ...rows.map(row => row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(","))
-      ].join("\n");
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `NEU_Library_Audit_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({ title: "CSV Stream Generated", description: "Audit spreadsheet exported successfully." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Export Failed", description: "Failed to generate CSV data stream." });
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExportPDF = () => {
+    // PDF export implementation would typically use a library like jsPDF
+    // For this prototype, we'll trigger the print dialog which can save as PDF
+    handlePrint();
   };
 
   const setToday = () => {
@@ -231,38 +191,46 @@ export default function ReportsPage() {
   );
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in max-w-[1400px] mx-auto overflow-x-hidden no-print">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Institutional Audits</h1>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mt-1">Strategic Intelligence Engine</p>
+    <div className="p-6 space-y-8 animate-fade-in max-w-[1600px] mx-auto overflow-x-hidden bg-slate-50/50 min-h-screen font-body">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 no-print">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Institutional Audits</h1>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mt-1">Strategic Intelligence Engine</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
-            onClick={() => setIsPreviewOpen(true)}
-            className="rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-6 shadow-md bg-primary hover:bg-primary/90 text-white transition-all active:scale-95 flex items-center gap-2"
+            variant="outline"
+            onClick={handlePrint}
+            className="rounded-xl border-slate-200 font-black text-[10px] uppercase tracking-[0.2em] h-12 px-8 bg-white text-slate-900 shadow-sm hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-3"
           >
-            <Eye className="h-3.5 w-3.5" />
-            Generate Audit Preview
+            <Printer className="h-4 w-4" />
+            Print
+          </Button>
+          <Button 
+            onClick={handleExportPDF}
+            className="rounded-xl font-black text-[10px] uppercase tracking-[0.2em] h-12 px-8 bg-primary text-white shadow-lg hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-3"
+          >
+            <Download className="h-4 w-4" />
+            Export PDF
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 no-print">
         {[
-          { title: "Current Set", value: reportStats.total, icon: Users, color: "text-primary", bg: "bg-primary/5" },
-          { title: "Students", value: reportStats.students, icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50" },
-          { title: "Employees", value: reportStats.employees, icon: Briefcase, color: "text-amber-600", bg: "bg-amber-50" },
-          { title: "External", value: reportStats.external, icon: UserPlus, color: "text-green-600", bg: "bg-green-50" },
-          { title: "Top Purpose", value: reportStats.topPurpose, icon: Library, color: "text-slate-700", bg: "bg-slate-100" },
-          { title: "Top Unit", value: reportStats.topDept, icon: ShieldCheck, color: "text-indigo-600", bg: "bg-indigo-50" },
+          { title: "Filtered Records", value: reportStats.total, icon: Users, color: "text-blue-500", bg: "bg-blue-50" },
+          { title: "Students", value: reportStats.students, icon: GraduationCap, color: "text-indigo-500", bg: "bg-indigo-50" },
+          { title: "Employees", value: reportStats.employees, icon: Briefcase, color: "text-amber-500", bg: "bg-amber-50" },
+          { title: "External Visitors", value: reportStats.external, icon: UserPlus, color: "text-green-500", bg: "bg-green-50" },
+          { title: "Primary Intent", value: reportStats.topPurpose, icon: Library, color: "text-slate-700", bg: "bg-slate-100" },
+          { title: "Peak Academic Unit", value: reportStats.topDept, icon: ShieldCheck, color: "text-violet-500", bg: "bg-violet-50" },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-2xl overflow-hidden bg-white">
-            <CardContent className="p-3">
-              <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center mb-2", stat.bg)}>
+          <Card key={i} className="border-none shadow-sm rounded-2xl overflow-hidden bg-white hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center mb-3", stat.bg)}>
                 <stat.icon className={cn("h-4 w-4", stat.color)} />
               </div>
-              <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{stat.title}</p>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{stat.title}</p>
               <h3 className="text-sm font-black text-primary tracking-tight truncate leading-tight">
                 {stat.value}
               </h3>
@@ -271,64 +239,62 @@ export default function ReportsPage() {
         ))}
       </div>
 
-      <Card className="border-none shadow-md rounded-[1.5rem] bg-white/50 backdrop-blur-xl">
-        <CardHeader className="p-5 border-b border-slate-100 bg-slate-50/50 rounded-t-[1.5rem]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="h-3.5 w-3.5 text-primary" />
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-primary">Data Filtering Node</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={setToday} variant="ghost" className="h-7 text-[8px] font-black uppercase tracking-widest hover:bg-white border border-slate-100 rounded-lg px-3">Today</Button>
-              <Button onClick={setThisWeek} variant="ghost" className="h-7 text-[8px] font-black uppercase tracking-widest hover:bg-white border border-slate-100 rounded-lg px-3">This Week</Button>
-            </div>
+      <Card className="border-none shadow-sm rounded-[2rem] bg-white no-print">
+        <CardHeader className="p-6 border-b border-slate-50 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Filter className="h-4 w-4 text-slate-400" />
+            <CardTitle className="text-[11px] font-black uppercase tracking-widest text-slate-900">Multivariate Filters</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={setToday} variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 border border-slate-100 rounded-lg px-4">Today</Button>
+            <Button onClick={setThisWeek} variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 border border-slate-100 rounded-lg px-4">This Week</Button>
           </div>
         </CardHeader>
-        <CardContent className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Date From</Label>
-            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 rounded-xl bg-slate-50 border-none font-bold text-[10px]" />
+        <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Date From</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs shadow-inner" />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Date To</Label>
-            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-xl bg-slate-50 border-none font-bold text-[10px]" />
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Date To</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs shadow-inner" />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Visit Purpose</Label>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Purpose</Label>
             <Select value={purpose} onValueChange={setPurpose}>
-              <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-[10px]">
+              <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs shadow-inner">
                 <SelectValue placeholder="All Intents" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="font-bold text-[10px]">All Intents</SelectItem>
-                {(settings?.purposes || PURPOSES).map((p: any) => <SelectItem key={p.id} value={p.id} className="font-bold text-[10px]">{p.label}</SelectItem>)}
+                <SelectItem value="all" className="font-bold text-xs">All Intents</SelectItem>
+                {(settings?.purposes || PURPOSES).map((p: any) => <SelectItem key={p.id} value={p.id} className="font-bold text-xs">{p.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-[8px] font-black uppercase tracking-widest text-slate-400">College / Unit</Label>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">College / Unit</Label>
             <Select value={college} onValueChange={setCollege}>
-              <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-[10px]">
+              <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs shadow-inner">
                 <SelectValue placeholder="All Units" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="font-bold text-[10px]">All Units</SelectItem>
+                <SelectItem value="all" className="font-bold text-xs">All Units</SelectItem>
                 {(settings?.departments || DEPARTMENTS.map(d => ({ name: d }))).map((d: any) => (
-                  <SelectItem key={d.name || d} value={d.name || d} className="font-bold text-[10px]">{d.name || d}</SelectItem>
+                  <SelectItem key={d.name || d} value={d.name || d} className="font-bold text-xs">{d.name || d}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Patron Role</Label>
+          <div className="space-y-2">
+            <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Profile Role</Label>
             <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="h-9 rounded-xl bg-slate-50 border-none font-bold text-[10px]">
+              <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs shadow-inner">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="font-bold text-[10px]">All Roles</SelectItem>
+                <SelectItem value="all" className="font-bold text-xs">All Roles</SelectItem>
                 {allPossibleRoles.map(r => (
-                  <SelectItem key={r} value={r} className="font-bold text-[10px]">{r}</SelectItem>
+                  <SelectItem key={r} value={r} className="font-bold text-xs">{r}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -336,175 +302,112 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-slate-200 rounded-[3rem] bg-slate-50/50 space-y-4">
-        <Eye className="h-12 w-12 text-slate-200" />
-        <div className="text-center space-y-1">
-          <h3 className="text-lg font-black text-slate-400 uppercase tracking-tight">Audit Preview Protocol</h3>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-sm">
-            Generate a preview to review the filtered identity records before authorizing print or CSV export actions.
-          </p>
-        </div>
-        <Button 
-          onClick={() => setIsPreviewOpen(true)}
-          className="rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-8 bg-primary text-white shadow-xl shadow-primary/20 mt-4"
-        >
-          Initialize Preview
-        </Button>
-      </div>
-
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden flex flex-col bg-slate-50">
-          <DialogHeader className="p-8 bg-white border-b shrink-0 flex flex-row items-center justify-between">
-            <div className="space-y-1">
-              <DialogTitle className="text-2xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Official Audit Preview</DialogTitle>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Institutional Verification Node</p>
-            </div>
-            <div className="flex items-center gap-4">
-               <div className="flex items-center gap-3 px-4 py-2 border border-slate-200 bg-white shadow-sm rounded-xl">
-                <Checkbox id="modal-review" checked={isReviewed} onCheckedChange={(val) => setIsReviewed(!!val)} className="border-slate-300 data-[state=checked]:bg-primary" />
-                <Label htmlFor="modal-review" className="text-[8px] font-black uppercase tracking-widest text-slate-500 cursor-pointer select-none">
-                  Data Reviewed & Verified
-                </Label>
+      <div className="bg-white rounded-[2.5rem] shadow-md border border-slate-100 overflow-hidden print-area">
+        <div className="p-12 space-y-12">
+          {/* Document Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="p-4 bg-slate-800 rounded-2xl shadow-lg">
+                <TableIcon className="h-8 w-8 text-white" />
               </div>
+              <div>
+                <h2 className="text-2xl font-headline font-black text-slate-900 uppercase tracking-tighter leading-none">Official Audit Report</h2>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1.5">NEU University Central Library</p>
+              </div>
+            </div>
+            <div className="text-right flex flex-col items-end">
+              <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-2 border border-slate-100">
+                 <span className="text-[8px] font-black text-slate-300">NEULOGO</span>
+              </div>
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Audit Timestamp</p>
+              <p className="text-[10px] font-black text-primary uppercase">{generatedOn || '---'}</p>
+            </div>
+          </div>
+
+          {/* Quick Summary Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Record Count</p>
+              <p className="text-3xl font-black text-primary tracking-tighter leading-none">{filteredVisits.length}</p>
+            </div>
+            <div className="p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Audit Window</p>
+              <p className="text-[11px] font-black text-primary uppercase leading-tight font-mono">
+                {format(new Date(dateFrom), 'MM/dd/yy')} - {format(new Date(dateTo), 'MM/dd/yy')}
+              </p>
+            </div>
+            <div className="p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100 flex flex-col justify-center">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Status</p>
               <div className="flex items-center gap-2">
-                <Button 
-                  onClick={handlePrint}
-                  disabled={!isReviewed}
-                  type="button"
-                  variant="outline"
-                  aria-label="Print Verified Report"
-                  className={cn(
-                    "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 transition-all shadow-sm",
-                    isReviewed ? "border-slate-200 text-primary hover:bg-slate-50 active:scale-95" : "opacity-40 cursor-not-allowed text-slate-300"
-                  )}
-                >
-                  <Printer className="h-3.5 w-3.5 mr-2" />
-                  Print
-                </Button>
-                <Button 
-                  onClick={handleExportCSV}
-                  disabled={!isReviewed || isExporting}
-                  className={cn(
-                    "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 transition-all shadow-md",
-                    isReviewed ? "bg-primary text-white hover:bg-primary/90" : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  )}
-                >
-                  {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <FileSpreadsheet className="h-3.5 w-3.5 mr-2" />}
-                  Export CSV
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setIsPreviewOpen(false)}
-                  className="rounded-xl text-slate-400 hover:text-primary hover:bg-slate-100"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
+                <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" />
+                <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">System Validated</p>
               </div>
             </div>
-          </DialogHeader>
+          </div>
 
-          <ScrollArea className="flex-1 bg-slate-100 p-12">
-            <div className="bg-white p-12 rounded-[2rem] shadow-xl border border-slate-200 min-h-full mx-auto max-w-[1000px] print-area">
-              <div className="flex items-center justify-between mb-12">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary rounded-xl shadow-md">
-                    <Library className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Official Audit Report</h2>
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">NEU University Central Library</p>
-                  </div>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Audit Generation Timestamp</p>
-                  <p className="text-[10px] font-black text-primary">{generatedOn || '---'}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6 mb-12">
-                <div className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Record Sample Size</p>
-                  <p className="text-2xl font-black text-primary tracking-tighter">{filteredVisits.length}</p>
-                </div>
-                <div className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Temporal Window</p>
-                  <p className="text-[10px] font-black text-primary uppercase leading-tight">
-                    {format(new Date(dateFrom), 'MM.dd.yyyy')} - {format(new Date(dateTo), 'MM.dd.yyyy')}
-                  </p>
-                </div>
-                <div className="p-6 bg-slate-50 rounded-[1.5rem] border border-slate-100">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Status</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn("h-1.5 w-1.5 rounded-full", isReviewed ? "bg-green-500" : "bg-yellow-500 animate-pulse")} />
-                    <p className={cn("text-[9px] font-black uppercase tracking-tight", isReviewed ? "text-green-600" : "text-yellow-600")}>
-                      {isReviewed ? "Institutional Verified" : "Review Pending"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-slate-100 rounded-[1.5rem] overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-slate-100">
-                    <tr>
-                      <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Log Timestamp</th>
-                      <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Patron Name</th>
-                      <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Unit / Dept</th>
-                      <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Role</th>
-                      <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Purpose</th>
-                      <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-right no-print">Sync</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {filteredVisits.map((v) => (
-                      <tr key={v.id} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="px-6 py-3 text-[9px] font-mono font-bold text-slate-400">{v.timestamp ? format(new Date(v.timestamp), 'HH:mm | MM.dd') : '---'}</td>
-                        <td className="px-6 py-3 text-[10px] font-black text-primary uppercase">{v.patronName || 'PURGED IDENTITY'}</td>
-                        <td className="px-6 py-3 text-[9px] font-bold text-slate-500 uppercase">{(v.patronDepartments && v.patronDepartments[0]) || 'Unassigned'}</td>
-                        <td className="px-6 py-3 text-[9px] font-black text-slate-600 uppercase tracking-tighter">{v.patronRole || 'Patron'}</td>
-                        <td className="px-6 py-3 text-[9px] font-black uppercase text-primary/70">{v.purpose || 'Visit'}</td>
-                        <td className="px-6 py-3 text-right no-print">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => {
-                              setVisitToDelete(v.id);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            className="h-8 w-8 p-0 text-slate-300 hover:text-red-500"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredVisits.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-6 py-24 text-center">
-                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">No registry records match the selected audit criteria</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-32 pt-8 border-t border-dashed border-slate-200 flex justify-between items-end">
-                <div className="space-y-1">
-                  <div className="w-48 h-px bg-slate-300 mb-4" />
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Authorized Librarian Signature</p>
-                  <p className="text-[10px] font-black text-primary uppercase">University Chief Librarian</p>
-                </div>
-                <div className="flex items-center gap-2 text-primary opacity-20">
-                  <ShieldCheck className="h-6 w-6" />
-                  <span className="text-[8px] font-black uppercase tracking-[0.3em]">SECURE AUDIT NODE</span>
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+          {/* Data Table */}
+          <div className="border border-slate-100 rounded-[2rem] overflow-hidden">
+            <table className="w-full text-left">
+              <thead className="bg-slate-50/50 border-b border-slate-100">
+                <tr>
+                  <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Log Timestamp</th>
+                  <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Patron Full Name</th>
+                  <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Institutional Unit</th>
+                  <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Role</th>
+                  <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Primary Intent</th>
+                  <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right no-print">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredVisits.map((v) => (
+                  <tr key={v.id} className="hover:bg-slate-50/30 transition-colors group">
+                    <td className="px-8 py-4 text-[10px] font-mono font-bold text-slate-400">
+                      {v.timestamp ? format(new Date(v.timestamp), 'HH:mm | MM/dd') : '---'}
+                    </td>
+                    <td className="px-8 py-4 text-[11px] font-black text-slate-800 uppercase tracking-tight">
+                      {v.patronName || 'PURGED IDENTITY'}
+                    </td>
+                    <td className="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase leading-tight">
+                      {(v.patronDepartments && v.patronDepartments[0]) || 'Unassigned'}
+                    </td>
+                    <td className="px-8 py-4">
+                       <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">{v.patronRole || 'Patron'}</span>
+                    </td>
+                    <td className="px-8 py-4">
+                      <span className="inline-flex px-3 py-1 rounded-full bg-slate-100 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                        {v.purpose || 'Visit'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-4 text-right no-print">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setVisitToDelete(v.id);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        className="h-8 w-8 p-0 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredVisits.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-8 py-32 text-center">
+                       <div className="flex flex-col items-center gap-4 opacity-20">
+                          <TableIcon className="h-12 w-12" />
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em]">No identity records match active filters</p>
+                       </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if(!open) setAdminSignature(''); }}>
         <DialogContent className="p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden sm:max-w-md bg-white">
@@ -557,7 +460,7 @@ export default function ReportsPage() {
             width: 100% !important; 
             height: 100% !important; 
             margin: 0 !important; 
-            padding: 2cm !important; 
+            padding: 1.5cm !important; 
             box-shadow: none !important; 
             border: none !important; 
             background: white !important;

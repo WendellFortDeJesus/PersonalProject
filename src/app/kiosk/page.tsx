@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
@@ -19,6 +19,7 @@ export default function KioskAuthPage() {
   const [activeTab, setActiveTab] = useState<'rfid' | 'email' | 'google'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [currentHostname, setCurrentHostname] = useState('');
   const [binaryBits, setBinaryBits] = useState<string[]>([]);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -33,6 +34,13 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentHostname(window.location.hostname);
+    }
+    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
+  }, []);
 
   // Handle Google Redirect Result
   useEffect(() => {
@@ -79,12 +87,11 @@ export default function KioskAuthPage() {
         }
       } catch (error: any) {
         setIsSyncing(false);
-        console.error("SSO Handshake Error:", error);
+        console.error("SSO Redirect Error:", error);
         
         let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
         if (error.code === 'auth/unauthorized-domain') {
-          // Explicitly state the mismatch between the workstation port (9002) and the whitelisted ports (6000/9000)
-          errorDesc = `GATEWAY BLOCKED: You must add the 9002-port domain to your Authorized Domains in the Firebase Console. Required: 9002-${window.location.hostname.split('-').slice(1).join('-')}`;
+          errorDesc = `GATEWAY BLOCKED: Ensure '${window.location.hostname}' is whitelisted in BOTH Firebase Console and Google Cloud Console.`;
         }
 
         toast({
@@ -97,26 +104,6 @@ export default function KioskAuthPage() {
 
     handleRedirect();
   }, [auth, db, enforcedDomain, router, toast]);
-
-  useEffect(() => {
-    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
-  }, []);
-
-  useEffect(() => {
-    if (settings) {
-      if (!settings.allowRfidScan && settings.allowEmailLogin) {
-        setActiveTab('email');
-      } else if (settings.allowRfidScan) {
-        setActiveTab('rfid');
-      }
-    }
-  }, [settings]);
-
-  useEffect(() => {
-    if (activeTab === 'rfid' && rfidInputRef.current) {
-      rfidInputRef.current.focus();
-    }
-  }, [activeTab]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,7 +189,7 @@ export default function KioskAuthPage() {
       setIsLoading(false);
       let errorDesc = error.message || "FAILED TO INITIATE SSO.";
       if (error.code === 'auth/unauthorized-domain') {
-        errorDesc = `GATEWAY BLOCKED: The domain '${window.location.hostname}' must be added to the Authorized Domains list in the Firebase Console.`;
+        errorDesc = `GATEWAY BLOCKED: Add '${window.location.hostname}' to Authorized Domains in Firebase Console.`;
       }
       toast({
         variant: "destructive",
@@ -231,14 +218,6 @@ export default function KioskAuthPage() {
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-8 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
-        {binaryBits.map((bit, i) => (
-          <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
-            {bit}
-          </span>
-        ))}
       </div>
 
       <div className="relative z-10 w-full max-w-lg space-y-6 animate-fade-in px-4">
@@ -375,7 +354,7 @@ export default function KioskAuthPage() {
               )}
             </div>
 
-            <div className="pt-4 border-t border-white/5">
+            <div className="pt-4 border-t border-white/5 space-y-4">
               <Button 
                 type="button" 
                 variant="ghost" 
@@ -385,6 +364,15 @@ export default function KioskAuthPage() {
                 <ArrowLeft className="mr-2 h-3 w-3" />
                 ABORT PROTOCOL
               </Button>
+
+              {/* Diagnostic Tool for domain issues */}
+              <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Active Connection Host</p>
+                  <code className="text-[7px] font-mono text-white/60 block truncate">{currentHostname || 'Detecting...'}</code>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col items-center gap-4 pt-4 border-t border-white/5">

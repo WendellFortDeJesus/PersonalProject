@@ -175,13 +175,13 @@ export default function KioskAuthPage() {
         toast({
           variant: "destructive",
           title: "GATEWAY BLOCKED",
-          description: `PLEASE ADD "${window.location.hostname}" TO FIREBASE AUTHORIZED DOMAINS AND GOOGLE CLOUD JS ORIGINS.`,
+          description: `PLEASE ADD "${window.location.hostname}" TO FIREBASE AUTHORIZED DOMAINS.`,
         });
       } else if (error.code === 'auth/popup-blocked') {
         toast({
           variant: "destructive",
           title: "POPUP BLOCKED",
-          description: "CLICK THE 'BLOCKED POPUP' ICON IN YOUR ADDRESS BAR TO ALLOW POPUPS FOR THIS SITE.",
+          description: "CLICK THE 'WINDOW WITH RED X' ICON IN YOUR ADDRESS BAR (NEXT TO THE STAR) TO ALLOW POPUPS.",
         });
       } else {
         toast({
@@ -315,7 +315,7 @@ export default function KioskAuthPage() {
                   
                   <div className="flex items-center gap-4 px-4 opacity-20">
                     <div className="h-px bg-white flex-1" />
-                    <span className="text-[7px] font-black uppercase tracking-widest text-white">OR AUTHORIZE VIA GOOGLE</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-white">OR AUTHORIZE VIA SSO</span>
                     <div className="h-px bg-white flex-1" />
                   </div>
 

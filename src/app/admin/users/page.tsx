@@ -31,7 +31,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, deleteDoc, where, getDocs, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -49,7 +49,8 @@ import {
   Filter,
   CalendarDays,
   Fingerprint,
-  PenTool
+  PenTool,
+  Loader2
 } from 'lucide-react';
 import { DEPARTMENTS } from '@/lib/data';
 
@@ -62,6 +63,7 @@ export default function UserManagementPage() {
   const [adminSignature, setAdminSignature] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
   const [selectedRole, setSelectedRole] = useState('all');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const db = useFirestore();
   const { toast } = useToast();
@@ -134,18 +136,36 @@ export default function UserManagementPage() {
 
   const handleDeletePatron = async () => {
     if (!db || !patronToDelete || !adminSignature.trim()) return;
+    setIsDeleting(true);
+    
     const patronRef = doc(db, 'patrons', patronToDelete.id);
+    const visitsQuery = query(collection(db, 'visits'), where('patronId', '==', patronToDelete.id));
 
-    deleteDoc(patronRef).then(() => {
+    try {
+      const visitsSnap = await getDocs(visitsQuery);
+      const batch = writeBatch(db);
+      
+      // Cascade Delete Action
+      batch.delete(patronRef);
+      visitsSnap.docs.forEach(docSnap => batch.delete(docSnap.ref));
+      
+      await batch.commit();
+      
       setIsDeleteDialogOpen(false);
       setAdminSignature('');
-      toast({ title: "Registry Purged", description: `User record erased by ${adminSignature}.` });
-    }).catch(error => {
+      toast({ 
+        title: "Linked Registry Purged", 
+        description: `Identity and all associated activity logs erased by ${adminSignature}.` 
+      });
+    } catch (error) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: patronRef.path,
         operation: 'delete'
       }));
-    });
+    } finally {
+      setIsDeleting(false);
+      setPatronToDelete(null);
+    }
   };
 
   const availableRoles = settings?.roles || ['Student', 'Visitor'];
@@ -445,6 +465,7 @@ export default function UserManagementPage() {
             <div className="space-y-2">
               <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Are you absolutely sure?</p>
               <h3 className="text-xl font-black text-primary uppercase tracking-tight">{patronToDelete?.name}</h3>
+              <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-2">!! THIS WILL ALSO ERASE ALL ASSOCIATED VISIT LOGS !!</p>
             </div>
             
             <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
@@ -467,13 +488,13 @@ export default function UserManagementPage() {
             <Button variant="ghost" onClick={() => { setIsDeleteDialogOpen(false); setAdminSignature(''); }} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl bg-white shadow-sm">Abort</Button>
             <Button 
               onClick={handleDeletePatron} 
-              disabled={!adminSignature.trim()}
+              disabled={!adminSignature.trim() || isDeleting}
               className={cn(
                 "h-14 font-black uppercase text-[10px] tracking-widest text-white rounded-2xl shadow-xl transition-all active:scale-[0.98]",
-                adminSignature.trim() ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-slate-300 cursor-not-allowed"
+                adminSignature.trim() && !isDeleting ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-slate-300 cursor-not-allowed"
               )}
             >
-              Confirm Erase
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Erase"}
             </Button>
           </DialogFooter>
         </DialogContent>

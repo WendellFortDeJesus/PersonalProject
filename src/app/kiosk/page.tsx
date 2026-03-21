@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -13,7 +12,7 @@ import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
@@ -31,6 +30,8 @@ export default function KioskAuthPage() {
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: settings } = useDoc(settingsRef);
+
+  const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
 
   useEffect(() => {
     if (settings) {
@@ -55,6 +56,18 @@ export default function KioskAuthPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
+      // Strict Domain Enforcement
+      if (!user.email?.endsWith(`@${enforcedDomain}`)) {
+        await signOut(auth);
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Access Restricted",
+          description: `Only @${enforcedDomain} accounts are authorized for terminal access.`,
+        });
+        return;
+      }
+
       if (user.email) {
         // Search for user in patrons
         const patronsRef = collection(db, 'patrons');
@@ -104,7 +117,6 @@ export default function KioskAuthPage() {
         return;
       }
 
-      const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
       if (activeTab === 'email' && !email.toLowerCase().endsWith(`@${enforcedDomain}`)) {
         setIsLoading(false);
         toast({
@@ -218,7 +230,7 @@ export default function KioskAuthPage() {
                     <div className="relative">
                       <Mail className="absolute left-4 top-4 h-4 w-4 text-slate-300" />
                       <Input 
-                        placeholder={`user@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
+                        placeholder={`user@${enforcedDomain}`} 
                         type="email" 
                         required
                         value={email}

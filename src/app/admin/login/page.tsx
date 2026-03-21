@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -9,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ShieldCheck, User, Lock, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
-import { signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInAnonymously, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
@@ -51,7 +50,21 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Strict Domain Enforcement
+      if (!user.email?.endsWith('@neu.edu.ph')) {
+        await signOut(auth);
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Access Restricted",
+          description: "Only @neu.edu.ph accounts are authorized for terminal access.",
+        });
+        return;
+      }
+
       router.push('/admin/dashboard');
     } catch (error: any) {
       setIsLoading(false);

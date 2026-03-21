@@ -406,9 +406,6 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-tight italic">
-                    Note: Roles managed here are for kiosk visitor registration only. Administrative roles are managed through secure protocols.
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -429,10 +426,6 @@ export default function SettingsPage() {
                 <p className="text-xs font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
                   Forcibly checks out all active identities currently in the system registry. Resets terminal status to 'Closed' for all entries dated today.
                 </p>
-                <div className="p-4 bg-red-50/50 border border-dashed border-red-200 rounded-2xl flex items-start gap-3">
-                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                  <p className="text-[10px] font-black text-red-700 uppercase tracking-tight leading-tight">Warning: This action will permanently modify active session logs for the current institutional cycle.</p>
-                </div>
                 <Button onClick={handleFlush} disabled={isSaving} variant="outline" className="w-full h-14 rounded-2xl border-red-200 text-red-600 font-black text-[11px] uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all">
                   Initiate Force Check-Out
                 </Button>
@@ -459,7 +452,7 @@ export default function SettingsPage() {
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0 bg-white">
-                    <div className="p-10 bg-red-600 text-white text-center">
+                    <AlertDialogHeader className="p-10 bg-red-600 text-white text-center">
                       <div className="p-4 bg-white/20 rounded-full w-fit mx-auto mb-6">
                         <Skull className="h-10 w-10 text-white" />
                       </div>
@@ -469,7 +462,7 @@ export default function SettingsPage() {
                       <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">
                         This protocol will PERMANENTLY ERASE every patron record and visit log in the system. This action is irreversible.
                       </AlertDialogDescription>
-                    </div>
+                    </AlertDialogHeader>
                     <div className="p-10 space-y-6 text-center">
                       <div className="grid grid-cols-2 gap-4">
                         <AlertDialogCancel className="h-12 rounded-xl font-black text-[9px] uppercase tracking-widest">Abort Action</AlertDialogCancel>
@@ -525,10 +518,6 @@ export default function SettingsPage() {
                         {visit.timestamp ? format(new Date(visit.timestamp), 'HH:mm:ss') : '--:--:--'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[7px] font-black text-primary uppercase tracking-widest">Handshake Validated</span>
-                      <ArrowRight className="h-2.5 w-2.5 text-primary" />
-                    </div>
                   </div>
                 </div>
               ))
@@ -538,14 +527,6 @@ export default function SettingsPage() {
                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Awaiting live node handshake signals...</p>
               </div>
             )}
-          </div>
-          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed max-w-sm">
-              This feed represents the "Single Source of Truth." Any deletion or modification in the registry is instantly reflected across all institutional nodes.
-            </p>
-            <Button variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-lg">
-              View All Activity
-            </Button>
           </div>
         </CardContent>
       </Card>

@@ -35,6 +35,7 @@ export const PURPOSES = [
   { id: 'computer', label: 'Use of Computer', icon: 'Monitor' },
   { id: 'assignments', label: 'Doing Assignments', icon: 'FileText' },
   { id: 'group_study', label: 'Group Study', icon: 'Users' },
+  { id: 'other', label: 'Other / Assistance', icon: 'HelpCircle' },
 ];
 
 export const DEPARTMENTS = [

@@ -34,8 +34,8 @@ function PurposeSelectionContent() {
   const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
-    // Generate random binary bits for background decoration
-    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
+    // Generate random binary bits only on the client to avoid hydration mismatch
+    setBinaryBits(Array.from({ length: 48 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
   const handleSelect = async (id: string) => {
@@ -111,33 +111,33 @@ function PurposeSelectionContent() {
       {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
         {binaryBits.map((bit, i) => (
-          <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
+          <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.15}s` }}>
             {bit}
           </span>
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl space-y-12 animate-fade-in px-6">
-        <div className="flex flex-col items-center gap-6">
+      <div className="relative z-10 w-full max-w-6xl space-y-12 animate-fade-in px-8">
+        <div className="flex flex-col items-center gap-8">
           <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-500 hover:text-white font-black uppercase tracking-[0.4em] text-[9px] h-auto self-start px-0 transition-colors"
+            className="text-slate-500 hover:text-red-400 font-black uppercase tracking-[0.4em] text-[10px] h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
             onClick={() => router.push('/kiosk')}
           >
-            <Icons.ArrowLeft className="mr-2 h-3 w-3" />
+            <Icons.ArrowLeft className="mr-3 h-4 w-4" />
             Abort Identity Protocol
           </Button>
           
-          <div className="text-center space-y-3">
-            <h1 className="text-5xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Intent</h1>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em]">
+          <div className="text-center space-y-4">
+            <h1 className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Intent</h1>
+            <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em]">
               {isNew ? "Node Registration: Select Primary Node Activity" : "Verification Step: Select Node Activity"}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {(settings?.purposes || PURPOSES).map((purpose: any) => {
             const IconComponent = (Icons as any)[purpose.icon] || Icons.HelpCircle;
             const isActive = selected === purpose.id;
@@ -150,24 +150,32 @@ function PurposeSelectionContent() {
                 onClick={() => handleSelect(purpose.id)}
                 variant="outline"
                 className={cn(
-                  "h-56 rounded-[2.5rem] flex flex-col items-center justify-center gap-6 transition-all duration-300 border-white/5 bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 group overflow-hidden",
-                  isActive ? 'ring-primary/40 bg-primary/10 shadow-[0_0_40px_rgba(53,88,114,0.3)]' : 'hover:bg-white/10 hover:ring-white/20'
+                  "h-64 rounded-[3rem] flex flex-col items-center justify-center gap-8 transition-all duration-500 border-white/10 bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 group overflow-hidden hover:scale-[1.05] hover:brightness-110 shadow-lg",
+                  isActive 
+                    ? 'ring-primary/60 bg-primary/20 shadow-[0_0_50px_rgba(53,88,114,0.4)] scale-[1.05] border-primary/40' 
+                    : 'hover:bg-white/10 hover:ring-white/30'
                 )}
               >
                 <div className={cn(
-                  "p-5 rounded-2xl transition-all duration-300",
-                  isActive ? 'bg-primary text-white scale-110' : 'bg-black/40 text-slate-500 group-hover:text-primary'
+                  "p-6 rounded-3xl transition-all duration-500 shadow-xl",
+                  isActive 
+                    ? 'bg-primary text-white scale-110 shadow-[0_0_30px_rgba(53,88,114,0.6)]' 
+                    : 'bg-black/40 text-slate-500 group-hover:text-primary group-hover:bg-primary/5'
                 )}>
-                  {isPending ? <Icons.Loader2 className="h-7 w-7 animate-spin" /> : <IconComponent className="h-8 w-8" />}
+                  {isPending ? <Icons.Loader2 className="h-10 w-10 animate-spin" /> : <IconComponent className="h-10 w-10" />}
                 </div>
-                <div className="text-center space-y-1">
+                <div className="text-center space-y-2">
                   <span className={cn(
-                    "block text-xs font-black uppercase tracking-widest transition-colors",
+                    "block text-sm font-black uppercase tracking-[0.15em] transition-colors",
                     isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
                   )}>
                     {purpose.label}
                   </span>
-                  <span className="block text-[8px] font-bold text-slate-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={cn(
+                    "h-1 w-8 mx-auto rounded-full transition-all duration-500",
+                    isActive ? "bg-primary w-16" : "bg-transparent group-hover:bg-primary/20 group-hover:w-12"
+                  )} />
+                  <span className="block text-[9px] font-bold text-slate-600 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                     Initialize Segment
                   </span>
                 </div>
@@ -176,16 +184,20 @@ function PurposeSelectionContent() {
           })}
         </div>
         
-        <div className="flex flex-col items-center gap-4 pt-8 border-t border-white/5">
+        <div className="flex flex-col items-center gap-6 pt-12 border-t border-white/10">
            <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-500 hover:text-primary font-black uppercase tracking-[0.4em] text-[9px] transition-colors"
+            className="text-slate-600 hover:text-primary font-black uppercase tracking-[0.5em] text-[10px] transition-all hover:tracking-[0.6em]"
             onClick={() => router.push('/kiosk')}
           >
             Relinquish Identity Focus
           </Button>
-           <span className="text-[7px] font-black text-primary/40 uppercase tracking-[0.4em]">Node Segment Isolation Active</span>
+           <div className="flex items-center gap-4">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+              <span className="text-[8px] font-black text-primary/30 uppercase tracking-[0.5em]">Node Segment Isolation Active</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+           </div>
         </div>
       </div>
     </div>

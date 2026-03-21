@@ -49,6 +49,9 @@ export default function AdminLoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
+    // Ensure the user is prompted to select an account
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;

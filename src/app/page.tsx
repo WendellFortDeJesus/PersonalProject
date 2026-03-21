@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -99,7 +98,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-black uppercase tracking-widest text-slate-900">Staff / Admin</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Restricted Console Access</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Staff Terminal Access</p>
                   </div>
                 </div>
               </Link>

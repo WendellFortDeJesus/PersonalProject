@@ -128,6 +128,7 @@ export default function KioskAuthPage() {
       const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
       const querySnapshot = await getDocs(q);
 
+      // Standard flow for ALL users (including admin) in Kiosk mode
       if (querySnapshot.empty) {
         const params = new URLSearchParams();
         params.set('isNew', 'true');

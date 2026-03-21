@@ -31,7 +31,6 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
-  const ADMIN_EMAIL = 'jcesperanza@neu.edu.ph';
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,15 +56,6 @@ export default function KioskAuthPage() {
 
       if (activeTab === 'email') {
         const lowerEmail = email.toLowerCase();
-        if (lowerEmail === ADMIN_EMAIL) {
-          setIsLoading(false);
-          toast({
-            variant: "destructive",
-            title: "RESTRICTED NODE",
-            description: "ADMIN IDENTITY DETECTED. PLEASE USE STAFF TERMINAL.",
-          });
-          return;
-        }
         if (!lowerEmail.endsWith(`@${enforcedDomain}`)) {
           setIsLoading(false);
           toast({
@@ -126,16 +116,6 @@ export default function KioskAuthPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const userEmail = (user.email || "").toLowerCase();
-
-      if (userEmail === ADMIN_EMAIL) {
-        toast({
-          variant: "destructive",
-          title: "RESTRICTED IDENTITY",
-          description: "ADMIN ACCESS IS ONLY PERMITTED VIA STAFF TERMINAL.",
-        });
-        setIsLoading(false);
-        return;
-      }
 
       if (!userEmail.endsWith(`@${enforcedDomain}`)) {
         toast({

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, Search } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
@@ -18,6 +18,7 @@ export default function KioskAuthPage() {
   const [rfid, setRfid] = useState('');
   const [activeTab, setActiveTab] = useState<'rfid' | 'email'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
+  const [binaryBits, setBinaryBits] = useState<string[]>([]);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -31,6 +32,11 @@ export default function KioskAuthPage() {
   const { data: settings } = useDoc(settingsRef);
 
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
+
+  useEffect(() => {
+    // Generate random binary bits only on the client to avoid hydration mismatch
+    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
+  }, []);
 
   useEffect(() => {
     if (settings) {
@@ -172,9 +178,9 @@ export default function KioskAuthPage() {
 
       {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
-        {Array.from({ length: 40 }).map((_, i) => (
+        {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
-            {Math.random() > 0.5 ? '1' : '0'}
+            {bit}
           </span>
         ))}
       </div>
@@ -211,7 +217,6 @@ export default function KioskAuthPage() {
           </CardHeader>
 
           <CardContent className="px-10 pb-12 space-y-8">
-            {/* Segmented Controller Slider */}
             <div className="relative bg-black/40 p-1.5 rounded-full h-14 border border-white/10 flex items-center">
               <div 
                 className={cn(
@@ -246,14 +251,11 @@ export default function KioskAuthPage() {
                 <form onSubmit={handleAuth} className="space-y-10 animate-fade-in">
                   <div className="text-center space-y-10">
                     <div className="relative flex items-center justify-center py-4">
-                      {/* Lidar Scanner Visual */}
                       <div className="absolute h-56 w-56 rounded-full border border-primary/20 animate-ping opacity-20" />
                       <div className="absolute h-44 w-44 rounded-full border border-primary/10" />
                       
                       <div className="relative h-36 w-36 rounded-full bg-black/60 flex items-center justify-center shadow-[inset_0_0_40px_rgba(53,88,114,0.4)] border border-white/10 overflow-hidden">
                         <Scan className="h-14 w-14 text-primary animate-pulse" />
-                        
-                        {/* Red Laser Sweep */}
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500 shadow-[0_0_15px_#ef4444] animate-[scan_3s_ease-in-out_infinite] opacity-80" />
                         
                         <style jsx global>{`

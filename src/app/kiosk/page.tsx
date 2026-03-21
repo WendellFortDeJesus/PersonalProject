@@ -117,8 +117,8 @@ export default function KioskAuthPage() {
       
       <div className="relative z-10 w-full max-w-2xl animate-fade-in transition-all duration-500">
         <Card className="relative border-none shadow-[0_0_120px_rgba(0,0,0,0.9)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[820px] flex flex-col">
-          {/* Abort Control - Positioned Upper Left */}
-          <div className="absolute top-10 left-10 z-20">
+          {/* Abort Control - Upper Left Positioned */}
+          <div className="absolute top-12 left-12 z-20">
             <Button 
               variant="ghost" 
               onClick={() => router.push('/')}
@@ -162,26 +162,24 @@ export default function KioskAuthPage() {
               </div>
             </div>
             
-            {/* Central HUD Scanner */}
+            {/* Institutional Information Node */}
             <div className="flex flex-col items-center justify-center py-4 space-y-8 flex-1 overflow-hidden">
-              <div className="relative w-44 h-44 flex items-center justify-center mb-2 shrink-0">
-                <div className="absolute inset-0 rounded-full border border-[#355872]/20 animate-pulse" />
-                <div className="absolute inset-4 rounded-full border border-[#355872]/10" />
-                <div className="relative p-10 bg-black/40 rounded-full ring-1 ring-[#355872]/20 shadow-inner overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#355872]/10 to-transparent" />
-                   <Scan className="h-12 w-12 text-[#355872]/60 relative z-10" />
+              <div className="w-full max-w-lg p-8 bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner space-y-5 text-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#355872]/5 to-transparent pointer-events-none" />
+                <div className="flex justify-center">
+                   <div className="p-3 bg-primary/20 rounded-2xl ring-1 ring-primary/40 shadow-[0_0_30px_rgba(53,88,114,0.2)]">
+                      <ShieldCheck className="h-6 w-6 text-primary" />
+                   </div>
                 </div>
-                
-                {/* Corner Frame Accents */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#355872]/40 rounded-tl-xl" />
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#355872]/40 rounded-tr-xl" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#355872]/40 rounded-bl-xl" />
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#355872]/40 rounded-br-xl" />
-              </div>
-
-              <div className="text-center space-y-1 shrink-0">
-                <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">SCANNER ACTIVE</h3>
-                <p className="text-[7px] font-bold text-slate-500 uppercase tracking-[0.2em]">AWAITING IDENTITY CARD</p>
+                <div className="space-y-2">
+                  <h3 className="text-xs font-black text-white uppercase tracking-[0.3em]">Institutional email Authorized Identity</h3>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed tracking-wider px-4">
+                    If authentication fails, verify that your browser is not blocking popups and that the origin above is whitelisted.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-white/5">
+                   <span className="text-[8px] font-black text-primary/40 uppercase tracking-[0.5em]">Handshake for @{enforcedDomain} accounts</span>
+                </div>
               </div>
 
               {/* Dynamic Input Forms */}

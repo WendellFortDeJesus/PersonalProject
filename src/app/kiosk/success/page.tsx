@@ -10,17 +10,13 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
-const MASTER_EMAIL = 'jcesperanza@neu.edu.ph';
-
 function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const db = useFirestore();
   const status = searchParams.get('status');
   const name = searchParams.get('name');
-  const email = searchParams.get('email');
-  const [binaryBits, setBinaryBits] = useState<string[]>([]);
-
+  
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, 'system_config', 'settings');
@@ -29,11 +25,9 @@ function SuccessContent() {
 
   const timeout = (settings?.timeoutSeconds || 5) * 1000;
   const isBlocked = status === 'blocked';
-  const isAdmin = status === 'admin' || (email && email.toLowerCase() === MASTER_EMAIL);
+  const isAdmin = status === 'admin';
 
   useEffect(() => {
-    setBinaryBits(Array.from({ length: 48 }, () => Math.random() > 0.5 ? '1' : '0'));
-    
     const timer = setTimeout(() => {
       if (isAdmin) {
         router.push('/admin/dashboard');
@@ -41,7 +35,6 @@ function SuccessContent() {
         router.push('/');
       }
     }, isAdmin ? 8000 : timeout);
-    
     return () => clearTimeout(timer);
   }, [router, timeout, isAdmin]);
 
@@ -54,20 +47,7 @@ function SuccessContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
-        {binaryBits.map((bit, i) => (
-          <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
-            {bit}
-          </span>
-        ))}
-      </div>
-
+    <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
       <div className="relative z-10 w-full max-w-xl space-y-10 animate-fade-in text-center px-4">
         <div className="flex justify-center">
           <div className={cn(
@@ -80,70 +60,50 @@ function SuccessContent() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-4xl font-headline font-black text-white tracking-tight leading-none uppercase">
+          <h1 className="text-4xl font-headline font-black text-white tracking-tight uppercase">
             {isAdmin ? "Welcome, Master Admin" : isBlocked ? "Access Restricted" : "Protocol Validated"}
           </h1>
           <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">
-            {isAdmin ? "Institutional Command Node" : "Institutional Registry Node"}
+            {isAdmin ? "Institutional Command Center" : "Institutional Registry Node"}
           </p>
         </div>
 
         <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
           <CardContent className="p-12 space-y-8">
-            <div className="flex justify-center">
-              <div className={cn(
-                "h-32 w-32 rounded-[2rem] bg-black/40 flex items-center justify-center border border-white/5 shadow-inner",
-                isAdmin && "ring-2 ring-accent/20"
-              )}>
-                <User className={cn("h-12 w-12", isAdmin ? "text-accent" : "text-primary/40")} />
-              </div>
-            </div>
-
             <div className="space-y-4">
               <h2 className="text-2xl font-headline font-black text-white uppercase tracking-tight">
                 {name || (isAdmin ? "CHIEF LIBRARIAN" : "Identity Logged")}
               </h2>
-              <div className={cn("h-1 w-12 mx-auto rounded-full", isAdmin ? "bg-accent/40" : "bg-primary/20")} />
-              <p className="text-base font-medium text-slate-400 max-w-xs mx-auto leading-relaxed">
+              <p className="text-base font-medium text-slate-400 max-w-xs mx-auto">
                 {isAdmin 
                   ? "Welcome back, Chief Librarian. System node is ready for administrative synchronization."
                   : isBlocked 
                   ? "Security restriction detected. Please proceed to the library staff desk for manual clearance."
-                  : "Your check-in has been successfully processed. You are cleared for facility entry."
+                  : "Your check-in has been successfully processed."
                 }
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex flex-col items-center gap-6">
-          <Button 
-            onClick={handleManualContinue}
-            className={cn(
-              "w-full h-18 rounded-2xl text-white font-bold text-sm uppercase tracking-widest shadow-2xl transition-all flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]",
-              isAdmin ? "bg-accent hover:bg-accent/90 shadow-accent/20" : "bg-primary hover:bg-primary/90 shadow-primary/20"
-            )}
-          >
-            {isAdmin ? "Enter Command Center" : "Continue to Gateway"}
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-
-          <div className="text-slate-600 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-3">
-            <span className="animate-pulse">Redirecting in {isAdmin ? '8s' : `${Math.round(timeout / 1000)}s`}</span>
-            <div className="h-1 w-1 bg-white/10 rounded-full" />
-            <span>Secure Node Logout</span>
-          </div>
-        </div>
+        <Button 
+          onClick={handleManualContinue}
+          className={cn(
+            "w-full h-18 rounded-2xl text-white font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3",
+            isAdmin ? "bg-accent hover:bg-accent/90 shadow-accent/20" : "bg-primary hover:bg-primary/90 shadow-primary/20"
+          )}
+        >
+          {isAdmin ? "Enter Command Center" : "Continue to Gateway"}
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
 }
 
 export default function SuccessPage(props: { params: Promise<any>, searchParams: Promise<any> }) {
-  // Explicitly unwrap Next.js 15 async dynamic props to avoid Proxy enumeration warnings
   use(props.params);
   use(props.searchParams);
-
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#0B1218] flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest animate-pulse">Updating Registry...</div>}>
       <SuccessContent />

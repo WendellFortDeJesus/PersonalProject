@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc, getDoc, writeBatch, where, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, doc, getDoc, writeBatch, where, getDocs } from 'firebase/firestore';
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 import { 
   FileDown, 
@@ -89,7 +89,8 @@ export default function ReportsPage() {
           start: startOfDay(new Date(dateFrom)),
           end: endOfDay(new Date(dateTo))
         });
-        const matchesPurpose = purpose === 'all' || v.purpose === (settings?.purposes || PURPOSES).find((p: any) => p.id === purpose)?.label;
+        const currentPurposes = settings?.purposes || PURPOSES;
+        const matchesPurpose = purpose === 'all' || v.purpose === currentPurposes.find((p: any) => p.id === purpose)?.label;
         const matchesCollege = college === 'all' || (v.patronDepartments && v.patronDepartments[0] === college);
         const matchesRole = role === 'all' || v.patronRole === role;
         
@@ -133,7 +134,7 @@ export default function ReportsPage() {
         const patronId = visitSnap.data().patronId;
         const batch = writeBatch(db);
         
-        // CASCADE PURGE: Delete patron and all linked history
+        // BI-DIRECTIONAL CASCADE PURGE: Delete patron and all linked history
         const patronRef = doc(db, 'patrons', patronId);
         batch.delete(patronRef);
         
@@ -143,7 +144,7 @@ export default function ReportsPage() {
         
         await batch.commit();
         toast({ 
-          title: "Linked Identity Purged", 
+          title: "Institutional Purge Successful", 
           description: `Identity and activity log stream permanently erased by ${adminSignature}.` 
         });
       }
@@ -199,7 +200,7 @@ export default function ReportsPage() {
       link.click();
       document.body.removeChild(link);
       
-      toast({ title: "CSV Data Stream Initialized", description: "Audit spreadsheet has been successfully generated." });
+      toast({ title: "CSV Stream Generated", description: "Audit spreadsheet exported successfully." });
     } catch (error) {
       toast({ variant: "destructive", title: "Export Failed", description: "Failed to generate CSV data stream." });
     } finally {
@@ -351,7 +352,6 @@ export default function ReportsPage() {
         </Button>
       </div>
 
-      {/* MODAL: OFFICIAL AUDIT PREVIEW */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden flex flex-col bg-slate-50">
           <DialogHeader className="p-8 bg-white border-b shrink-0 flex flex-row items-center justify-between">
@@ -370,15 +370,16 @@ export default function ReportsPage() {
                 <Button 
                   onClick={handlePrint}
                   disabled={!isReviewed}
+                  type="button"
                   variant="outline"
                   aria-label="Print Verified Report"
                   className={cn(
-                    "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 transition-all",
-                    isReviewed ? "border-slate-200 text-primary hover:bg-slate-50" : "opacity-40 cursor-not-allowed text-slate-300"
+                    "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 transition-all shadow-sm",
+                    isReviewed ? "border-slate-200 text-primary hover:bg-slate-50 active:scale-95" : "opacity-40 cursor-not-allowed text-slate-300"
                   )}
                 >
                   <Printer className="h-3.5 w-3.5 mr-2" />
-                  Print PDF
+                  Print
                 </Button>
                 <Button 
                   onClick={handleExportCSV}
@@ -505,7 +506,6 @@ export default function ReportsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL: LINKED PURGE CONFIRMATION */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if(!open) setAdminSignature(''); }}>
         <DialogContent className="p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden sm:max-w-md bg-white">
           <DialogHeader className="p-12 bg-red-600 text-white text-center">
@@ -560,6 +560,7 @@ export default function ReportsPage() {
             padding: 2cm !important; 
             box-shadow: none !important; 
             border: none !important; 
+            background: white !important;
           }
         }
       `}</style>

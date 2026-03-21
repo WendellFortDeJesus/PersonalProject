@@ -105,11 +105,9 @@ export default function UserManagementPage() {
     
     try {
       const batch = writeBatch(db);
-      
-      // Update Patron Document
       batch.update(patronRef, updateData);
       
-      // Find and Update all associated Visits for this patron to keep information in sync
+      // SYNC VISIT LOGS WITH PROFILE CHANGES
       const visitsQuery = query(collection(db, 'visits'), where('patronId', '==', editingPatron.id));
       const visitsSnap = await getDocs(visitsQuery);
       
@@ -124,7 +122,6 @@ export default function UserManagementPage() {
       });
       
       await batch.commit();
-      
       setIsEditSheetOpen(false);
       setIsSaving(false);
       toast({ 
@@ -173,12 +170,11 @@ export default function UserManagementPage() {
       const visitsSnap = await getDocs(visitsQuery);
       const batch = writeBatch(db);
       
-      // Cascade Delete Action
+      // BI-DIRECTIONAL CASCADE PURGE
       batch.delete(patronRef);
       visitsSnap.docs.forEach(docSnap => batch.delete(docSnap.ref));
       
       await batch.commit();
-      
       setIsDeleteDialogOpen(false);
       setAdminSignature('');
       toast({ 
@@ -509,9 +505,6 @@ export default function UserManagementPage() {
                 onChange={(e) => setAdminSignature(e.target.value)}
                 className="h-12 rounded-xl border-slate-200 font-bold text-center text-sm shadow-inner"
               />
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight leading-relaxed">
-                Provide your identity to authorize this permanent removal from the institutional registry.
-              </p>
             </div>
           </div>
           <DialogFooter className="p-10 bg-slate-50 border-t grid grid-cols-2 gap-4">

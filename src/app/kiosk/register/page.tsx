@@ -73,7 +73,7 @@ function RegistrationContent() {
   });
 
   useEffect(() => {
-    // Generate decorative binary bits for the atmospheric background
+    // Moving binary generation to useEffect to prevent hydration error
     const bits = Array.from({ length: 60 }, () => Math.random() > 0.5 ? '1' : '0');
     setBinaryBits(bits);
   }, []);
@@ -174,7 +174,7 @@ function RegistrationContent() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-4xl space-y-6 animate-fade-in px-4">
+      <div className="relative z-10 w-full max-w-5xl space-y-6 animate-fade-in px-4">
         <Button 
           variant="ghost" 
           onClick={handleBack}
@@ -200,7 +200,7 @@ function RegistrationContent() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12 overflow-y-auto max-h-[75vh] no-scrollbar">
+          <CardContent className="px-10 pb-12 overflow-y-auto max-h-[80vh] no-scrollbar">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
                 {/* Section 1: Personal Identity */}
@@ -385,15 +385,27 @@ function RegistrationContent() {
                   />
                 </div>
 
-                <Button disabled={isLoading} className="w-full h-24 text-[12px] font-black uppercase tracking-[0.5em] bg-primary hover:bg-primary/90 text-white rounded-[2.5rem] shadow-[0_0_40px_rgba(53,88,114,0.4)] hover:shadow-[0_0_60px_rgba(53,88,114,0.6)] active:scale-[0.98] transition-all relative overflow-hidden group">
-                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : (
-                    <span className="flex items-center gap-4">
-                      <UserCheck className="h-5 w-5" />
-                      Authorize Terminal Entry
-                    </span>
-                  )}
-                </Button>
+                <div className="flex gap-4">
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    onClick={handleBack}
+                    disabled={isLoading}
+                    className="h-24 px-12 text-[11px] font-black uppercase tracking-[0.4em] border border-white/5 bg-white/5 rounded-[2.5rem] text-slate-400 hover:text-white transition-all hover:bg-white/10"
+                  >
+                    <ArrowLeft className="mr-3 h-5 w-5" />
+                    Back
+                  </Button>
+                  <Button disabled={isLoading} className="flex-1 h-24 text-[12px] font-black uppercase tracking-[0.5em] bg-primary hover:bg-primary/90 text-white rounded-[2.5rem] shadow-[0_0_40px_rgba(53,88,114,0.4)] hover:shadow-[0_0_60px_rgba(53,88,114,0.6)] active:scale-[0.98] transition-all relative overflow-hidden group">
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : (
+                      <span className="flex items-center justify-center gap-4">
+                        <UserCheck className="h-5 w-5" />
+                        Authorize Terminal Entry
+                      </span>
+                    )}
+                  </Button>
+                </div>
               </form>
             </Form>
           </CardContent>

@@ -189,7 +189,7 @@ function RegistrationContent() {
             </div>
             <div className="space-y-2">
               <CardTitle className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Record</CardTitle>
-              <CardDescription className="text-sm font-medium text-slate-500 uppercase tracking-widest">
+              <CardDescription className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">
                 Registry Node Initialization
               </CardDescription>
             </div>
@@ -201,14 +201,14 @@ function RegistrationContent() {
                 <div className="p-12 bg-black/40 rounded-[4rem] border border-white/5 space-y-10 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10 shadow-2xl">
                    <div className="flex items-center gap-4 mb-2">
                     <Fingerprint className="h-8 w-8 text-primary shadow-[0_0_20px_rgba(53,88,114,0.6)]" />
-                    <h3 className="text-base font-bold text-primary">Personal Identity Node</h3>
+                    <h3 className="text-base font-black uppercase tracking-widest text-primary">Personal Identity Node</h3>
                   </div>
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-300 ml-4">Full Legal Identity</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">Full Legal Identity</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="Juan Dela Cruz" 
@@ -226,7 +226,7 @@ function RegistrationContent() {
                       name="age"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-300 ml-4">Bio-Metric Age</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">Bio-Metric Age</FormLabel>
                           <FormControl>
                             <Input type="text" inputMode="numeric" placeholder="20" {...field} className="h-24 rounded-[2.5rem] border-none bg-black/40 font-bold text-3xl text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/60 transition-all shadow-inner px-12" />
                           </FormControl>
@@ -239,7 +239,7 @@ function RegistrationContent() {
                       name="role"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-300 ml-4">Registry Role</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">Registry Role</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-24 rounded-[2.5rem] border-none bg-black/40 font-bold text-3xl text-white focus:ring-1 focus:ring-primary/60 shadow-inner px-12 transition-all">
@@ -247,10 +247,10 @@ function RegistrationContent() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-[#0B1218] border-white/10 text-white">
-                              <SelectItem value="Student" className="focus:bg-primary/20 focus:text-white">Student</SelectItem>
-                              <SelectItem value="Faculty" className="focus:bg-primary/20 focus:text-white">Faculty</SelectItem>
-                              <SelectItem value="Staff" className="focus:bg-primary/20 focus:text-white">Staff</SelectItem>
-                              <SelectItem value="Visitor" className="focus:bg-primary/20 focus:text-white">Visitor</SelectItem>
+                              <SelectItem value="Student" className="focus:bg-primary/20 focus:text-white font-bold">Student</SelectItem>
+                              <SelectItem value="Faculty" className="focus:bg-primary/20 focus:text-white font-bold">Faculty</SelectItem>
+                              <SelectItem value="Staff" className="focus:bg-primary/20 focus:text-white font-bold">Staff</SelectItem>
+                              <SelectItem value="Visitor" className="focus:bg-primary/20 focus:text-white font-bold">Visitor</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage className="text-red-500 text-xs font-medium ml-4" />
@@ -263,7 +263,7 @@ function RegistrationContent() {
                 <div className="p-12 bg-black/40 rounded-[4rem] border border-white/5 space-y-10 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <ShieldCheck className="h-8 w-8 text-primary shadow-[0_0_20px_rgba(53,88,114,0.6)]" />
-                    <h3 className="text-base font-bold text-primary">Credential Verification Node</h3>
+                    <h3 className="text-base font-black uppercase tracking-widest text-primary">Credential Verification Node</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <FormField
@@ -271,7 +271,7 @@ function RegistrationContent() {
                       name="schoolId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-300 ml-4">Registry ID</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">Registry ID</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input 
@@ -296,7 +296,7 @@ function RegistrationContent() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-slate-300 ml-4">Verified SSO Node</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">Verified SSO Node</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input 
@@ -322,14 +322,14 @@ function RegistrationContent() {
                 <div className="p-12 bg-black/40 rounded-[4rem] border border-white/5 space-y-10 relative overflow-hidden group transition-all hover:bg-black/50 hover:border-white/10 shadow-2xl">
                   <div className="flex items-center gap-4 mb-2">
                     <GraduationCap className="h-8 w-8 text-primary shadow-[0_0_20px_rgba(53,88,114,0.6)]" />
-                    <h3 className="text-base font-bold text-primary">Academic Mapping Node</h3>
+                    <h3 className="text-base font-black uppercase tracking-widest text-primary">Academic Mapping Node</h3>
                   </div>
                   <FormField
                     control={form.control}
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-300 ml-4">College / Department Unit</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">College / Department Unit</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-24 rounded-[2.5rem] border-none bg-black/40 font-bold text-2xl text-white focus:ring-1 focus:ring-primary/60 shadow-inner transition-all px-12">
@@ -352,7 +352,7 @@ function RegistrationContent() {
                     name="purposeId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-300 ml-4">Node Activity Intent</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase text-slate-300 ml-4 tracking-widest">Node Activity Intent</FormLabel>
                         <div className="relative">
                           <Select onValueChange={field.onChange} value={field.value} disabled={!!initialPurposeId}>
                             <FormControl>
@@ -365,7 +365,7 @@ function RegistrationContent() {
                             </FormControl>
                             <SelectContent className="bg-[#0B1218] border-white/10 text-white">
                               {(settings?.purposes || PURPOSES).map((p: any) => (
-                                <SelectItem key={p.id} value={p.id} className="focus:bg-primary/20 focus:text-white">{p.label}</SelectItem>
+                                <SelectItem key={p.id} value={p.id} className="focus:bg-primary/20 focus:text-white font-bold">{p.label}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -383,12 +383,12 @@ function RegistrationContent() {
                     variant="ghost"
                     onClick={handleBack}
                     disabled={isLoading}
-                    className="h-28 px-16 text-lg font-bold border border-white/10 bg-white/5 rounded-[3rem] text-slate-400 hover:text-white transition-all hover:bg-white/10 active:scale-95"
+                    className="h-28 px-16 text-lg font-black uppercase tracking-widest border border-white/10 bg-white/5 rounded-[3rem] text-slate-400 hover:text-white transition-all hover:bg-white/10 active:scale-95"
                   >
                     <ArrowLeft className="mr-4 h-8 w-8" />
                     Back
                   </Button>
-                  <Button disabled={isLoading} className="flex-1 h-28 text-xl font-bold bg-primary hover:bg-primary/90 text-white rounded-[3rem] shadow-[0_0_60px_rgba(53,88,114,0.5)] hover:shadow-[0_0_80px_rgba(53,88,114,0.7)] active:scale-[0.98] transition-all relative overflow-hidden group">
+                  <Button disabled={isLoading} className="flex-1 h-28 text-xl font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-white rounded-[3rem] shadow-[0_0_60px_rgba(53,88,114,0.5)] hover:shadow-[0_0_80px_rgba(53,88,114,0.7)] active:scale-[0.98] transition-all relative overflow-hidden group">
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     {isLoading ? <Loader2 className="h-12 w-12 animate-spin" /> : (
                       <span className="flex items-center justify-center gap-8">

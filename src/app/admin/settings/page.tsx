@@ -459,7 +459,7 @@ export default function SettingsPage() {
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0 bg-white">
-                    <AlertDialogHeader className="p-10 bg-red-600 text-white text-center">
+                    <div className="p-10 bg-red-600 text-white text-center">
                       <div className="p-4 bg-white/20 rounded-full w-fit mx-auto mb-6">
                         <Skull className="h-10 w-10 text-white" />
                       </div>
@@ -469,7 +469,7 @@ export default function SettingsPage() {
                       <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">
                         This protocol will PERMANENTLY ERASE every patron record and visit log in the system. This action is irreversible.
                       </AlertDialogDescription>
-                    </AlertDialogHeader>
+                    </div>
                     <div className="p-10 space-y-6 text-center">
                       <div className="grid grid-cols-2 gap-4">
                         <AlertDialogCancel className="h-12 rounded-xl font-black text-[9px] uppercase tracking-widest">Abort Action</AlertDialogCancel>

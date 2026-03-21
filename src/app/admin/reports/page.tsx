@@ -124,9 +124,11 @@ export default function ReportsPage() {
         const patronId = visitSnap.data().patronId;
         const batch = writeBatch(db);
         
+        // BI-DIRECTIONAL DELETION: Delete patron profile
         const patronRef = doc(db, 'patrons', patronId);
         batch.delete(patronRef);
         
+        // CASCADE DELETION: Delete all logs associated with this patron
         const q = query(collection(db, 'visits'), where('patronId', '==', patronId));
         const visitsSnap = await getDocs(q);
         visitsSnap.docs.forEach(d => batch.delete(d.ref));
@@ -148,12 +150,16 @@ export default function ReportsPage() {
     }
   };
 
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
+
   const handleExportPDF = () => {
     setIsExporting(true);
     setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.print();
-      }
+      handlePrint();
       setIsExporting(false);
       toast({ title: "Export Initialized", description: "Audit document is being prepared for save." });
     }, 300);
@@ -186,11 +192,7 @@ export default function ReportsPage() {
           <Button 
             type="button"
             aria-label="Print audit report"
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.print();
-              }
-            }} 
+            onClick={handlePrint} 
             variant="outline" 
             className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
           >

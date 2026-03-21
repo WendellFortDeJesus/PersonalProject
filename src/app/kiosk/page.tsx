@@ -184,7 +184,7 @@ export default function KioskAuthPage() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl space-y-6 animate-fade-in px-8">
+      <div className="relative z-10 w-full max-w-6xl space-y-6 animate-fade-in px-8">
         <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[4rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
           <CardHeader className="text-center pt-16 pb-10 px-16 space-y-4">
             <div className="flex justify-center mb-2">
@@ -200,7 +200,7 @@ export default function KioskAuthPage() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-16 pb-16 space-y-12 overflow-y-auto max-h-[60vh] no-scrollbar">
+          <CardContent className="px-16 pb-16 space-y-12">
             {/* Segmented Control */}
             <div className="relative bg-black/40 p-3 rounded-full h-24 border border-white/10 flex items-center shadow-inner">
               <div 
@@ -341,7 +341,6 @@ export default function KioskAuthPage() {
             </div>
 
             <div className="flex flex-col items-center gap-8 pt-8 border-t border-white/5">
-               <button className="text-xs font-bold text-slate-500 hover:text-primary transition-colors duration-300">Identity Access Assistance</button>
                <div className="flex items-center gap-4 opacity-40">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Institutional Data Clearance: Node Alpha Only</span>

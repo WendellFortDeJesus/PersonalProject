@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PURPOSES } from '@/lib/data';
 import * as Icons from 'lucide-react';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, use } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +48,7 @@ function PurposeSelectionContent() {
       params.set('authMethod', authMethod);
       if (initialEmail) params.set('email', initialEmail);
       if (initialSchoolId) params.set('schoolId', initialSchoolId);
-      router.push(`/kiosk/register?${params.toString()}`);
+      router.push(`/kiosk/purpose?${params.toString()}`);
       return;
     }
 
@@ -197,7 +197,14 @@ function PurposeSelectionContent() {
   );
 }
 
-export default function PurposeSelectionPage() {
+export default function PurposeSelectionPage(props: {
+  params: Promise<any>;
+  searchParams: Promise<any>;
+}) {
+  // Unwrap promises to satisfy Next.js 15 sync-dynamic-apis requirements
+  use(props.params);
+  use(props.searchParams);
+
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Segment Node...</div>}>
       <PurposeSelectionContent />

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -418,7 +418,14 @@ function RegistrationContent() {
   );
 }
 
-export default function RegistrationPage() {
+export default function RegistrationPage(props: {
+  params: Promise<any>;
+  searchParams: Promise<any>;
+}) {
+  // Unwrap promises to satisfy Next.js 15 sync-dynamic-apis requirements
+  use(props.params);
+  use(props.searchParams);
+
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Initializing Protocol Node...</div>}>
       <RegistrationContent />

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, Suspense, useState } from 'react';
+import { useEffect, Suspense, useState, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -118,7 +118,14 @@ function SuccessContent() {
   );
 }
 
-export default function SuccessPage() {
+export default function SuccessPage(props: {
+  params: Promise<any>;
+  searchParams: Promise<any>;
+}) {
+  // Unwrap promises to satisfy Next.js 15 sync-dynamic-apis requirements
+  use(props.params);
+  use(props.searchParams);
+
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#0B1218] flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest animate-pulse">Updating Registry...</div>}>
       <SuccessContent />

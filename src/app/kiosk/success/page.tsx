@@ -10,12 +10,15 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
+const MASTER_EMAIL = 'jcesperanza@neu.edu.ph';
+
 function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const db = useFirestore();
   const status = searchParams.get('status');
   const name = searchParams.get('name');
+  const email = searchParams.get('email');
   const [binaryBits, setBinaryBits] = useState<string[]>([]);
 
   const settingsRef = useMemoFirebase(() => {
@@ -26,7 +29,7 @@ function SuccessContent() {
 
   const timeout = (settings?.timeoutSeconds || 5) * 1000;
   const isBlocked = status === 'blocked';
-  const isAdmin = status === 'admin';
+  const isAdmin = status === 'admin' || (email && email.toLowerCase() === MASTER_EMAIL);
 
   useEffect(() => {
     setBinaryBits(Array.from({ length: 48 }, () => Math.random() > 0.5 ? '1' : '0'));

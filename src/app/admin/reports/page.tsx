@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, orderBy, doc, deleteDoc, getDoc, writeBatch, where, getDocs } from 'firebase/firestore';
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
@@ -25,7 +26,9 @@ import {
   Trash2,
   AlertTriangle,
   PenTool,
-  Loader2
+  Loader2,
+  Table,
+  CheckCircle2
 } from 'lucide-react';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -49,6 +52,7 @@ export default function ReportsPage() {
   const [generatedOn, setGeneratedOn] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReviewed, setIsReviewed] = useState(false);
   
   // State for deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -156,13 +160,47 @@ export default function ReportsPage() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportCSV = () => {
+    if (!filteredVisits.length) {
+      toast({ variant: "destructive", title: "No Data", description: "There are no records to export." });
+      return;
+    }
+    
     setIsExporting(true);
-    setTimeout(() => {
-      handlePrint();
+    
+    try {
+      const headers = ["Timestamp", "Patron Name", "School ID", "Unit", "Role", "Purpose", "Status"];
+      const rows = filteredVisits.map(v => [
+        v.timestamp ? format(new Date(v.timestamp), 'yyyy-MM-dd HH:mm:ss') : '---',
+        v.patronName || 'PURGED IDENTITY',
+        v.schoolId || '---',
+        (v.patronDepartments && v.patronDepartments[0]) || 'Unassigned',
+        v.patronRole || 'Patron',
+        v.purpose || 'Visit',
+        v.status || 'granted'
+      ]);
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `NEU_Library_Audit_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({ title: "CSV Stream Initialized", description: "Audit spreadsheet has been successfully generated." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Export Failed", description: "Failed to generate CSV data stream." });
+    } finally {
       setIsExporting(false);
-      toast({ title: "Export Initialized", description: "Audit document is being prepared for save." });
-    }, 300);
+    }
   };
 
   const setToday = () => {
@@ -188,27 +226,42 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-headline font-black text-primary uppercase tracking-tighter leading-none">Institutional Audits</h1>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mt-1">Strategic Intelligence Engine</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            type="button"
-            aria-label="Print audit report"
-            onClick={handlePrint} 
-            variant="outline" 
-            className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
-          >
-            <Printer className="h-3.5 w-3.5 mr-2" />
-            Print
-          </Button>
-          <Button 
-            type="button"
-            aria-label="Export audit report as PDF"
-            onClick={handleExportPDF}
-            disabled={isExporting}
-            className="rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md shadow-primary/10 hover:bg-primary/90 transition-all active:scale-95"
-          >
-            {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-2" />}
-            Export PDF
-          </Button>
+        <div className="flex items-center gap-3">
+          <Card className="flex items-center gap-3 px-4 py-2 border-slate-200 bg-white shadow-sm rounded-xl">
+            <Checkbox id="review-confirm" checked={isReviewed} onCheckedChange={(val) => setIsReviewed(!!val)} className="border-slate-300 data-[state=checked]:bg-primary" />
+            <Label htmlFor="review-confirm" className="text-[8px] font-black uppercase tracking-widest text-slate-500 cursor-pointer select-none">
+              Data Reviewed & Verified
+            </Label>
+          </Card>
+          <div className="flex items-center gap-2">
+            <Button 
+              type="button"
+              aria-label="Print audit report"
+              onClick={handlePrint} 
+              disabled={!isReviewed}
+              variant="outline" 
+              className={cn(
+                "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm transition-all active:scale-95",
+                isReviewed ? "border-slate-200 text-primary hover:bg-slate-50" : "opacity-40 cursor-not-allowed border-slate-100 text-slate-300"
+              )}
+            >
+              <Printer className="h-3.5 w-3.5 mr-2" />
+              Print
+            </Button>
+            <Button 
+              type="button"
+              aria-label="Export audit report as CSV"
+              onClick={handleExportCSV}
+              disabled={isExporting || !isReviewed}
+              className={cn(
+                "rounded-xl font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md transition-all active:scale-95",
+                isReviewed ? "bg-primary text-white shadow-primary/10 hover:bg-primary/90" : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+              )}
+            >
+              {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <Table className="h-3.5 w-3.5 mr-2" />}
+              Export CSV
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -297,6 +350,18 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {!isReviewed && (
+        <Card className="border-dashed border-2 border-primary/20 bg-primary/5 rounded-[2rem] p-12 text-center space-y-4 no-print">
+          <CheckCircle2 className="h-12 w-12 text-primary/40 mx-auto" />
+          <div className="space-y-1">
+            <h3 className="text-xl font-headline font-black text-primary uppercase tracking-tight">Audit Review Required</h3>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest max-w-md mx-auto">
+              Please verify the filtered registry entries below. Once verified, check the "Data Reviewed" box to authorize print and export protocols.
+            </p>
+          </div>
+        </Card>
+      )}
 
       <div className="bg-white p-12 rounded-[2rem] shadow-xl border border-slate-100 min-h-[800px] print:shadow-none print:p-4 print:m-0 print:rounded-none">
         <div className="flex items-center justify-between mb-10">

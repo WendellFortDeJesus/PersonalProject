@@ -39,10 +39,10 @@ export default function KioskAuthPage() {
     if (!auth || !db) return;
 
     const handleRedirect = async () => {
-      setIsSyncing(true);
       try {
         const result = await getRedirectResult(auth);
         if (result) {
+          setIsSyncing(true);
           const user = result.user;
           const userEmail = user.email || "";
 
@@ -76,19 +76,21 @@ export default function KioskAuthPage() {
               router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
             }
           }
-        } else {
-          setIsSyncing(false);
         }
       } catch (error: any) {
         setIsSyncing(false);
         console.error("SSO Handshake Error:", error);
-        if (error.code !== 'auth/no-auth-event') {
-          toast({
-            variant: "destructive",
-            title: "SSO SYNC FAILED",
-            description: error.message || "COULD NOT VALIDATE IDENTITY.",
-          });
+        
+        let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
+        if (error.code === 'auth/unauthorized-domain') {
+          errorDesc = `DOMAIN UNAUTHORIZED: Please add '${window.location.hostname}' to the Authorized Domains list in the Firebase Console.`;
         }
+
+        toast({
+          variant: "destructive",
+          title: "SSO SYNC FAILED",
+          description: errorDesc,
+        });
       }
     };
 
@@ -194,14 +196,17 @@ export default function KioskAuthPage() {
     });
     
     try {
-      // Use Redirect instead of Popup to avoid browser blocking
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
+      let errorDesc = error.message || "FAILED TO INITIATE SSO.";
+      if (error.code === 'auth/unauthorized-domain') {
+        errorDesc = `GATEWAY BLOCKED: The domain '${window.location.hostname}' must be added to the Authorized Domains list in the Firebase Console.`;
+      }
       toast({
         variant: "destructive",
         title: "GATEWAY ERROR",
-        description: error.message || "FAILED TO INITIATE SSO.",
+        description: errorDesc,
       });
     }
   };
@@ -268,7 +273,7 @@ export default function KioskAuthPage() {
                 )}
               >
                 <Fingerprint className="h-3 w-3" />
-                RFID
+                RFID LOGIN
               </button>
               <button 
                 type="button"
@@ -279,7 +284,7 @@ export default function KioskAuthPage() {
                 )}
               >
                 <Mail className="h-3 w-3" />
-                SSO
+                EMAIL SSO
               </button>
             </div>
             
@@ -361,7 +366,7 @@ export default function KioskAuthPage() {
                           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="currentColor"/>
                           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="currentColor"/>
                         </svg>
-                        GOOGLE SSO
+                        SIGN-IN WITH GOOGLE
                       </>
                     )}
                   </Button>

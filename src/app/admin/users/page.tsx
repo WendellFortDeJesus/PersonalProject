@@ -50,7 +50,8 @@ import {
   CalendarDays,
   Fingerprint,
   PenTool,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { DEPARTMENTS } from '@/lib/data';
 
@@ -63,6 +64,7 @@ export default function UserManagementPage() {
   const [adminSignature, setAdminSignature] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
   const [selectedRole, setSelectedRole] = useState('all');
+  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const db = useFirestore();
@@ -95,22 +97,48 @@ export default function UserManagementPage() {
 
   const handleSaveChanges = async () => {
     if (!db || !editingPatron) return;
+    setIsSaving(true);
+    
     const patronRef = doc(db, 'patrons', editingPatron.id);
     const { id, ...updateData } = editingPatron;
     updateData.updatedAt = new Date().toISOString();
     
-    updateDoc(patronRef, updateData)
-      .then(() => {
-        setIsEditSheetOpen(false);
-        toast({ title: "Registry Updated", description: "The profile has been successfully synchronized." });
-      })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: patronRef.path,
-          operation: 'update',
-          requestResourceData: updateData,
-        }));
+    try {
+      const batch = writeBatch(db);
+      
+      // Update Patron Document
+      batch.update(patronRef, updateData);
+      
+      // Find and Update all associated Visits for this patron to keep information in sync
+      const visitsQuery = query(collection(db, 'visits'), where('patronId', '==', editingPatron.id));
+      const visitsSnap = await getDocs(visitsQuery);
+      
+      visitsSnap.docs.forEach((visitDoc) => {
+        batch.update(visitDoc.ref, {
+          patronName: updateData.name,
+          patronDepartments: updateData.departments,
+          patronRole: updateData.role,
+          patronAge: updateData.age,
+          schoolId: updateData.schoolId
+        });
       });
+      
+      await batch.commit();
+      
+      setIsEditSheetOpen(false);
+      setIsSaving(false);
+      toast({ 
+        title: "Registry & Reports Synchronized", 
+        description: "Profile changes have been propagated across all institutional nodes." 
+      });
+    } catch (error) {
+      setIsSaving(false);
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: patronRef.path,
+        operation: 'update',
+        requestResourceData: updateData,
+      }));
+    }
   };
 
   const toggleBlockStatus = async (patron: any) => {
@@ -445,7 +473,9 @@ export default function UserManagementPage() {
           </div>
           <SheetFooter className="p-10 bg-slate-50 border-t gap-4 shrink-0">
             <Button variant="ghost" onClick={() => setIsEditSheetOpen(false)} className="h-14 font-black uppercase text-[10px] tracking-widest flex-1 border-slate-200 rounded-2xl bg-white">Cancel</Button>
-            <Button onClick={handleSaveChanges} className="h-14 font-black uppercase text-[10px] tracking-widest bg-primary text-white px-10 flex-1 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Commit Changes</Button>
+            <Button onClick={handleSaveChanges} disabled={isSaving} className="h-14 font-black uppercase text-[10px] tracking-widest bg-primary text-white px-10 flex-1 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Commit Changes"}
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>

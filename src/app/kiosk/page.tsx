@@ -116,8 +116,20 @@ export default function KioskAuthPage() {
       <div className="absolute inset-0 z-0 opacity-10 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px]" />
       
       <div className="relative z-10 w-full max-w-2xl animate-fade-in transition-all duration-500">
-        <Card className="border-none shadow-[0_0_120px_rgba(0,0,0,0.9)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[820px] flex flex-col">
-          <CardHeader className="text-center pt-12 pb-6 px-8 space-y-4 shrink-0">
+        <Card className="relative border-none shadow-[0_0_120px_rgba(0,0,0,0.9)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[820px] flex flex-col">
+          {/* Abort Control - Positioned Upper Left */}
+          <div className="absolute top-10 left-10 z-20">
+            <Button 
+              variant="ghost" 
+              onClick={() => router.push('/')}
+              className="h-10 px-4 text-slate-500 hover:text-white font-black text-[8px] uppercase tracking-[0.3em] rounded-xl bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 border border-white/5"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              ABORT PROTOCOL
+            </Button>
+          </div>
+
+          <CardHeader className="text-center pt-14 pb-6 px-8 space-y-4 shrink-0">
             <div className="flex justify-center">
               <div className="p-2.5 bg-[#355872]/20 rounded-xl ring-1 ring-[#355872]/40 shadow-[0_0_20px_rgba(53,88,114,0.3)]">
                 <Shield className="h-6 w-6 text-[#7AAACE]" />
@@ -131,9 +143,9 @@ export default function KioskAuthPage() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12 space-y-6 flex-1 flex flex-col no-scrollbar overflow-hidden">
+          <CardContent className="px-10 pb-12 space-y-8 flex-1 flex flex-col no-scrollbar overflow-hidden">
             {/* Tab Navigation */}
-            <div className="bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
+            <div className="bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0 max-w-xs mx-auto w-full">
               <div className="flex gap-1">
                 {(['rfid', 'email', 'google'] as const).map((tab) => (
                   <button 
@@ -149,27 +161,15 @@ export default function KioskAuthPage() {
                 ))}
               </div>
             </div>
-
-            {/* Abort Control - Moved up for better visibility */}
-            <div className="shrink-0">
-              <Button 
-                variant="ghost" 
-                onClick={() => router.push('/')}
-                className="w-full h-12 text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.3em] rounded-2xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                ABORT PROTOCOL
-              </Button>
-            </div>
             
             {/* Central HUD Scanner */}
-            <div className="flex flex-col items-center justify-center py-2 space-y-8 flex-1 overflow-hidden">
-              <div className="relative w-40 h-40 flex items-center justify-center mb-2 shrink-0">
+            <div className="flex flex-col items-center justify-center py-4 space-y-8 flex-1 overflow-hidden">
+              <div className="relative w-44 h-44 flex items-center justify-center mb-2 shrink-0">
                 <div className="absolute inset-0 rounded-full border border-[#355872]/20 animate-pulse" />
                 <div className="absolute inset-4 rounded-full border border-[#355872]/10" />
-                <div className="relative p-8 bg-black/40 rounded-full ring-1 ring-[#355872]/20 shadow-inner overflow-hidden">
+                <div className="relative p-10 bg-black/40 rounded-full ring-1 ring-[#355872]/20 shadow-inner overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-t from-[#355872]/10 to-transparent" />
-                   <Scan className="h-10 w-10 text-[#355872]/60 relative z-10" />
+                   <Scan className="h-12 w-12 text-[#355872]/60 relative z-10" />
                 </div>
                 
                 {/* Corner Frame Accents */}

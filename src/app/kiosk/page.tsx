@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -116,7 +115,7 @@ export default function KioskAuthPage() {
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden p-6">
       <div className="absolute inset-0 z-0 opacity-10 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px]" />
       
-      <div className="relative z-10 w-full max-w-lg animate-fade-in transition-all duration-500">
+      <div className="relative z-10 w-full max-w-2xl animate-fade-in transition-all duration-500">
         <Card className="border-none shadow-[0_0_120px_rgba(0,0,0,0.9)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[820px] flex flex-col">
           <CardHeader className="text-center pt-12 pb-6 px-8 space-y-4 shrink-0">
             <div className="flex justify-center">
@@ -132,7 +131,7 @@ export default function KioskAuthPage() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12 space-y-10 flex-1 flex flex-col no-scrollbar">
+          <CardContent className="px-10 pb-12 space-y-8 flex-1 flex flex-col no-scrollbar">
             {/* Tab Navigation */}
             <div className="bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
               <div className="flex gap-1">
@@ -237,7 +236,7 @@ export default function KioskAuthPage() {
             </div>
 
             {/* Bottom Controls */}
-            <div className="space-y-6 pt-4 shrink-0">
+            <div className="pt-4 shrink-0 flex flex-col items-center gap-4">
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/')}

@@ -23,6 +23,7 @@ Authorized personnel can access the Command Center using the following instituti
 
 - **Identity UID**: `jcesperanza@neu.edu.ph`
 - **Access Token**: `12345`
+- **Administrative Signature For Account Deletion**: `jcesperanza@neu.edu.ph`
 
 ## 📁 Project Structure
 

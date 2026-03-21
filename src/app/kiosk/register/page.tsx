@@ -17,6 +17,7 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
 

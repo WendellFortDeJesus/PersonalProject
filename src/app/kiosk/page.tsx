@@ -61,20 +61,21 @@ export default function KioskAuthPage() {
           setIsLoading(true);
           const user = result.user;
           
-          if (!user.email?.endsWith(`@${enforcedDomain}`)) {
+          // STRICT DOMAIN ENFORCEMENT
+          if (!user.email?.toLowerCase().endsWith(`@${enforcedDomain}`)) {
             await signOut(auth);
             setIsLoading(false);
             toast({
               variant: "destructive",
-              title: "ACCESS RESTRICTED",
-              description: `ONLY @${enforcedDomain} ACCOUNTS ARE AUTHORIZED FOR TERMINAL ACCESS.`,
+              title: "DOMAIN ACCESS DENIED",
+              description: `ONLY @${enforcedDomain.toUpperCase()} ACCOUNTS ARE AUTHORIZED FOR THIS TERMINAL.`,
             });
             return;
           }
 
           if (user.email) {
             const patronsRef = collection(db, 'patrons');
-            const q = query(patronsRef, where('email', '==', user.email), limit(1));
+            const q = query(patronsRef, where('email', '==', user.email.toLowerCase()), limit(1));
             const snap = await getDocs(q);
             
             if (snap.empty) {
@@ -92,18 +93,18 @@ export default function KioskAuthPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        console.error("KIOSK SSO ERROR:", error);
+        console.error("SSO REDIRECT HANDSHAKE ERROR:", error);
         if (error.code === 'auth/unauthorized-domain') {
           toast({
             variant: "destructive",
-            title: "DOMAIN NOT WHITELISTED",
-            description: "PLEASE ADD THIS WORKSTATION DOMAIN TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE AUTH CONSOLE.",
+            title: "DOMAIN NOT AUTHORIZED",
+            description: "ENSURE THIS WORKSTATION URL IS WHITELISTED IN FIREBASE AUTH SETTINGS.",
           });
         } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
             title: "AUTHENTICATION ERROR",
-            description: error.message || "FAILED TO FINALIZE GOOGLE SSO SESSION.",
+            description: error.message || "FAILED TO FINALIZE SECURE SESSION.",
           });
         }
       }
@@ -115,7 +116,11 @@ export default function KioskAuthPage() {
     e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+    // Suggest the hosted domain to Google
+    provider.setCustomParameters({ 
+      prompt: 'select_account',
+      hd: enforcedDomain
+    });
 
     try {
       await signInWithRedirect(auth, provider);
@@ -125,14 +130,14 @@ export default function KioskAuthPage() {
       if (error.code === 'auth/unauthorized-domain') {
         toast({
           variant: "destructive",
-          title: "DOMAIN NOT WHITELISTED",
-          description: "ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE AUTH CONSOLE.",
+          title: "UNAUTHORIZED SOURCE",
+          description: "DOMAIN WHITELIST ERROR. PLEASE UPDATE FIREBASE CONSOLE.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "SSO INITIATION FAILED",
-          description: "VERIFY YOUR AUTHORIZED DOMAINS IN FIREBASE CONSOLE.",
+          title: "SSO FAILED",
+          description: "PROTOCOL HANDSHAKE FAILED. CHECK SYSTEM CONNECTIVITY.",
         });
       }
     }
@@ -170,7 +175,7 @@ export default function KioskAuthPage() {
       }
 
       const field = activeTab === 'rfid' ? 'schoolId' : 'email';
-      const value = activeTab === 'rfid' ? rfid : email;
+      const value = activeTab === 'rfid' ? rfid : email.toLowerCase();
 
       const q = query(patronsRef, where(field, '==', value), limit(1));
       const querySnapshot = await getDocs(q);
@@ -181,7 +186,7 @@ export default function KioskAuthPage() {
         params.set('isNew', 'true');
         params.set('authMethod', authMethod);
         if (activeTab === 'rfid') params.set('schoolId', rfid);
-        if (activeTab === 'email') params.set('email', email);
+        if (activeTab === 'email') params.set('email', email.toLowerCase());
         router.push(`/kiosk/purpose?${params.toString()}`);
         return;
       }
@@ -337,7 +342,7 @@ export default function KioskAuthPage() {
                     
                     <div className="relative flex items-center gap-4 py-2">
                       <div className="h-px bg-white/5 flex-1 opacity-20" />
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">ALTERNATIVE</span>
+                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">ALTERNATIVE GATEWAY</span>
                       <div className="h-px bg-white/5 flex-1 opacity-20" />
                     </div>
 

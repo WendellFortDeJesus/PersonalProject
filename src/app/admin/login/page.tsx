@@ -33,14 +33,14 @@ export default function AdminLoginPage() {
         if (result) {
           setIsLoading(true);
           const user = result.user;
-          // Security enforcement for Admin Node
+          // SECURITY ENFORCEMENT: Only jcesperanza@neu.edu.ph can access Admin Node
           if (user.email !== 'jcesperanza@neu.edu.ph') {
             await signOut(auth);
             setIsLoading(false);
             toast({
               variant: "destructive",
               title: "ACCESS RESTRICTED",
-              description: "UNAUTHORIZED ACCOUNT. ONLY JCESPERANZA@NEU.EDU.PH IS PERMITTED.",
+              description: "UNAUTHORIZED IDENTITY. ONLY JCESPERANZA@NEU.EDU.PH IS PERMITTED.",
             });
             return;
           }
@@ -48,18 +48,12 @@ export default function AdminLoginPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        console.error("AUTH REDIRECT ERROR:", error);
+        console.error("ADMIN SSO REDIRECT ERROR:", error);
         if (error.code === 'auth/unauthorized-domain') {
           toast({
             variant: "destructive",
-            title: "DOMAIN NOT AUTHORIZED",
-            description: "PLEASE ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
-          });
-        } else if (error.code === 'auth/operation-not-allowed') {
-          toast({
-            variant: "destructive",
-            title: "PROTOCOL NOT ENABLED",
-            description: "ENSURE GOOGLE AUTH IS ENABLED IN YOUR FIREBASE CONSOLE.",
+            title: "UNAUTHORIZED SOURCE",
+            description: "PLEASE WHITELIST THIS WORKSTATION DOMAIN IN FIREBASE AUTH CONSOLE.",
           });
         } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
@@ -104,13 +98,16 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+    provider.setCustomParameters({ 
+      prompt: 'select_account',
+      hd: 'neu.edu.ph' // Enforce institutional domain suggestion
+    });
     
     try {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
-      console.error("SSO INITIATION ERROR:", error);
+      console.error("ADMIN SSO INITIATION ERROR:", error);
       if (error.code === 'auth/unauthorized-domain') {
         toast({
           variant: "destructive",

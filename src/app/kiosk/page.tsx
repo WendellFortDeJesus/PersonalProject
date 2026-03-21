@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
-import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, doc, setDoc } from 'firebase/firestore';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { cn } from '@/lib/utils';
+
+const MASTER_EMAIL = 'jcesperanza@neu.edu.ph';
 
 export default function KioskAuthPage() {
   const [email, setEmail] = useState('');
@@ -38,6 +40,25 @@ export default function KioskAuthPage() {
 
     try {
       if (!db) return;
+
+      // Special handling for Master Admin
+      if (activeTab === 'email' && email.toLowerCase() === MASTER_EMAIL) {
+        // Ensure admin identity exists in registry
+        const adminRef = doc(db, 'patrons', 'master-admin');
+        await setDoc(adminRef, {
+          id: 'master-admin',
+          email: MASTER_EMAIL,
+          name: 'JOSEPH CAESAR ESPERANZA',
+          role: 'Admin',
+          isBlocked: false,
+          schoolId: 'ADMIN-MASTER',
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        router.push(`/kiosk/success?status=admin&name=${encodeURIComponent("JOSEPH CAESAR ESPERANZA")}`);
+        return;
+      }
+
       const patronsRef = collection(db, 'patrons');
       const authMethod = activeTab === 'rfid' ? 'RF-ID Login' : 'SSO Login';
       
@@ -116,6 +137,24 @@ export default function KioskAuthPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const userEmail = (user.email || "").toLowerCase();
+
+      // Special handling for Master Admin
+      if (userEmail === MASTER_EMAIL) {
+        const adminRef = doc(db, 'patrons', user.uid);
+        await setDoc(adminRef, {
+          id: user.uid,
+          email: MASTER_EMAIL,
+          name: user.displayName?.toUpperCase() || 'JOSEPH CAESAR ESPERANZA',
+          role: 'Admin',
+          isBlocked: false,
+          schoolId: 'ADMIN-SSO',
+          updatedAt: new Date().toISOString(),
+          photoUrl: user.photoURL
+        }, { merge: true });
+
+        router.push(`/kiosk/success?status=admin&name=${encodeURIComponent(user.displayName || "JOSEPH CAESAR ESPERANZA")}`);
+        return;
+      }
 
       if (!userEmail.endsWith(`@${enforcedDomain}`)) {
         toast({

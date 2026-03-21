@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -128,13 +129,12 @@ function RegistrationContent() {
         status: "granted"
       };
       
-      await addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
+      addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'visits',
           operation: 'create',
           requestResourceData: visitData,
         }));
-        throw error;
       });
 
       router.push(`/kiosk/success?patronId=${patronDoc.id}&name=${encodeURIComponent(values.name)}`);
@@ -146,12 +146,12 @@ function RegistrationContent() {
   };
 
   const handleBack = () => {
-    const params = new URLSearchParams();
-    params.set('isNew', 'true');
-    params.set('authMethod', authMethod);
-    if (initialEmail) params.set('email', initialEmail);
-    if (initialSchoolId) params.set('schoolId', initialSchoolId);
-    router.push(`/kiosk/purpose?${params.toString()}`);
+    const queryParams = new URLSearchParams();
+    queryParams.set('isNew', 'true');
+    queryParams.set('authMethod', authMethod);
+    if (initialEmail) queryParams.set('email', initialEmail);
+    if (initialSchoolId) queryParams.set('schoolId', initialSchoolId);
+    router.push(`/kiosk/purpose?${queryParams.toString()}`);
   };
 
   return (
@@ -411,7 +411,11 @@ function RegistrationContent() {
   );
 }
 
-export default function RegistrationPage() {
+export default function RegistrationPage(props: { params: Promise<any>, searchParams: Promise<any> }) {
+  // Explicitly unwrap Next.js 15 async dynamic props to avoid Proxy enumeration warnings
+  use(props.params);
+  use(props.searchParams);
+
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Initializing Protocol Node...</div>}>
       <RegistrationContent />

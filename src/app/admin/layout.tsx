@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { use } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
@@ -25,7 +25,11 @@ import { signOut } from 'firebase/auth';
 import { ShieldCheck, LayoutDashboard, FileBarChart, LogOut, Users, Settings, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout(props: { children: React.ReactNode, params: Promise<any> }) {
+  // Explicitly unwrap params to comply with Next.js 15 asynchronous request APIs
+  use(props.params);
+  const { children } = props;
+
   const pathname = usePathname();
   const auth = useAuth();
   const router = useRouter();

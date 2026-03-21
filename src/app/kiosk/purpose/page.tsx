@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { PURPOSES } from '@/lib/data';
 import * as Icons from 'lucide-react';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, use } from 'react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -42,12 +43,12 @@ function PurposeSelectionContent() {
     setSelected(id);
 
     if (isNew) {
-      const params = new URLSearchParams();
-      params.set('purposeId', id);
-      params.set('authMethod', authMethod);
-      if (initialEmail) params.set('email', initialEmail);
-      if (initialSchoolId) params.set('schoolId', initialSchoolId);
-      router.push(`/kiosk/register?${params.toString()}`);
+      const queryParams = new URLSearchParams();
+      queryParams.set('purposeId', id);
+      queryParams.set('authMethod', authMethod);
+      if (initialEmail) queryParams.set('email', initialEmail);
+      if (initialSchoolId) queryParams.set('schoolId', initialSchoolId);
+      router.push(`/kiosk/register?${queryParams.toString()}`);
       return;
     }
 
@@ -77,13 +78,12 @@ function PurposeSelectionContent() {
         status: "granted"
       };
 
-      await addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
+      addDoc(collection(db, 'visits'), visitData).catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'visits',
           operation: 'create',
           requestResourceData: visitData,
         }));
-        throw error;
       });
 
       router.push(`/kiosk/success?patronId=${patronId}&purposeId=${id}&name=${encodeURIComponent(patronData.name)}`);
@@ -194,7 +194,11 @@ function PurposeSelectionContent() {
   );
 }
 
-export default function PurposeSelectionPage() {
+export default function PurposeSelectionPage(props: { params: Promise<any>, searchParams: Promise<any> }) {
+  // Explicitly unwrap Next.js 15 async dynamic props to avoid Proxy enumeration warnings
+  use(props.params);
+  use(props.searchParams);
+
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Segment Node...</div>}>
       <PurposeSelectionContent />

@@ -304,18 +304,24 @@ function RegistrationContent() {
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
                         <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Visit Purpose</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl font-bold">
-                              <SelectValue placeholder="Select Intent" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {(settings?.purposes || PURPOSES).map((p: any) => (
-                              <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="relative">
+                          <Select onValueChange={field.onChange} value={field.value} disabled={!!initialPurposeId}>
+                            <FormControl>
+                              <SelectTrigger className={cn(
+                                "h-12 rounded-xl font-bold",
+                                !!initialPurposeId && "bg-slate-50 border-slate-100 text-slate-500 pr-10"
+                              )}>
+                                <SelectValue placeholder="Select Intent" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {(settings?.purposes || PURPOSES).map((p: any) => (
+                                <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {!!initialPurposeId && <Lock className="absolute right-3 top-3.5 h-4 w-4 text-slate-300" />}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

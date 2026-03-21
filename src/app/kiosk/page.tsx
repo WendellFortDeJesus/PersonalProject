@@ -6,11 +6,11 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, RefreshCw, Info, Globe } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, RefreshCw, Info, Globe, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { cn } from '@/lib/utils';
 
 export default function KioskAuthPage() {
@@ -18,9 +18,7 @@ export default function KioskAuthPage() {
   const [rfid, setRfid] = useState('');
   const [activeTab, setActiveTab] = useState<'rfid' | 'email' | 'google'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [currentOrigin, setCurrentOrigin] = useState('');
-  const hasProcessedRedirect = useRef(false);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -40,82 +38,6 @@ export default function KioskAuthPage() {
       setCurrentOrigin(window.location.origin);
     }
   }, []);
-
-  const processAuthResult = async () => {
-    if (!auth || !db || hasProcessedRedirect.current) return;
-    
-    // Check if we are returning from a redirect
-    setIsSyncing(true);
-    try {
-      const result = await getRedirectResult(auth);
-      hasProcessedRedirect.current = true;
-      
-      if (result) {
-        const user = result.user;
-        const userEmail = user.email || "";
-
-        // POST-LOGIN DOMAIN ENFORCEMENT
-        if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-          toast({
-            variant: "destructive",
-            title: "DOMAIN REJECTED",
-            description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
-          });
-          setIsSyncing(false);
-          return;
-        }
-
-        const patronsRef = collection(db, 'patrons');
-        const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-          const params = new URLSearchParams();
-          params.set('isNew', 'true');
-          params.set('authMethod', 'SSO Login');
-          params.set('email', userEmail.toLowerCase());
-          params.set('name', user.displayName || "");
-          router.push(`/kiosk/purpose?${params.toString()}`);
-        } else {
-          const patronDoc = querySnapshot.docs[0];
-          const patronData = patronDoc.data();
-          if (patronData.isBlocked) {
-            router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
-          } else {
-            router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
-          }
-        }
-      } else {
-        setIsSyncing(false);
-      }
-    } catch (error: any) {
-      setIsSyncing(false);
-      console.error("SSO 403 Trace:", error);
-      
-      let errorTitle = "SSO HANDSHAKE ERROR";
-      let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
-
-      // Handle the specific 403 Forbidden / restricted_client error
-      if (error.code === 'auth/internal-error' || error.message?.includes('403')) {
-        errorTitle = "GOOGLE 403 FORBIDDEN";
-        errorDesc = "REASON: This domain is not whitelisted in Google Cloud Console 'JavaScript Origins'.";
-      } else if (error.code === 'auth/unauthorized-domain') {
-        errorTitle = "FIREBASE AUTH BLOCKED";
-        errorDesc = "REASON: Domain is missing from Firebase 'Authorized Domains' list.";
-      }
-
-      toast({
-        variant: "destructive",
-        title: errorTitle,
-        description: errorDesc,
-      });
-    }
-  };
-
-  useEffect(() => {
-    // Run once on mount to catch standard redirects
-    processAuthResult();
-  }, [auth, db]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,67 +108,77 @@ export default function KioskAuthPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth) return;
+    if (!auth || !db) return;
     setIsLoading(true);
     
     const provider = new GoogleAuthProvider();
-    // Removed 'hd' to avoid initiation errors on misconfigured domains
     provider.setCustomParameters({
       prompt: 'select_account'
     });
     
     try {
-      await signInWithRedirect(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const userEmail = user.email || "";
+
+      if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+        toast({
+          variant: "destructive",
+          title: "DOMAIN REJECTED",
+          description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const patronsRef = collection(db, 'patrons');
+      const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        const params = new URLSearchParams();
+        params.set('isNew', 'true');
+        params.set('authMethod', 'SSO Login');
+        params.set('email', userEmail.toLowerCase());
+        params.set('name', user.displayName || "");
+        router.push(`/kiosk/purpose?${params.toString()}`);
+      } else {
+        const patronDoc = querySnapshot.docs[0];
+        const patronData = patronDoc.data();
+        if (patronData.isBlocked) {
+          router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
+        } else {
+          router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
+        }
+      }
     } catch (error: any) {
       setIsLoading(false);
-      toast({
-        variant: "destructive",
-        title: "PROTOCOL ERROR",
-        description: error.message || "FAILED TO START SSO.",
-      });
+      console.error("SSO Error:", error);
+      
+      if (error.code === 'auth/popup-blocked') {
+        toast({
+          variant: "destructive",
+          title: "POPUP BLOCKED",
+          description: "PLEASE ENABLE POPUPS FOR THIS SITE IN YOUR BROWSER.",
+        });
+      } else if (error.code === 'auth/internal-error' || error.message?.includes('403')) {
+        toast({
+          variant: "destructive",
+          title: "403: GATEWAY BLOCKED",
+          description: "THE ORIGIN URL BELOW MUST BE ADDED TO GOOGLE CLOUD JS ORIGINS.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "PROTOCOL ERROR",
+          description: error.message || "FAILED TO START SSO.",
+        });
+      }
     }
-  };
-
-  const resetGateway = () => {
-    hasProcessedRedirect.current = false;
-    window.location.reload();
   };
 
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
-      {/* Syncing Overlay */}
-      {(isSyncing || isLoading) && (
-        <div className="absolute inset-0 z-[100] bg-[#0B1218]/95 backdrop-blur-2xl flex flex-col items-center justify-center space-y-8">
-          <div className="relative">
-            <div className="h-32 w-32 rounded-full border-t-2 border-primary animate-spin" />
-            <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 text-primary animate-pulse" />
-          </div>
-          <div className="text-center space-y-6 max-w-sm px-8">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-headline font-black text-white uppercase tracking-tighter">Syncing Identity</h2>
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Establishing Secure Protocol</p>
-            </div>
-            <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
-              <div className="flex items-center gap-2">
-                <Globe className="h-3 w-3 text-primary" />
-                <p className="text-[8px] font-mono text-white/40 truncate text-left">ORIGIN: {currentOrigin}</p>
-              </div>
-              <p className="text-[8px] font-bold text-red-400 uppercase tracking-widest leading-relaxed">
-                If stuck, verify that the 'ORIGIN' above is in your Google Cloud JavaScript Origins.
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={resetGateway}
-              className="h-12 text-[10px] font-black text-white border-white/10 hover:bg-white/5 uppercase tracking-[0.2em] w-full rounded-2xl"
-            >
-              <RefreshCw className="h-4 w-4 mr-3" />
-              Force Reset Gateway
-            </Button>
-          </div>
-        </div>
-      )}
-
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       </div>
@@ -280,7 +212,7 @@ export default function KioskAuthPage() {
               <button onClick={() => setActiveTab('google')} className={cn("relative z-10 flex-1 text-[8px] font-black uppercase tracking-widest transition-colors", activeTab === 'google' ? "text-white" : "text-slate-500")}>GOOGLE</button>
             </div>
             
-            <div className="min-h-[200px]">
+            <div className="min-h-[220px]">
               {activeTab === 'rfid' ? (
                 <form onSubmit={handleAuth} className="space-y-8 animate-fade-in">
                   <div className="text-center space-y-8">
@@ -336,7 +268,7 @@ export default function KioskAuthPage() {
                   </form>
                 </div>
               ) : (
-                <div className="space-y-8 animate-fade-in pt-8 text-center">
+                <div className="space-y-8 animate-fade-in pt-4 text-center">
                    <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-white/5 relative overflow-hidden group">
                       <div className="relative z-10 space-y-6">
                         <div className="flex justify-center">
@@ -355,20 +287,45 @@ export default function KioskAuthPage() {
                           disabled={isLoading}
                           className="w-full h-16 bg-white text-primary hover:bg-slate-50 font-black text-[11px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-4 transition-all"
                         >
-                          <svg className="h-5 w-5" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                          </svg>
-                          Authorize via Google SSO
+                          {isLoading ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <>
+                              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                              </svg>
+                              Authorize via Google SSO
+                            </>
+                          )}
                         </Button>
                       </div>
                    </div>
                    
-                   <div className="flex items-center gap-3 justify-center px-4 opacity-40">
-                      <Info className="h-3 w-3 text-primary" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white/50">Ensure pop-ups are allowed for this node</span>
+                   <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-3 w-3 text-blue-400" />
+                        <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Diagnostic Origin</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <code className="text-[7px] font-mono text-white/60 truncate max-w-[200px]">{currentOrigin}</code>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-[7px] font-black uppercase text-blue-400 hover:bg-blue-400/10"
+                          onClick={() => {
+                            navigator.clipboard.writeText(currentOrigin);
+                            toast({ title: "Copied!", description: "Origin URL copied to clipboard." });
+                          }}
+                        >
+                          Copy URL
+                        </Button>
+                      </div>
+                      <p className="text-[7px] font-bold text-white/30 uppercase tracking-tighter text-left">
+                        * ENSURE THIS EXACT URL IS IN GOOGLE CLOUD JS ORIGINS
+                      </p>
                    </div>
                 </div>
               )}
@@ -385,14 +342,11 @@ export default function KioskAuthPage() {
                 ABORT PROTOCOL
               </Button>
 
-              <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-4 w-4 text-blue-500 shrink-0" />
-                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest leading-none">Diagnostic Node</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[7px] font-mono text-white/40 truncate">ORIGIN: {currentOrigin || 'Detecting...'}</p>
-                </div>
+              <div className="p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 flex items-start gap-3">
+                 <Info className="h-4 w-4 text-yellow-500/40 shrink-0 mt-0.5" />
+                 <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest leading-relaxed">
+                   If authentication fails, verify that your browser is not blocking popups and that the origin above is whitelisted.
+                 </p>
               </div>
             </div>
           </CardContent>

@@ -10,7 +10,7 @@ import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
 
 export default function KioskAuthPage() {
@@ -53,6 +53,56 @@ export default function KioskAuthPage() {
     }
   }, [activeTab]);
 
+  // Handle Google Redirect Result
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user && db) {
+          setIsLoading(true);
+          const user = result.user;
+          
+          if (!user.email?.endsWith(`@${enforcedDomain}`)) {
+            await signOut(auth);
+            setIsLoading(false);
+            toast({
+              variant: "destructive",
+              title: "Access Restricted",
+              description: `Only @${enforcedDomain} accounts are authorized for terminal access.`,
+            });
+            return;
+          }
+
+          if (user.email) {
+            const patronsRef = collection(db, 'patrons');
+            const q = query(patronsRef, where('email', '==', user.email), limit(1));
+            const snap = await getDocs(q);
+            
+            if (snap.empty) {
+              router.push(`/kiosk/purpose?isNew=true&authMethod=SSO Login&email=${encodeURIComponent(user.email)}`);
+            } else {
+              const patronDoc = snap.docs[0];
+              const patronData = patronDoc.data();
+              if (patronData.isBlocked) {
+                router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
+              } else {
+                router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
+              }
+            }
+          }
+        }
+      } catch (error: any) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Auth Redirect Error",
+          description: error.message,
+        });
+      }
+    };
+    checkRedirect();
+  }, [auth, db, enforcedDomain, router, toast]);
+
   const handleGoogleLogin = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     setIsLoading(true);
@@ -60,43 +110,13 @@ export default function KioskAuthPage() {
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      if (!user.email?.endsWith(`@${enforcedDomain}`)) {
-        await signOut(auth);
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Access Restricted",
-          description: `Only @${enforcedDomain} accounts are authorized for terminal access.`,
-        });
-        return;
-      }
-
-      if (user.email) {
-        const patronsRef = collection(db, 'patrons');
-        const q = query(patronsRef, where('email', '==', user.email), limit(1));
-        const snap = await getDocs(q);
-        
-        if (snap.empty) {
-          router.push(`/kiosk/purpose?isNew=true&authMethod=SSO Login&email=${encodeURIComponent(user.email)}`);
-        } else {
-          const patronDoc = snap.docs[0];
-          const patronData = patronDoc.data();
-          if (patronData.isBlocked) {
-            router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
-          } else {
-            router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
-          }
-        }
-      }
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
       toast({
         variant: "destructive",
         title: "Google Auth Failed",
-        description: error.message || "Failed to sign in with Google.",
+        description: error.message || "Failed to initiate Google sign-in.",
       });
     }
   };
@@ -106,7 +126,7 @@ export default function KioskAuthPage() {
     setIsLoading(true);
 
     try {
-      const patronsRef = collection(db, 'patrons');
+      const patronsRef = collection(db!, 'patrons');
       const authMethod = activeTab === 'rfid' ? 'RF-ID Login' : 'SSO Login';
       
       const enforcedPattern = settings?.rfidPattern || "^[0-9]{2}-[0-9]{5}-[0-9]{3}$";

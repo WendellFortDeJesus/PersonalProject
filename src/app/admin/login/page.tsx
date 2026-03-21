@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ShieldCheck, User, Lock, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
-import { signInAnonymously, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { signInAnonymously, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
 import { cn } from '@/lib/utils';
 
 export default function AdminLoginPage() {
@@ -25,6 +25,40 @@ export default function AdminLoginPage() {
   useEffect(() => {
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
+
+  // Handle Google Redirect Result
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          setIsLoading(true);
+          const user = result.user;
+          if (user.email !== 'jcesperanza@neu.edu.ph') {
+            await signOut(auth);
+            setIsLoading(false);
+            toast({
+              variant: "destructive",
+              title: "Access Restricted",
+              description: "Unauthorized account. Only jcesperanza@neu.edu.ph is permitted.",
+            });
+            return;
+          }
+          router.push('/admin/dashboard');
+        }
+      } catch (error: any) {
+        setIsLoading(false);
+        if (error.code !== 'auth/popup-closed-by-user') {
+          toast({
+            variant: "destructive",
+            title: "Auth Redirect Error",
+            description: error.message,
+          });
+        }
+      }
+    };
+    checkRedirect();
+  }, [auth, router, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,27 +94,13 @@ export default function AdminLoginPage() {
     provider.setCustomParameters({ prompt: 'select_account' });
     
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (user.email !== 'jcesperanza@neu.edu.ph') {
-        await signOut(auth);
-        setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Access Restricted",
-          description: "Unauthorized account. Only jcesperanza@neu.edu.ph is permitted.",
-        });
-        return;
-      }
-
-      router.push('/admin/dashboard');
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
       toast({
         variant: "destructive",
         title: "Google Auth Failed",
-        description: error.message || "Failed to sign in with Google.",
+        description: error.message || "Failed to initiate Google sign-in.",
       });
     }
   };

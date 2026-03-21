@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, collection, query, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, setDoc, collection, query, where, getDocs, updateDoc, writeBatch, orderBy, limit } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { 
   ShieldCheck, 
@@ -24,9 +24,14 @@ import {
   Save,
   AlertCircle,
   Skull,
-  UserCog
+  UserCog,
+  Activity,
+  Clock,
+  User,
+  ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +54,13 @@ export default function SettingsPage() {
     return doc(db, 'system_config', 'settings');
   }, [db]);
   const { data: settings, isLoading } = useDoc(settingsRef);
+
+  // Live Activity Feed Query
+  const activityQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'visits'), orderBy('timestamp', 'desc'), limit(5));
+  }, [db]);
+  const { data: recentVisits } = useCollection(activityQuery);
 
   // Local state for Pillar 1
   const [domain, setDomain] = useState('');
@@ -469,6 +481,72 @@ export default function SettingsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Live Node Activity Feed */}
+      <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white mt-12">
+        <CardHeader className="p-10 pb-0 flex flex-row items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-2 w-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
+              <CardTitle className="text-xl font-black uppercase tracking-tight text-primary leading-none">Live Node Activity</CardTitle>
+            </div>
+            <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">Real-time Handshake & Identity Logs</CardDescription>
+          </div>
+          <Activity className="h-6 w-6 text-primary/20" />
+        </CardHeader>
+        <CardContent className="p-10">
+          <div className="space-y-4">
+            {recentVisits && recentVisits.length > 0 ? (
+              recentVisits.map((visit) => (
+                <div key={visit.id} className="group flex items-center justify-between p-5 bg-slate-50/50 rounded-3xl border border-slate-100 hover:bg-primary/[0.02] hover:border-primary/10 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-105 transition-transform border border-slate-100">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[11px] font-black text-primary uppercase leading-none">{visit.patronName}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[8px] font-black px-2 py-0.5 bg-primary/5 text-primary rounded-full uppercase tracking-widest border border-primary/5">
+                          {visit.purpose}
+                        </span>
+                        <div className="h-1 w-1 rounded-full bg-slate-200" />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                          {visit.patronDepartments?.[0] || 'Unit Unassigned'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <Clock className="h-3 w-3" />
+                      <span className="text-[9px] font-mono font-bold">
+                        {visit.timestamp ? format(new Date(visit.timestamp), 'HH:mm:ss') : '--:--:--'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[7px] font-black text-primary uppercase tracking-widest">Handshake Validated</span>
+                      <ArrowRight className="h-2.5 w-2.5 text-primary" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center border border-dashed rounded-[2rem] border-slate-200">
+                <Activity className="h-12 w-12 text-slate-100 mx-auto mb-4" />
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Awaiting live node handshake signals...</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed max-w-sm">
+              This feed represents the "Single Source of Truth." Any deletion or modification in the registry is instantly reflected across all institutional nodes.
+            </p>
+            <Button variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 rounded-lg">
+              View All Activity
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

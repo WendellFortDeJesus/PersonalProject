@@ -266,7 +266,7 @@ export default function KioskAuthPage() {
                     </div>
                   </div>
                   <Button disabled={isLoading} className="w-full h-18 text-[12px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/95 text-white rounded-[2rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all py-8">
-                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (rfid ? "Process Identity" : "Verify Registry Status")}
+                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (rfid ? "Process Identity" : "Continue")}
                   </Button>
                 </form>
               </TabsContent>
@@ -276,8 +276,8 @@ export default function KioskAuthPage() {
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-3">Institutional SSO Email</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-8 flex items-center text-slate-400 group-focus-within:text-primary transition-colors">
-                        <Mail className="h-8 w-8" />
+                      <div className="absolute inset-y-0 left-6 flex items-center text-slate-400 group-focus-within:text-primary transition-colors">
+                        <Mail className="h-6 w-6" />
                       </div>
                       <Input 
                         placeholder={`username@${enforcedDomain}`} 
@@ -285,12 +285,12 @@ export default function KioskAuthPage() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-24 pl-20 rounded-[2.5rem] border-slate-200 bg-slate-50/50 font-black text-2xl focus:bg-white focus:border-primary/30 transition-all shadow-inner border-2"
+                        className="h-16 pl-16 rounded-[2rem] border-slate-200 bg-slate-50/50 font-black text-xl focus:bg-white focus:border-primary/30 transition-all shadow-inner border-2"
                       />
                     </div>
                   </div>
                   <Button disabled={isLoading} className="w-full h-18 text-[12px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/95 text-white rounded-[2rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all py-8">
-                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (email ? "Process SSO" : "Verify SSO Credentials")}
+                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (email ? "Process SSO" : "Continue")}
                   </Button>
                 </form>
               </TabsContent>

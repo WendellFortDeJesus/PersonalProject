@@ -87,7 +87,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden">
+    <div className="relative h-screen w-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden no-scrollbar">
       {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
@@ -107,13 +107,13 @@ export default function AdminLoginPage() {
         <Button 
           variant="ghost" 
           onClick={() => router.push('/')}
-          className="text-slate-500 hover:text-white font-black text-[10px] uppercase tracking-widest px-0 hover:bg-transparent transition-colors group"
+          className="text-slate-500 hover:text-white font-black text-[10px] uppercase tracking-widest px-0 hover:bg-transparent transition-colors group ml-2"
         >
           <ArrowLeft className="mr-3 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
           Kiosk Home
         </Button>
 
-        <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
+        <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/5 relative">
           {/* Card Corner Accents */}
           <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/20 rounded-tl-[3rem] pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/20 rounded-br-[3rem] pointer-events-none" />
@@ -125,7 +125,7 @@ export default function AdminLoginPage() {
               </div>
             </div>
             <CardTitle className="text-4xl font-headline font-black text-white tracking-tighter uppercase leading-none">Staff Terminal</CardTitle>
-            <CardDescription className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mt-3">
+            <CardDescription className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-3">
               Authorized Personnel Node Entry
             </CardDescription>
           </CardHeader>
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
             <form onSubmit={handleLogin} className="space-y-10">
               <div className="space-y-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Identity UID</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">Identity UID</label>
                   <div className="relative group">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -142,12 +142,12 @@ export default function AdminLoginPage() {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-16 pl-14 rounded-2xl border-none bg-black/40 font-bold text-lg text-white focus:ring-2 focus:ring-primary/40 focus:bg-black/60 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
+                      className="h-16 pl-14 rounded-2xl border-none bg-black/60 font-bold text-lg text-white focus:ring-2 focus:ring-primary/40 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Access Token</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">Access Token</label>
                   <div className="relative group">
                     <Lock className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -156,7 +156,7 @@ export default function AdminLoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-16 pl-14 pr-14 rounded-2xl border-none bg-black/40 font-bold text-lg text-white focus:ring-2 focus:ring-primary/40 focus:bg-black/60 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
+                      className="h-16 pl-14 pr-14 rounded-2xl border-none bg-black/60 font-bold text-lg text-white focus:ring-2 focus:ring-primary/40 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
                     />
                     <button 
                       type="button"
@@ -177,7 +177,7 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            <div className="relative flex items-center gap-8 py-4">
+            <div className="relative flex items-center gap-8 py-4 px-6">
               <div className="h-px bg-white/5 flex-1" />
               <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Alternative</span>
               <div className="h-px bg-white/5 flex-1" />
@@ -187,7 +187,7 @@ export default function AdminLoginPage() {
               onClick={handleGoogleLogin}
               disabled={isLoading}
               variant="outline" 
-              className="w-full h-20 border-white/10 bg-white/5 rounded-2xl text-[12px] font-bold text-white uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-white/10 transition-all shadow-sm group"
+              className="w-full h-20 border-white/5 bg-white/5 rounded-2xl text-[12px] font-bold text-white uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-white/10 transition-all shadow-sm group"
             >
               <svg viewBox="0 0 24 24" className="h-6 w-6 group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

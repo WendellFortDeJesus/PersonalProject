@@ -132,7 +132,7 @@ export default function KioskAuthPage() {
     });
     
     try {
-      // Switch to signInWithPopup for better reliability in cloud workstations
+      // Use signInWithPopup for better reliability in workstations
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const userEmail = user.email || "";

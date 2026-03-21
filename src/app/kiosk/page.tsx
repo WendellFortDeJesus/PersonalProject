@@ -3,12 +3,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, HelpCircle } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
@@ -165,7 +164,7 @@ export default function KioskAuthPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 bg-[#F8FAFC] font-body overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center p-6 bg-[#F8FAFC] font-body overflow-hidden no-scrollbar">
       {/* Background with technical grid/circuit patterns */}
       <div className="absolute inset-0 z-0 opacity-[0.03]">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -178,7 +177,7 @@ export default function KioskAuthPage() {
         </svg>
       </div>
 
-      <div className="relative z-10 w-full max-w-2xl space-y-6 animate-fade-in">
+      <div className="relative z-10 w-full max-w-2xl space-y-6 animate-fade-in no-scrollbar">
         <div className="flex items-center justify-between px-4">
           <Button 
             variant="ghost" 
@@ -285,7 +284,7 @@ export default function KioskAuthPage() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-16 pl-14 rounded-2xl border-slate-200 bg-slate-50/50 font-black text-lg focus:bg-white focus:border-primary/30 transition-all shadow-inner border-2"
+                        className="h-16 pl-14 rounded-2xl border-slate-200 bg-slate-50/50 font-black text-xl focus:bg-white focus:border-primary/30 transition-all shadow-inner border-2"
                       />
                     </div>
                   </div>
@@ -331,4 +330,3 @@ export default function KioskAuthPage() {
     </div>
   );
 }
-

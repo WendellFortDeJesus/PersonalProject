@@ -153,13 +153,18 @@ export default function KioskAuthPage() {
       }
     } catch (error: any) {
       setIsLoading(false);
-      console.error("SSO Error:", error);
       
+      // Specifically handle common auth errors to prevent messy UI notifications
       if (error.code === 'auth/popup-blocked') {
         toast({
           variant: "destructive",
           title: "POPUP BLOCKED",
           description: "PLEASE ENABLE POPUPS FOR THIS SITE IN YOUR BROWSER.",
+        });
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: "SIGN-IN CANCELLED",
+          description: "THE AUTHENTICATION WINDOW WAS CLOSED BEFORE COMPLETION.",
         });
       } else if (error.code === 'auth/internal-error' || error.message?.includes('403')) {
         toast({

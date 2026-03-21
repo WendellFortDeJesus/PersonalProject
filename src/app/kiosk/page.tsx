@@ -113,11 +113,10 @@ export default function KioskAuthPage() {
 
   return (
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden p-6">
-      {/* Background Grid Pattern */}
       <div className="absolute inset-0 z-0 opacity-10 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px]" />
       
       <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <Card className="border-none shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[90vh] flex flex-col">
+        <Card className="border-none shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[720px] flex flex-col">
           <CardHeader className="text-center pt-12 pb-6 px-8 space-y-4 shrink-0">
             <div className="flex justify-center">
               <div className="p-4 bg-[#355872]/20 rounded-2xl ring-1 ring-[#355872]/40 shadow-[0_0_30px_rgba(53,88,114,0.3)]">
@@ -133,7 +132,6 @@ export default function KioskAuthPage() {
           </CardHeader>
 
           <CardContent className="px-8 pb-10 space-y-8 flex-1 flex flex-col overflow-y-auto no-scrollbar">
-            {/* Tab Switcher */}
             <div className="bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
               <div className="flex gap-1">
                 <button 
@@ -174,13 +172,11 @@ export default function KioskAuthPage() {
                   <div className="relative p-10 bg-black/40 rounded-full ring-1 ring-[#355872]/30 shadow-inner">
                     <Scan className="h-10 w-10 text-[#355872]/60" />
                   </div>
-                  {/* Corner Brackets */}
                   <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#355872]/30 rounded-tl-xl" />
                   <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#355872]/30 rounded-tr-xl" />
                   <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#355872]/30 rounded-bl-xl" />
                   <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#355872]/30 rounded-br-xl" />
                   
-                  {/* Internal Brackets */}
                   <div className="absolute top-16 left-16 w-12 h-12 border-2 border-dashed border-[#355872]/40 rounded-lg flex items-center justify-center">
                     <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
                   </div>

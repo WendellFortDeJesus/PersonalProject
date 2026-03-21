@@ -59,7 +59,6 @@ export default function ReportsPage() {
   const [isReviewed, setIsReviewed] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
-  // State for deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [visitToDelete, setVisitToDelete] = useState<string | null>(null);
   const [adminSignature, setAdminSignature] = useState('');
@@ -134,7 +133,6 @@ export default function ReportsPage() {
         const patronId = visitSnap.data().patronId;
         const batch = writeBatch(db);
         
-        // BI-DIRECTIONAL CASCADE PURGE: Delete patron and all linked history
         const patronRef = doc(db, 'patrons', patronId);
         batch.delete(patronRef);
         
@@ -161,7 +159,9 @@ export default function ReportsPage() {
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
-      window.print();
+      setTimeout(() => {
+        window.print();
+      }, 300);
     }
   };
 
@@ -360,12 +360,12 @@ export default function ReportsPage() {
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Institutional Verification Node</p>
             </div>
             <div className="flex items-center gap-4">
-               <Card className="flex items-center gap-3 px-4 py-2 border-slate-200 bg-white shadow-sm rounded-xl">
+               <div className="flex items-center gap-3 px-4 py-2 border border-slate-200 bg-white shadow-sm rounded-xl">
                 <Checkbox id="modal-review" checked={isReviewed} onCheckedChange={(val) => setIsReviewed(!!val)} className="border-slate-300 data-[state=checked]:bg-primary" />
                 <Label htmlFor="modal-review" className="text-[8px] font-black uppercase tracking-widest text-slate-500 cursor-pointer select-none">
                   Data Reviewed & Verified
                 </Label>
-              </Card>
+              </div>
               <div className="flex items-center gap-2">
                 <Button 
                   onClick={handlePrint}

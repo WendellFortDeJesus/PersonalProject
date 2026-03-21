@@ -103,7 +103,7 @@ export default function AdminLoginPage() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-xl space-y-8 animate-fade-in">
+      <div className="relative z-10 w-full max-w-3xl space-y-8 animate-fade-in">
         <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[4rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
           {/* Card Corner Accents */}
           <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-white/20 rounded-tl-[4rem] pointer-events-none" />
@@ -169,10 +169,10 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            <div className="relative flex items-center gap-8 py-4 px-6">
-              <div className="h-px bg-white/5 flex-1" />
+            <div className="relative flex items-center justify-center gap-8 py-4">
+              <div className="h-px bg-white/5 w-1/4" />
               <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Alternative Gateway</span>
-              <div className="h-px bg-white/5 flex-1" />
+              <div className="h-px bg-white/5 w-1/4" />
             </div>
 
             <Button 

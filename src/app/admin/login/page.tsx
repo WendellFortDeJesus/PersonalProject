@@ -38,8 +38,8 @@ export default function AdminLoginPage() {
             setIsLoading(false);
             toast({
               variant: "destructive",
-              title: "Access Restricted",
-              description: "Unauthorized account. Only jcesperanza@neu.edu.ph is permitted.",
+              title: "ACCESS RESTRICTED",
+              description: "UNAUTHORIZED ACCOUNT. ONLY JCESPERANZA@NEU.EDU.PH IS PERMITTED.",
             });
             return;
           }
@@ -47,18 +47,18 @@ export default function AdminLoginPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        console.error("Auth Redirect Error:", error);
+        console.error("AUTH REDIRECT ERROR:", error);
         if (error.code === 'auth/unauthorized-domain') {
           toast({
             variant: "destructive",
-            title: "Domain Authorization Failed",
-            description: "Please add this workstation domain to 'Authorized Domains' in your Firebase console.",
+            title: "DOMAIN NOT AUTHORIZED",
+            description: "PLEASE ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
           });
         } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
-            title: "Authentication Failed",
-            description: error.message || "Failed to finalize secure session.",
+            title: "AUTHENTICATION FAILED",
+            description: error.message || "FAILED TO FINALIZE SECURE SESSION.",
           });
         }
       }
@@ -79,16 +79,16 @@ export default function AdminLoginPage() {
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "System Auth Error",
-          description: error.message || "Failed to establish secure session.",
+          title: "SYSTEM AUTH ERROR",
+          description: error.message || "FAILED TO ESTABLISH SECURE SESSION.",
         });
       }
     } else {
       setIsLoading(false);
       toast({
         variant: "destructive",
-        title: "Authentication Failed",
-        description: "Invalid credentials. Access Denied.",
+        title: "AUTHENTICATION FAILED",
+        description: "INVALID CREDENTIALS. ACCESS DENIED.",
       });
     }
   };
@@ -103,18 +103,18 @@ export default function AdminLoginPage() {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
-      console.error("SSO Initiation Error:", error);
+      console.error("SSO INITIATION ERROR:", error);
       if (error.code === 'auth/unauthorized-domain') {
         toast({
           variant: "destructive",
-          title: "Domain Not Whitelisted",
-          description: "This domain must be authorized in your Firebase project settings.",
+          title: "DOMAIN NOT WHITELISTED",
+          description: "ADD THIS WORKSTATION DOMAIN TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "SSO Initialization Error",
-          description: "Verify that your current domain is whitelisted in Firebase Console.",
+          title: "SSO INITIALIZATION ERROR",
+          description: "VERIFY THAT YOUR CURRENT DOMAIN IS WHITELISTED IN FIREBASE CONSOLE.",
         });
       }
     }
@@ -162,7 +162,7 @@ export default function AdminLoginPage() {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-14 pl-14 rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 transition-all"
+                      className="h-14 pl-14 w-full rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 transition-all shadow-inner"
                     />
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function AdminLoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-14 pl-14 pr-14 rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 transition-all"
+                      className="h-14 pl-14 pr-14 w-full rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 transition-all shadow-inner"
                     />
                     <button 
                       type="button"
@@ -198,9 +198,9 @@ export default function AdminLoginPage() {
             </form>
 
             <div className="relative flex items-center justify-center gap-4 py-1">
-              <div className="h-px bg-white/10 flex-1" />
+              <div className="h-px bg-white/10 flex-1 opacity-20" />
               <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em]">ALTERNATIVE GATEWAY</span>
-              <div className="h-px bg-white/10 flex-1" />
+              <div className="h-px bg-white/10 flex-1 opacity-20" />
             </div>
 
             <Button 

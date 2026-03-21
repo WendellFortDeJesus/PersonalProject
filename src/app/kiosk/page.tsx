@@ -66,8 +66,8 @@ export default function KioskAuthPage() {
             setIsLoading(false);
             toast({
               variant: "destructive",
-              title: "Access Restricted",
-              description: `Only @${enforcedDomain} accounts are authorized for terminal access.`,
+              title: "ACCESS RESTRICTED",
+              description: `ONLY @${enforcedDomain} ACCOUNTS ARE AUTHORIZED FOR TERMINAL ACCESS.`,
             });
             return;
           }
@@ -92,18 +92,18 @@ export default function KioskAuthPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        console.error("Kiosk SSO Error:", error);
+        console.error("KIOSK SSO ERROR:", error);
         if (error.code === 'auth/unauthorized-domain') {
           toast({
             variant: "destructive",
-            title: "Domain Not Authorized",
-            description: "Please add this domain to 'Authorized Domains' in your Firebase Auth console settings.",
+            title: "DOMAIN NOT AUTHORIZED",
+            description: "PLEASE ADD THIS WORKSTATION DOMAIN TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
           });
         } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
-            title: "Authentication Error",
-            description: error.message || "Failed to finalize Google SSO session.",
+            title: "AUTHENTICATION ERROR",
+            description: error.message || "FAILED TO FINALIZE GOOGLE SSO SESSION.",
           });
         }
       }
@@ -121,18 +121,18 @@ export default function KioskAuthPage() {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
-      console.error("SSO Initiation Error:", error);
+      console.error("SSO INITIATION ERROR:", error);
       if (error.code === 'auth/unauthorized-domain') {
         toast({
           variant: "destructive",
-          title: "Domain Not Whitelisted",
-          description: "Add this workstation URL to 'Authorized Domains' in the Firebase Auth console.",
+          title: "DOMAIN NOT WHITELISTED",
+          description: "ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE AUTH CONSOLE.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "SSO Initiation Failed",
-          description: "Check your authorized domains in Firebase Console.",
+          title: "SSO INITIATION FAILED",
+          description: "VERIFY YOUR AUTHORIZED DOMAINS IN FIREBASE CONSOLE.",
         });
       }
     }
@@ -153,8 +153,8 @@ export default function KioskAuthPage() {
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Format Required",
-          description: "Example: 24-12345-123",
+          title: "FORMAT REQUIRED",
+          description: "EXAMPLE: 24-12345-123",
         });
         return;
       }
@@ -163,8 +163,8 @@ export default function KioskAuthPage() {
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Access Restricted",
-          description: `Only @${enforcedDomain} accounts are allowed.`,
+          title: "ACCESS RESTRICTED",
+          description: `ONLY @${enforcedDomain} ACCOUNTS ARE ALLOWED.`,
         });
         return;
       }
@@ -197,8 +197,8 @@ export default function KioskAuthPage() {
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Connection Error",
-        description: "Failed to reach the registry. Please try again.",
+        title: "CONNECTION ERROR",
+        description: "FAILED TO REACH THE REGISTRY. PLEASE TRY AGAIN.",
       });
     } finally {
       setIsLoading(false);
@@ -336,9 +336,9 @@ export default function KioskAuthPage() {
                     </Button>
                     
                     <div className="relative flex items-center gap-4 py-2">
-                      <div className="h-px bg-white/5 flex-1" />
+                      <div className="h-px bg-white/5 flex-1 opacity-20" />
                       <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">ALTERNATIVE</span>
-                      <div className="h-px bg-white/5 flex-1" />
+                      <div className="h-px bg-white/5 flex-1 opacity-20" />
                     </div>
 
                     <Button 

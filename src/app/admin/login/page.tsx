@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
       toast({
         variant: "destructive",
         title: "Authentication Failed",
-        description: "Invalid credentials. Please contact IT support.",
+        description: "Invalid credentials. Access Denied.",
       });
     }
   };
@@ -70,7 +70,7 @@ export default function AdminLoginPage() {
         toast({
           variant: "destructive",
           title: "Access Restricted",
-          description: "This account is not authorized for administrative terminal access. Only jcesperanza@neu.edu.ph is permitted.",
+          description: "Unauthorized account. Only jcesperanza@neu.edu.ph is permitted.",
         });
         return;
       }
@@ -113,7 +113,7 @@ export default function AdminLoginPage() {
           Kiosk Home
         </Button>
 
-        <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/5 relative">
+        <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
           {/* Card Corner Accents */}
           <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/20 rounded-tl-[3rem] pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/20 rounded-br-[3rem] pointer-events-none" />
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
             <form onSubmit={handleLogin} className="space-y-10">
               <div className="space-y-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">Identity UID</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Identity UID</label>
                   <div className="relative group">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -147,7 +147,7 @@ export default function AdminLoginPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 ml-4">Access Token</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Access Token</label>
                   <div className="relative group">
                     <Lock className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 group-focus-within:text-primary transition-colors" />
                     <Input 

@@ -24,9 +24,21 @@ import {
   Plus, 
   Trash2, 
   Save,
-  AlertCircle
+  AlertCircle,
+  Skull
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function SettingsPage() {
   const db = useFirestore();
@@ -104,8 +116,6 @@ export default function SettingsPage() {
     if (!db) return;
     setIsSaving(true);
     try {
-      // Find visits that don't have a specific check-out or are 'granted' but current
-      // In this schema, we'll mark today's entries as processed
       const q = query(collection(db, 'visits'), where('status', '==', 'granted'));
       const snap = await getDocs(q);
       const batch = writeBatch(db);
@@ -121,6 +131,33 @@ export default function SettingsPage() {
       toast({ title: "Terminal Flush Complete", description: "Active sessions have been force-closed." });
     } catch (e) {
       toast({ variant: "destructive", title: "Flush Error", description: "Operation failed." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePurgeRegistry = async () => {
+    if (!db) return;
+    setIsSaving(true);
+    try {
+      const patronsSnap = await getDocs(collection(db, 'patrons'));
+      const visitsSnap = await getDocs(collection(db, 'visits'));
+      
+      const batch = writeBatch(db);
+      patronsSnap.docs.forEach(docSnap => batch.delete(docSnap.ref));
+      visitsSnap.docs.forEach(docSnap => batch.delete(docSnap.ref));
+      
+      await batch.commit();
+      toast({ 
+        title: "Registry Purged", 
+        description: "All institutional records have been permanently erased from the registry." 
+      });
+    } catch (e) {
+      toast({ 
+        variant: "destructive", 
+        title: "Purge Failed", 
+        description: "Failed to erase institutional data. Check system permissions." 
+      });
     } finally {
       setIsSaving(false);
     }
@@ -169,7 +206,6 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex gap-2">
                     <Input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="@neu.edu.ph" className="h-12 rounded-xl font-bold bg-slate-50 border-none shadow-inner" />
-                    <Button variant="outline" className="h-12 rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest px-6">Edit</Button>
                   </div>
                   <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-tight">Only identities originating from this institutional domain are permitted system entry.</p>
                 </div>
@@ -347,28 +383,40 @@ export default function SettingsPage() {
             <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
               <CardHeader className="p-10 pb-0">
                 <div className="p-3 bg-primary/5 rounded-2xl w-fit mb-4">
-                   <Download className="h-6 w-6 text-primary" />
+                   <Skull className="h-6 w-6 text-red-600" />
                 </div>
-                <CardTitle className="text-xl font-black uppercase tracking-tight text-primary">Data Integrity & Archiver</CardTitle>
-                <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Collection Maintenance</CardDescription>
+                <CardTitle className="text-xl font-black uppercase tracking-tight text-red-600">Nuclear Option</CardTitle>
+                <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest">Master Registry Purge</CardDescription>
               </CardHeader>
               <CardContent className="p-10 space-y-6">
                 <p className="text-xs font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
-                  Identifies and exports registry logs older than 30 institutional cycles. Optimized for database performance and high-speed dashboard loading.
+                  This protocol ERASES ALL IDENTITIES and VISIT LOGS from the institutional registry. This action is IRREVERSIBLE.
                 </p>
-                <div className="space-y-3">
-                   <div className="flex justify-between items-center px-4 py-3 bg-slate-50 rounded-xl">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Log Density</span>
-                      <span className="text-[11px] font-black text-primary font-mono">OPTIMAL</span>
-                   </div>
-                   <div className="flex justify-between items-center px-4 py-3 bg-slate-50 rounded-xl">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Legacy Records</span>
-                      <span className="text-[11px] font-black text-slate-400 font-mono">0.00%</span>
-                   </div>
-                </div>
-                <Button className="w-full h-14 rounded-2xl bg-primary text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
-                  Export & Archive Legacy Data
-                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isSaving} className="w-full h-14 rounded-2xl bg-red-600 text-white font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-red-200 hover:bg-red-700 transition-all">
+                      Purge Institutional Registry
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0">
+                    <div className="p-10 bg-red-600 text-white text-center">
+                      <div className="p-4 bg-white/20 rounded-full w-fit mx-auto mb-6">
+                        <Skull className="h-10 w-10 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-black uppercase tracking-tighter">Confirm Registry Purge?</h2>
+                    </div>
+                    <div className="p-10 space-y-6">
+                      <p className="text-sm font-bold text-slate-600 leading-relaxed uppercase tracking-tight text-center">
+                        This action will PERMANENTLY ERASE every patron record and visit log in the system, including identities such as jcesperanza@neu.edu.ph from the registry.
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <AlertDialogCancel className="h-12 rounded-xl font-black text-[9px] uppercase tracking-widest">Abort Action</AlertDialogCancel>
+                        <AlertDialogAction onClick={handlePurgeRegistry} className="h-12 rounded-xl bg-red-600 text-white hover:bg-red-700 font-black text-[9px] uppercase tracking-widest">Confirm Purge</AlertDialogAction>
+                      </div>
+                    </div>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           </div>

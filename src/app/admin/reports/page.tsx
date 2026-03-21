@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -131,12 +131,14 @@ export default function ReportsPage() {
     setDateTo(end);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  }, []);
 
   const availableRoles = settings?.roles || ['Student', 'Visitor'];
-  const allPossibleRoles = Array.from(new Set(['Admin', ...availableRoles]));
+  const allPossibleRoles = Array.from(new Set(['Admin', 'Staff', 'Faculty', ...availableRoles]));
 
   return (
     <div className="p-6 space-y-6 animate-fade-in max-w-[1400px] mx-auto overflow-x-hidden">
@@ -146,11 +148,19 @@ export default function ReportsPage() {
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mt-1">Strategic Intelligence Engine</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={handlePrint} variant="outline" className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm">
+          <Button 
+            type="button"
+            onClick={handlePrint} 
+            variant="outline" 
+            className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm"
+          >
             <Printer className="h-3.5 w-3.5 mr-2" />
             Print
           </Button>
-          <Button className="rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md shadow-primary/10">
+          <Button 
+            type="button"
+            className="rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md shadow-primary/10"
+          >
             <Download className="h-3.5 w-3.5 mr-2" />
             Export PDF
           </Button>

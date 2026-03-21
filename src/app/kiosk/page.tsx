@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -33,7 +34,6 @@ export default function KioskAuthPage() {
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
 
   useEffect(() => {
-    // Generate binary bits only on the client to avoid hydration mismatch
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
@@ -53,7 +53,8 @@ export default function KioskAuthPage() {
     }
   }, [activeTab]);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -169,13 +170,11 @@ export default function KioskAuthPage() {
 
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
-      {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
-      {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-8 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
@@ -201,7 +200,6 @@ export default function KioskAuthPage() {
           </CardHeader>
 
           <CardContent className="px-8 pb-10 space-y-8">
-            {/* Segmented Control */}
             <div className="relative bg-black/40 p-1.5 rounded-2xl h-14 border border-white/10 flex items-center shadow-inner">
               <div 
                 className={cn(
@@ -210,6 +208,7 @@ export default function KioskAuthPage() {
                 )} 
               />
               <button 
+                type="button"
                 onClick={() => setActiveTab('rfid')}
                 className={cn(
                   "relative z-10 flex-1 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-colors duration-300",
@@ -220,6 +219,7 @@ export default function KioskAuthPage() {
                 RFID
               </button>
               <button 
+                type="button"
                 onClick={() => setActiveTab('email')}
                 className={cn(
                   "relative z-10 flex-1 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-colors duration-300",
@@ -240,13 +240,6 @@ export default function KioskAuthPage() {
                       <div className="relative h-32 w-32 rounded-full bg-black/60 flex items-center justify-center shadow-[inset_0_0_40px_rgba(53,88,114,0.4)] border border-white/10 overflow-hidden">
                         <Scan className="h-12 w-12 text-primary animate-pulse" />
                         <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_10px_hsl(var(--primary))] animate-[scan_3s_ease-in-out_infinite] opacity-90 z-20" />
-                        
-                        <style jsx global>{`
-                          @keyframes scan {
-                            0%, 100% { transform: translateY(0); }
-                            50% { transform: translateY(128px); }
-                          }
-                        `}</style>
                       </div>
                     </div>
 
@@ -270,10 +263,11 @@ export default function KioskAuthPage() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <Button disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg active:scale-[0.98] transition-all">
+                    <Button type="submit" disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg active:scale-[0.98] transition-all">
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Identity"}
                     </Button>
                     <Button 
+                      type="button"
                       variant="ghost" 
                       onClick={() => router.push('/')}
                       className="w-full h-12 text-slate-500 hover:text-red-400 font-black text-[9px] uppercase tracking-widest bg-white/5 rounded-2xl border border-white/5 transition-all"
@@ -300,7 +294,7 @@ export default function KioskAuthPage() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <Button disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg active:scale-[0.98] transition-all">
+                    <Button type="submit" disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg active:scale-[0.98] transition-all">
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Node"}
                     </Button>
                     
@@ -311,6 +305,7 @@ export default function KioskAuthPage() {
                     </div>
 
                     <Button 
+                      type="button"
                       onClick={handleGoogleLogin}
                       disabled={isLoading}
                       variant="outline" 
@@ -325,6 +320,7 @@ export default function KioskAuthPage() {
                       Google SSO
                     </Button>
                     <Button 
+                      type="button"
                       variant="ghost" 
                       onClick={() => router.push('/')}
                       className="w-full h-12 text-slate-500 hover:text-red-400 font-black text-[9px] uppercase tracking-widest bg-white/5 rounded-2xl border border-white/5 transition-all"
@@ -343,6 +339,12 @@ export default function KioskAuthPage() {
           </CardContent>
         </Card>
       </div>
+      <style jsx global>{`
+        @keyframes scan {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(128px); }
+        }
+      `}</style>
     </div>
   );
 }

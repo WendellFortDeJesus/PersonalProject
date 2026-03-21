@@ -23,7 +23,6 @@ export default function AdminLoginPage() {
   const auth = useAuth();
 
   useEffect(() => {
-    // Generate binary decoration bits only on client to prevent hydration mismatch
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
@@ -31,7 +30,6 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validate credentials using the secure institutional identity
     if (username === 'jcesperanza@neu.edu.ph' && password === '12345') {
       try {
         await signInAnonymously(auth);
@@ -55,7 +53,8 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -88,13 +87,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className="relative h-screen w-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden no-scrollbar">
-      {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
-      {/* Floating Binary Bits Decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none overflow-hidden">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
@@ -105,7 +102,6 @@ export default function AdminLoginPage() {
 
       <div className="relative z-10 w-full max-w-md space-y-6 animate-fade-in flex flex-col items-center">
         <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
-          {/* Card Corner Accents */}
           <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-white/20 rounded-tl-[3rem] pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-white/20 rounded-br-[3rem] pointer-events-none" />
           
@@ -161,6 +157,7 @@ export default function AdminLoginPage() {
                 </div>
               </div>
               <Button 
+                type="submit"
                 disabled={isLoading} 
                 className="w-full h-16 text-[12px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-primary to-secondary hover:brightness-110 rounded-2xl transition-all active:scale-[0.98] shadow-[0_0_30px_rgba(53,88,114,0.4)] relative overflow-hidden group"
               >
@@ -176,6 +173,7 @@ export default function AdminLoginPage() {
             </div>
 
             <Button 
+              type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading}
               variant="outline" 
@@ -192,6 +190,7 @@ export default function AdminLoginPage() {
 
             <div className="pt-4 border-t border-white/5">
               <Button 
+                type="button"
                 variant="ghost" 
                 onClick={() => router.push('/')}
                 className="w-full h-12 text-slate-500 hover:text-white font-black text-[8px] uppercase tracking-[0.3em] rounded-xl hover:bg-white/5 transition-all group"

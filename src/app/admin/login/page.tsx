@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
 
   // Handle Google Redirect Result
   useEffect(() => {
-    const checkRedirect = async () => {
+    const handleRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result) {
@@ -49,18 +49,23 @@ export default function AdminLoginPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        // auth/account-exists-with-different-credential or similar
-        if (error.code !== 'auth/popup-closed-by-user') {
+        if (error.code === 'auth/account-exists-with-different-credential') {
+          toast({
+            variant: "destructive",
+            title: "Auth Conflict",
+            description: "An account already exists with a different credential.",
+          });
+        } else if (error.code !== 'auth/popup-closed-by-user') {
           console.error("Auth Error:", error);
           toast({
             variant: "destructive",
-            title: "Authentication Error",
-            description: error.message || "Failed to finalize secure session. Please check your console settings.",
+            title: "Authentication Failed",
+            description: "Failed to finalize secure session. Ensure your domain is whitelisted.",
           });
         }
       }
     };
-    checkRedirect();
+    handleRedirect();
   }, [auth, router, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -94,7 +99,6 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
-    // Use prompt: 'select_account' to allow switching accounts if one is 403'd
     provider.setCustomParameters({ prompt: 'select_account' });
     
     try {
@@ -104,19 +108,19 @@ export default function AdminLoginPage() {
       toast({
         variant: "destructive",
         title: "Google Auth Failed",
-        description: error.message || "Failed to initiate Google sign-in.",
+        description: "Failed to initiate redirect. Please check browser settings.",
       });
     }
   };
 
   return (
-    <div className="relative h-screen w-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden no-scrollbar">
+    <div className="relative h-screen w-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
-      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
             {bit}
@@ -126,18 +130,15 @@ export default function AdminLoginPage() {
 
       <div className="relative z-10 w-full max-w-md space-y-6 animate-fade-in flex flex-col items-center">
         <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
-          <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-white/20 rounded-tl-[3rem] pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-white/20 rounded-br-[3rem] pointer-events-none" />
-          
           <CardHeader className="text-center pt-10 pb-4 px-8">
             <div className="flex justify-center mb-3">
               <div className="p-3 bg-primary/20 rounded-[1.5rem] text-primary shadow-[0_0_40px_rgba(53,88,114,0.4)] ring-1 ring-primary/40">
                 <ShieldCheck className="h-6 w-6" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-headline font-black text-white tracking-tighter uppercase leading-none">Staff Terminal</CardTitle>
+            <CardTitle className="text-3xl font-headline font-black text-white tracking-tighter uppercase leading-none">STAFF TERMINAL</CardTitle>
             <CardDescription className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2">
-              Authorized Personnel Node Entry
+              AUTHORIZED PERSONNEL NODE ENTRY
             </CardDescription>
           </CardHeader>
 
@@ -145,7 +146,7 @@ export default function AdminLoginPage() {
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 ml-4">Identity UID</label>
+                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 ml-4">IDENTITY UID</label>
                   <div className="relative group">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -154,12 +155,12 @@ export default function AdminLoginPage() {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-14 pl-14 rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
+                      className="h-14 pl-14 rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 ml-4">Access Token</label>
+                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 ml-4">ACCESS TOKEN</label>
                   <div className="relative group">
                     <Lock className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -168,7 +169,7 @@ export default function AdminLoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-14 pl-14 pr-14 rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
+                      className="h-14 pl-14 pr-14 rounded-2xl border-none bg-black/60 font-bold text-base text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 transition-all"
                     />
                     <button 
                       type="button"
@@ -183,16 +184,15 @@ export default function AdminLoginPage() {
               <Button 
                 type="submit"
                 disabled={isLoading} 
-                className="w-full h-16 text-[12px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-primary to-secondary hover:brightness-110 rounded-2xl transition-all active:scale-[0.98] shadow-[0_0_30px_rgba(53,88,114,0.4)] relative overflow-hidden group"
+                className="w-full h-16 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl transition-all active:scale-[0.98] shadow-lg"
               >
-                <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                {isLoading ? <Loader2 className="mr-3 h-4 w-4 animate-spin" /> : "Authorize Entry"}
+                {isLoading ? <Loader2 className="mr-3 h-4 w-4 animate-spin" /> : "AUTHORIZE ENTRY"}
               </Button>
             </form>
 
             <div className="relative flex items-center justify-center gap-4 py-1">
               <div className="h-px bg-white/10 flex-1" />
-              <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em]">Alternative Gateway</span>
+              <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.3em]">ALTERNATIVE GATEWAY</span>
               <div className="h-px bg-white/10 flex-1" />
             </div>
 
@@ -201,7 +201,7 @@ export default function AdminLoginPage() {
               onClick={handleGoogleLogin}
               disabled={isLoading}
               variant="outline" 
-              className="w-full h-14 border-white/5 bg-white/5 rounded-2xl text-[10px] font-black text-white uppercase tracking-[0.15em] flex items-center justify-center gap-4 hover:bg-white/10 transition-all shadow-sm group"
+              className="w-full h-14 border-white/5 bg-white/5 rounded-2xl text-[10px] font-black text-white uppercase tracking-[0.15em] flex items-center justify-center gap-4 hover:bg-white/10 transition-all group"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5 group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -209,7 +209,7 @@ export default function AdminLoginPage() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              Continue with Google
+              CONTINUE WITH GOOGLE
             </Button>
 
             <div className="pt-4 border-t border-white/5">
@@ -220,14 +220,14 @@ export default function AdminLoginPage() {
                 className="w-full h-12 text-slate-500 hover:text-white font-black text-[8px] uppercase tracking-[0.3em] rounded-xl hover:bg-white/5 transition-all group"
               >
                 <ArrowLeft className="mr-3 h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-                Return to Kiosk Gateway
+                RETURN TO KIOSK GATEWAY
               </Button>
             </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-[7px] font-black text-slate-700 uppercase tracking-[0.5em] mt-2">
-          Institutional Access Point Node 01
+          INSTITUTIONAL ACCESS POINT NODE 01
         </p>
       </div>
     </div>

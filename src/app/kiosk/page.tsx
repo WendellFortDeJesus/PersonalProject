@@ -55,7 +55,7 @@ export default function KioskAuthPage() {
 
   // Handle Google Redirect Result
   useEffect(() => {
-    const checkRedirect = async () => {
+    const handleRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result && result.user && db) {
@@ -98,12 +98,12 @@ export default function KioskAuthPage() {
           toast({
             variant: "destructive",
             title: "Authentication Error",
-            description: "Failed to finalize Google SSO. Please ensure your domain is whitelisted in Firebase Console.",
+            description: "Failed to finalize Google SSO. Ensure your domain is whitelisted.",
           });
         }
       }
     };
-    checkRedirect();
+    handleRedirect();
   }, [auth, db, enforcedDomain, router, toast]);
 
   const handleGoogleLogin = async (e?: React.MouseEvent) => {
@@ -119,7 +119,7 @@ export default function KioskAuthPage() {
       toast({
         variant: "destructive",
         title: "Google Auth Failed",
-        description: error.message || "Failed to initiate Google sign-in.",
+        description: "Redirect protocol failed. Check browser security settings.",
       });
     }
   };
@@ -217,7 +217,7 @@ export default function KioskAuthPage() {
             <div className="space-y-1">
               <CardTitle className="text-3xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY HUB</CardTitle>
               <CardDescription className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
-                Institutional Access Protocol
+                INSTITUTIONAL ACCESS PROTOCOL
               </CardDescription>
             </div>
           </CardHeader>
@@ -226,7 +226,7 @@ export default function KioskAuthPage() {
             <div className="relative bg-black/40 p-1.5 rounded-2xl h-14 border border-white/10 flex items-center shadow-inner">
               <div 
                 className={cn(
-                  "absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-primary rounded-xl shadow-[0_0_20px_rgba(53,88,114,0.4)] transition-all duration-300 ease-in-out",
+                  "absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-primary rounded-xl transition-all duration-300 ease-in-out",
                   activeTab === 'email' ? "translate-x-full" : "translate-x-0"
                 )} 
               />
@@ -239,7 +239,7 @@ export default function KioskAuthPage() {
                 )}
               >
                 <Fingerprint className="h-4 w-4" />
-                RFID
+                RFID LOGIN
               </button>
               <button 
                 type="button"
@@ -250,7 +250,7 @@ export default function KioskAuthPage() {
                 )}
               >
                 <Mail className="h-4 w-4" />
-                SSO
+                EMAIL SSO
               </button>
             </div>
             
@@ -268,8 +268,8 @@ export default function KioskAuthPage() {
 
                     <div className="space-y-4">
                       <div className="flex flex-col items-center">
-                        <span className="text-sm font-black text-white uppercase tracking-widest mb-1">Scanner Active</span>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Awaiting card proximity</span>
+                        <span className="text-sm font-black text-white uppercase tracking-widest mb-1">TERMINAL SCANNER ACTIVE</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Awaiting identity card proximity</span>
                       </div>
 
                       <div className="max-w-xs mx-auto">
@@ -280,14 +280,14 @@ export default function KioskAuthPage() {
                           autoComplete="off"
                           value={rfid}
                           onChange={(e) => setRfid(e.target.value)}
-                          className="h-14 w-full text-center text-xl font-mono font-black border-none bg-black/40 rounded-2xl text-white focus-visible:ring-1 focus-visible:ring-primary/50 shadow-inner placeholder:text-slate-800"
+                          className="h-14 w-full text-center text-xl font-mono font-black border-none bg-black/40 rounded-2xl text-white focus-visible:ring-1 focus-visible:ring-primary/50 shadow-inner"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <Button type="submit" disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg active:scale-[0.98] transition-all">
-                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Identity"}
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "VERIFY IDENTITY"}
                     </Button>
                     <Button 
                       type="button"
@@ -296,14 +296,14 @@ export default function KioskAuthPage() {
                       className="w-full h-12 text-slate-500 hover:text-red-400 font-black text-[9px] uppercase tracking-widest bg-white/5 rounded-2xl border border-white/5 transition-all"
                     >
                       <ArrowLeft className="mr-2 h-3 w-3" />
-                      Abort
+                      ABORT PROTOCOL
                     </Button>
                   </div>
                 </form>
               ) : (
                 <form onSubmit={handleAuth} className="space-y-8 animate-fade-in pt-4">
                   <div className="space-y-4">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-4">Verification Node</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-4">VERIFICATION NODE</label>
                     <div className="relative group">
                       <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 group-focus-within:text-primary transition-colors" />
                       <Input 
@@ -318,12 +318,12 @@ export default function KioskAuthPage() {
                   </div>
                   <div className="space-y-4">
                     <Button type="submit" disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-lg active:scale-[0.98] transition-all">
-                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Node"}
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "VERIFY NODE"}
                     </Button>
                     
                     <div className="relative flex items-center gap-4 py-2">
                       <div className="h-px bg-white/5 flex-1" />
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Alternative</span>
+                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">ALTERNATIVE</span>
                       <div className="h-px bg-white/5 flex-1" />
                     </div>
 
@@ -340,7 +340,7 @@ export default function KioskAuthPage() {
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                       </svg>
-                      Google SSO
+                      GOOGLE SSO
                     </Button>
                     <Button 
                       type="button"
@@ -349,7 +349,7 @@ export default function KioskAuthPage() {
                       className="w-full h-12 text-slate-500 hover:text-red-400 font-black text-[9px] uppercase tracking-widest bg-white/5 rounded-2xl border border-white/5 transition-all"
                     >
                       <ArrowLeft className="mr-2 h-3 w-3" />
-                      Abort
+                      ABORT PROTOCOL
                     </Button>
                   </div>
                 </form>
@@ -357,7 +357,7 @@ export default function KioskAuthPage() {
             </div>
 
             <div className="flex flex-col items-center gap-4 pt-4 border-t border-white/5">
-               <span className="text-[8px] font-black text-primary/40 uppercase tracking-[0.4em]">Node Alpha Restricted</span>
+               <span className="text-[8px] font-black text-primary/40 uppercase tracking-[0.4em]">INSTITUTIONAL DATA CLEARANCE: NODE ALPHA ONLY</span>
             </div>
           </CardContent>
         </Card>

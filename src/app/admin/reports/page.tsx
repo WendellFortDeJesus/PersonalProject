@@ -24,7 +24,8 @@ import {
   UserPlus,
   Trash2,
   AlertTriangle,
-  PenTool
+  PenTool,
+  Loader2
 } from 'lucide-react';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ export default function ReportsPage() {
   const [college, setCollege] = useState('all');
   const [role, setRole] = useState('all');
   const [generatedOn, setGeneratedOn] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   
   // State for deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -71,16 +73,20 @@ export default function ReportsPage() {
   const filteredVisits = useMemo(() => {
     if (!visits) return [];
     return visits.filter(v => {
-      const vDate = new Date(v.timestamp);
-      const inRange = isWithinInterval(vDate, {
-        start: startOfDay(new Date(dateFrom)),
-        end: endOfDay(new Date(dateTo))
-      });
-      const matchesPurpose = purpose === 'all' || v.purpose === PURPOSES.find(p => p.id === purpose)?.label;
-      const matchesCollege = college === 'all' || v.patronDepartments?.[0] === college;
-      const matchesRole = role === 'all' || v.patronRole === role;
-      
-      return inRange && matchesPurpose && matchesCollege && matchesRole;
+      try {
+        const vDate = new Date(v.timestamp);
+        const inRange = isWithinInterval(vDate, {
+          start: startOfDay(new Date(dateFrom)),
+          end: endOfDay(new Date(dateTo))
+        });
+        const matchesPurpose = purpose === 'all' || v.purpose === PURPOSES.find(p => p.id === purpose)?.label;
+        const matchesCollege = college === 'all' || (v.patronDepartments && v.patronDepartments[0] === college);
+        const matchesRole = role === 'all' || v.patronRole === role;
+        
+        return inRange && matchesPurpose && matchesCollege && matchesRole;
+      } catch (e) {
+        return false;
+      }
     });
   }, [visits, dateFrom, dateTo, purpose, college, role]);
 
@@ -90,13 +96,14 @@ export default function ReportsPage() {
     const external = filteredVisits.filter(v => v.patronRole === 'Visitor').length;
 
     const purposeMap = filteredVisits.reduce((acc, v) => {
-      acc[v.purpose] = (acc[v.purpose] || 0) + 1;
+      const p = v.purpose || 'Other';
+      acc[p] = (acc[p] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     const topPurpose = Object.entries(purposeMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
     const deptMap = filteredVisits.reduce((acc, v) => {
-      const dept = v.patronDepartments?.[0] || 'Unassigned';
+      const dept = (v.patronDepartments && v.patronDepartments[0]) || 'Unassigned';
       acc[dept] = (acc[dept] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -118,6 +125,26 @@ export default function ReportsPage() {
     }
   };
 
+  const handlePrint = useCallback((e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  }, []);
+
+  const handleExportPDF = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExporting(true);
+    // Standard approach for PDF export in web is triggering the Print to PDF dialog
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.print();
+      }
+      setIsExporting(false);
+      toast({ title: "Export Initialized", description: "Audit document is being prepared for save." });
+    }, 500);
+  }, [toast]);
+
   const setToday = () => {
     const today = format(new Date(), 'yyyy-MM-dd');
     setDateFrom(today);
@@ -130,12 +157,6 @@ export default function ReportsPage() {
     setDateFrom(start);
     setDateTo(end);
   };
-
-  const handlePrint = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
-  }, []);
 
   const availableRoles = settings?.roles || ['Student', 'Visitor'];
   const allPossibleRoles = Array.from(new Set(['Admin', 'Staff', 'Faculty', ...availableRoles]));
@@ -152,16 +173,18 @@ export default function ReportsPage() {
             type="button"
             onClick={handlePrint} 
             variant="outline" 
-            className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm"
+            className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
           >
             <Printer className="h-3.5 w-3.5 mr-2" />
             Print
           </Button>
           <Button 
             type="button"
-            className="rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md shadow-primary/10"
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className="rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md shadow-primary/10 hover:bg-primary/90 transition-all active:scale-95"
           >
-            <Download className="h-3.5 w-3.5 mr-2" />
+            {isExporting ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-2" />}
             Export PDF
           </Button>
         </div>
@@ -308,13 +331,13 @@ export default function ReportsPage() {
             <tbody className="divide-y divide-slate-50">
               {filteredVisits.map((v) => (
                 <tr key={v.id} className="hover:bg-slate-50/30 transition-colors">
-                  <td className="px-6 py-3 text-[9px] font-mono font-bold text-slate-400">{format(new Date(v.timestamp), 'HH:mm | MM/dd')}</td>
-                  <td className="px-6 py-3 text-[10px] font-black text-primary uppercase">{v.patronName}</td>
-                  <td className="px-6 py-3 text-[9px] font-bold text-slate-500 uppercase">{v.patronDepartments?.[0] || 'Unassigned'}</td>
-                  <td className="px-6 py-3 text-[9px] font-black text-slate-600 uppercase tracking-tighter">{v.patronRole || '---'}</td>
+                  <td className="px-6 py-3 text-[9px] font-mono font-bold text-slate-400">{v.timestamp ? format(new Date(v.timestamp), 'HH:mm | MM/dd') : '---'}</td>
+                  <td className="px-6 py-3 text-[10px] font-black text-primary uppercase">{v.patronName || 'PURGED IDENTITY'}</td>
+                  <td className="px-6 py-3 text-[9px] font-bold text-slate-500 uppercase">{(v.patronDepartments && v.patronDepartments[0]) || 'Unassigned'}</td>
+                  <td className="px-6 py-3 text-[9px] font-black text-slate-600 uppercase tracking-tighter">{v.patronRole || 'Patron'}</td>
                   <td className="px-6 py-3">
                     <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/10 tracking-widest">
-                      {v.purpose}
+                      {v.purpose || 'Visit'}
                     </span>
                   </td>
                   <td className="px-6 py-3 text-right no-print">

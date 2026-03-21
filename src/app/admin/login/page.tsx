@@ -87,7 +87,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden">
       {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
@@ -95,7 +95,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Floating Binary Bits Decoration */}
-      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
+      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none overflow-hidden">
         {binaryBits.map((bit, i) => (
           <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
             {bit}
@@ -113,7 +113,7 @@ export default function AdminLoginPage() {
           Kiosk Home
         </Button>
 
-        <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
+        <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
           {/* Card Corner Accents */}
           <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/20 rounded-tl-[3rem] pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/20 rounded-br-[3rem] pointer-events-none" />

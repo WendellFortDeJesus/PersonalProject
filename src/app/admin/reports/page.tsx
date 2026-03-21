@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -7,23 +8,49 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
-import { FileDown, Filter, Printer, Download, ShieldCheck, Library, Calendar, Users, GraduationCap, Briefcase, UserPlus } from 'lucide-react';
+import { 
+  FileDown, 
+  Filter, 
+  Printer, 
+  Download, 
+  ShieldCheck, 
+  Library, 
+  Calendar, 
+  Users, 
+  GraduationCap, 
+  Briefcase, 
+  UserPlus,
+  Trash2,
+  AlertTriangle
+} from 'lucide-react';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function ReportsPage() {
   const db = useFirestore();
+  const { toast } = useToast();
   const [dateFrom, setDateFrom] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [dateTo, setDateTo] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [purpose, setPurpose] = useState('all');
   const [college, setCollege] = useState('all');
   const [role, setRole] = useState('all');
   const [generatedOn, setGeneratedOn] = useState<string | null>(null);
+  
+  // State for deletion
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [visitToDelete, setVisitToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    // Stability fix for hydration mismatches
     setGeneratedOn(format(new Date(), 'MMMM dd, yyyy HH:mm'));
   }, []);
 
@@ -70,6 +97,18 @@ export default function ReportsPage() {
     return { total: filteredVisits.length, students, employees, external, topPurpose, topDept };
   }, [filteredVisits]);
 
+  const handleDeleteVisit = async () => {
+    if (!db || !visitToDelete) return;
+    try {
+      await deleteDoc(doc(db, 'visits', visitToDelete));
+      toast({ title: "Log Entry Erased", description: "The visit record has been permanently removed." });
+      setIsDeleteDialogOpen(false);
+      setVisitToDelete(null);
+    } catch (error) {
+      toast({ variant: "destructive", title: "Action Failed", description: "Failed to delete log entry." });
+    }
+  };
+
   const setToday = () => {
     const today = format(new Date(), 'yyyy-MM-dd');
     setDateFrom(today);
@@ -106,7 +145,6 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Quick Stats Grid - VISIBLE ON DASHBOARD & REPORT */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 no-print">
         {[
           { title: "Filtered Records", value: reportStats.total, icon: Users, color: "text-primary", bg: "bg-primary/5" },
@@ -243,6 +281,7 @@ export default function ReportsPage() {
                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Institutional Unit</th>
                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Role</th>
                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Primary Intent</th>
+                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-500 text-right no-print">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -257,11 +296,24 @@ export default function ReportsPage() {
                       {v.purpose}
                     </span>
                   </td>
+                  <td className="px-6 py-3 text-right no-print">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setVisitToDelete(v.id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      className="h-8 w-8 p-0 hover:bg-red-50 text-slate-300 hover:text-red-600 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
               ))}
               {filteredVisits.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-24 text-center">
+                  <td colSpan={6} className="px-6 py-24 text-center">
                     <div className="space-y-2">
                        <FileDown className="h-8 w-8 text-slate-200 mx-auto" />
                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">No registry records match the selected audit criteria</p>
@@ -285,6 +337,25 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden sm:max-w-md">
+          <DialogHeader className="p-12 bg-red-600 text-white text-center">
+            <div className="mx-auto bg-white/20 p-5 rounded-full w-fit mb-6">
+              <AlertTriangle className="h-12 w-12 text-white" />
+            </div>
+            <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-white">Erase Log Entry?</DialogTitle>
+          </DialogHeader>
+          <div className="p-12 text-center space-y-6">
+            <p className="text-base font-bold text-slate-600">This action will permanently remove this visit record from the institutional audit trail.</p>
+            <p className="text-[11px] font-black text-red-400 uppercase tracking-widest leading-relaxed">System history for this event will be invalidated.</p>
+          </div>
+          <DialogFooter className="p-10 bg-slate-50 border-t grid grid-cols-2 gap-4">
+            <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl">Abort</Button>
+            <Button onClick={handleDeleteVisit} className="h-14 font-black uppercase text-[10px] tracking-widest bg-red-600 text-white hover:bg-red-700 rounded-2xl shadow-xl shadow-red-100">Confirm Deletion</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

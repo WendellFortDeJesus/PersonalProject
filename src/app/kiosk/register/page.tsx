@@ -23,7 +23,7 @@ const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
 
 const formSchema = z.object({
   name: z.string().min(1, "Full legal name is required"),
-  department: z.string().min(1, "Select your academic unit"),
+  department: z.string().min(1, "Select your college/department"),
   age: z.string().min(1, "Age index is required").refine((val) => !isNaN(parseInt(val)), "Age must be a numeric value"),
   purposeId: z.string().min(1, "Select your primary purpose of visit"),
   role: z.string().min(1, "Institutional role is required"),
@@ -332,7 +332,7 @@ function RegistrationContent() {
                     name="department"
                     render={({ field }) => (
                       <FormItem className="md:col-span-2">
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Academic Unit</FormLabel>
+                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">College/Department</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12 rounded-xl font-bold">

@@ -459,17 +459,15 @@ export default function SettingsPage() {
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0 bg-white">
-                    <div className="p-10 bg-red-600 text-white text-center">
+                    <AlertDialogHeader className="p-10 bg-red-600 text-white text-center">
                       <div className="p-4 bg-white/20 rounded-full w-fit mx-auto mb-6">
                         <Skull className="h-10 w-10 text-white" />
                       </div>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-white">Confirm Registry Purge?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">Critical System Protocol</AlertDialogDescription>
-                      </AlertDialogHeader>
-                    </div>
-                    <div className="p-10 space-y-6">
-                      <p className="text-sm font-bold text-slate-600 leading-relaxed uppercase tracking-tight text-center">
+                      <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-white">Confirm Registry Purge?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">Critical System Protocol</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="p-10 space-y-6 text-center">
+                      <p className="text-sm font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
                         This action will PERMANENTLY ERASE every patron record and visit log in the system, including identities such as jcesperanza@neu.edu.ph from the registry.
                       </p>
                       <div className="grid grid-cols-2 gap-4">

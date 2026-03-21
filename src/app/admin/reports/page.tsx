@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,15 +125,13 @@ export default function ReportsPage() {
     }
   };
 
-  const handlePrint = useCallback((e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
+  const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print();
     }
-  }, []);
+  };
 
-  const handleExportPDF = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleExportPDF = () => {
     setIsExporting(true);
     // Standard approach for PDF export in web is triggering the Print to PDF dialog
     setTimeout(() => {
@@ -142,8 +140,8 @@ export default function ReportsPage() {
       }
       setIsExporting(false);
       toast({ title: "Export Initialized", description: "Audit document is being prepared for save." });
-    }, 500);
-  }, [toast]);
+    }, 300);
+  };
 
   const setToday = () => {
     const today = format(new Date(), 'yyyy-MM-dd');

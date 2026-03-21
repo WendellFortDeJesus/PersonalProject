@@ -112,34 +112,34 @@ export default function KioskAuthPage() {
   };
 
   return (
-    <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
+    <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden p-6">
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 z-0 opacity-10 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px]" />
       
-      <div className="relative z-10 w-full max-w-lg space-y-6 animate-fade-in px-4">
-        <Card className="border-none shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[4.5rem] overflow-hidden bg-[#121921]/90 backdrop-blur-3xl ring-1 ring-white/5">
-          <CardHeader className="text-center pt-14 pb-8 px-8 space-y-4">
-            <div className="flex justify-center mb-1">
-              <div className="p-5 bg-[#355872]/20 rounded-2xl ring-1 ring-[#355872]/40 shadow-[0_0_30px_rgba(53,88,114,0.3)]">
-                <ShieldCheck className="h-8 w-8 text-[#7AAACE]" />
+      <div className="relative z-10 w-full max-w-md animate-fade-in">
+        <Card className="border-none shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[4.5rem] overflow-hidden bg-[#121921] backdrop-blur-3xl ring-1 ring-white/5 h-[90vh] flex flex-col">
+          <CardHeader className="text-center pt-12 pb-6 px-8 space-y-4 shrink-0">
+            <div className="flex justify-center">
+              <div className="p-4 bg-[#355872]/20 rounded-2xl ring-1 ring-[#355872]/40 shadow-[0_0_30px_rgba(53,88,114,0.3)]">
+                <ShieldCheck className="h-6 w-6 text-[#7AAACE]" />
               </div>
             </div>
             <div className="space-y-1">
               <CardTitle className="text-4xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY HUB</CardTitle>
-              <CardDescription className="text-[9px] font-mono font-black text-slate-500 uppercase tracking-[0.4em]">
+              <CardDescription className="text-[8px] font-mono font-black text-slate-500 uppercase tracking-[0.4em]">
                 INSTITUTIONAL ACCESS PROTOCOL
               </CardDescription>
             </div>
           </CardHeader>
 
-          <CardContent className="px-8 pb-14 space-y-10">
+          <CardContent className="px-8 pb-10 space-y-8 flex-1 flex flex-col overflow-y-auto no-scrollbar">
             {/* Tab Switcher */}
-            <div className="bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner">
+            <div className="bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner shrink-0">
               <div className="flex gap-1">
                 <button 
                   onClick={() => setActiveTab('rfid')} 
                   className={cn(
-                    "flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300", 
+                    "flex-1 h-12 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300", 
                     activeTab === 'rfid' ? "bg-[#355872] text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
                   )}
                 >
@@ -148,8 +148,8 @@ export default function KioskAuthPage() {
                 <button 
                   onClick={() => setActiveTab('email')} 
                   className={cn(
-                    "flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300", 
-                    activeTab === 'email' ? "bg-[#355872] text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                    "flex-1 h-12 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300", 
+                    activeTab === 'email' ? "bg-black/20 text-slate-500" : "text-slate-600 hover:text-slate-400"
                   )}
                 >
                   EMAIL
@@ -157,8 +157,8 @@ export default function KioskAuthPage() {
                 <button 
                   onClick={() => setActiveTab('google')} 
                   className={cn(
-                    "flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300", 
-                    activeTab === 'google' ? "bg-[#355872] text-white shadow-lg" : "text-slate-600 hover:text-slate-400"
+                    "flex-1 h-12 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300", 
+                    activeTab === 'google' ? "bg-black/20 text-slate-500" : "text-slate-600 hover:text-slate-400"
                   )}
                 >
                   GOOGLE
@@ -166,64 +166,69 @@ export default function KioskAuthPage() {
               </div>
             </div>
             
-            <div className="flex flex-col items-center justify-center py-4 space-y-10">
+            <div className="flex flex-col items-center justify-center py-4 space-y-8 flex-1">
               {activeTab === 'rfid' && (
-                <div className="relative w-40 h-40 flex items-center justify-center mb-4">
+                <div className="relative w-44 h-44 flex items-center justify-center mb-2 shrink-0">
                   <div className="absolute inset-0 rounded-full border border-[#355872]/20 animate-pulse" />
-                  <div className="absolute inset-2 rounded-full border border-[#355872]/10" />
-                  <div className="relative p-8 bg-black/40 rounded-full ring-1 ring-[#355872]/30 shadow-inner">
-                    <Scan className="h-12 w-12 text-[#355872]/60" />
+                  <div className="absolute inset-4 rounded-full border border-[#355872]/10" />
+                  <div className="relative p-10 bg-black/40 rounded-full ring-1 ring-[#355872]/30 shadow-inner">
+                    <Scan className="h-10 w-10 text-[#355872]/60" />
                   </div>
-                  {/* Scanning Brackets */}
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#355872]/40 rounded-tl-lg" />
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#355872]/40 rounded-tr-lg" />
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#355872]/40 rounded-bl-lg" />
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#355872]/40 rounded-br-lg" />
+                  {/* Corner Brackets */}
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#355872]/30 rounded-tl-xl" />
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#355872]/30 rounded-tr-xl" />
+                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#355872]/30 rounded-bl-xl" />
+                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#355872]/30 rounded-br-xl" />
+                  
+                  {/* Internal Brackets */}
+                  <div className="absolute top-16 left-16 w-12 h-12 border-2 border-dashed border-[#355872]/40 rounded-lg flex items-center justify-center">
+                    <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+                  </div>
                 </div>
               )}
 
               {activeTab === 'rfid' && (
-                <div className="text-center space-y-2">
-                  <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">SCANNER ACTIVE</h3>
-                  <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">AWAITING IDENTITY CARD</p>
+                <div className="text-center space-y-2 shrink-0">
+                  <h3 className="text-[10px] font-black text-white uppercase tracking-[0.3em]">SCANNER ACTIVE</h3>
+                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">AWAITING IDENTITY CARD</p>
                 </div>
               )}
 
-              <div className="w-full space-y-6">
+              <div className="w-full space-y-6 flex-1 flex flex-col justify-end">
                 {activeTab === 'rfid' ? (
-                  <form onSubmit={handleAuth} className="space-y-8 w-full">
+                  <form onSubmit={handleAuth} className="space-y-6 w-full">
                     <div className="relative group">
                       <Input 
                         placeholder="00-00000-000" 
                         value={rfid} 
                         onChange={(e) => setRfid(e.target.value)} 
-                        className="h-16 text-center text-2xl font-mono font-black border-2 border-[#355872]/20 bg-black/40 rounded-2xl text-white focus:border-[#355872]/60 focus:ring-0 transition-all shadow-inner" 
+                        className="h-16 text-center text-xl font-mono font-black border-none bg-black/40 rounded-2xl text-white focus:ring-1 focus:ring-[#355872]/50 transition-all shadow-inner placeholder:text-slate-800" 
                       />
                     </div>
                     <Button 
                       type="submit" 
                       disabled={isLoading} 
-                      className="w-full h-16 bg-[#355872] hover:bg-[#355872]/90 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-black/40 transition-all active:scale-[0.98]"
+                      className="w-full h-16 bg-[#355872] hover:bg-[#355872]/90 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-black/20 transition-all active:scale-[0.98]"
                     >
                       {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "VERIFY IDENTITY"}
                     </Button>
                   </form>
                 ) : activeTab === 'email' ? (
-                  <form onSubmit={handleAuth} className="space-y-6 w-full">
+                  <form onSubmit={handleAuth} className="space-y-4 w-full">
                     <div className="space-y-2">
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">INSTITUTIONAL NODE</p>
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">INSTITUTIONAL NODE</p>
                       <Input 
                         placeholder={`username@${enforcedDomain}`} 
                         type="email" 
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)} 
-                        className="h-16 rounded-2xl border-2 border-[#355872]/20 bg-black/40 font-bold text-white px-8 focus:border-[#355872]/60 focus:ring-0 transition-all shadow-inner" 
+                        className="h-16 rounded-2xl border-none bg-black/40 font-bold text-white px-8 focus:ring-1 focus:ring-[#355872]/50 transition-all shadow-inner" 
                       />
                     </div>
                     <Button 
                       type="submit" 
                       disabled={isLoading} 
-                      className="w-full h-16 bg-[#355872] text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-lg transition-all active:scale-[0.98]"
+                      className="w-full h-16 bg-[#355872] text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-lg transition-all active:scale-[0.98]"
                     >
                       {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "VERIFY NODE"}
                     </Button>
@@ -233,7 +238,7 @@ export default function KioskAuthPage() {
                     <Button 
                       onClick={handleGoogleLogin} 
                       disabled={isLoading} 
-                      className="w-full h-16 bg-white text-[#0B1218] hover:bg-slate-100 font-black text-xs uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-4 shadow-xl transition-all active:scale-[0.98]"
+                      className="w-full h-16 bg-white text-[#0B1218] hover:bg-slate-100 font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-4 shadow-xl transition-all active:scale-[0.98]"
                     >
                       {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                         <>
@@ -252,19 +257,19 @@ export default function KioskAuthPage() {
               </div>
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-white/5">
+            <div className="space-y-4 pt-6 shrink-0">
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/')}
-                className="w-full h-14 text-slate-500 hover:text-white font-black text-[10px] uppercase tracking-[0.3em] rounded-2xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
+                className="w-full h-14 text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.3em] rounded-2xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
               >
                 <ArrowLeft className="h-3 w-3" />
                 ABORT PROTOCOL
               </Button>
 
-              <div className="p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 flex gap-4">
-                <Info className="h-4 w-4 text-yellow-500/60 shrink-0" />
-                <p className="text-[8px] font-bold text-yellow-500/60 uppercase leading-relaxed tracking-wider">
+              <div className="p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 flex gap-3">
+                <Info className="h-3.5 w-3.5 text-yellow-500/60 shrink-0 mt-0.5" />
+                <p className="text-[7px] font-bold text-yellow-500/60 uppercase leading-relaxed tracking-wider">
                   IF AUTHENTICATION FAILS, VERIFY THAT YOUR BROWSER IS NOT BLOCKING POPUPS AND THAT THE ORIGIN ABOVE IS WHITELISTED.
                 </p>
               </div>

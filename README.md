@@ -1,4 +1,4 @@
-# PatronPoint: Click Here:[NEU School Library](https://personal-project-ruddy-theta.vercel.app/)
+# PatronPoint - Click Here: [NEU School Library](https://personal-project-ruddy-theta.vercel.app/)
 
 PatronPoint is a high-density, mission-critical visitor management system designed for institutional environments like the NEU Central Library. It features an immersive "Cyber-Tech" Head-Up Display (HUD) aesthetic, providing real-time telemetry and secure access protocols.
 

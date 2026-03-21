@@ -103,52 +103,52 @@ export default function AdminLoginPage() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-3xl space-y-8 animate-fade-in">
+      <div className="relative z-10 w-full max-w-3xl space-y-8 animate-fade-in flex flex-col items-center">
         <Card className="w-full border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[4rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 relative">
           {/* Card Corner Accents */}
           <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-white/20 rounded-tl-[4rem] pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-white/20 rounded-br-[4rem] pointer-events-none" />
           
-          <CardHeader className="text-center pt-24 pb-12 px-16">
-            <div className="flex justify-center mb-8">
+          <CardHeader className="text-center pt-16 pb-10 px-16">
+            <div className="flex justify-center mb-6">
               <div className="p-6 bg-primary/20 rounded-[2.5rem] text-primary shadow-[0_0_40px_rgba(53,88,114,0.4)] ring-1 ring-primary/40">
-                <ShieldCheck className="h-12 w-12" />
+                <ShieldCheck className="h-10 w-10" />
               </div>
             </div>
             <CardTitle className="text-5xl font-headline font-black text-white tracking-tighter uppercase leading-none">Staff Terminal</CardTitle>
-            <CardDescription className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] mt-4">
+            <CardDescription className="text-xs font-black text-slate-500 uppercase tracking-[0.45em] mt-4">
               Authorized Personnel Node Entry
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="p-16 pt-4 space-y-12">
-            <form onSubmit={handleLogin} className="space-y-12">
-              <div className="space-y-10">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-6">Identity UID</label>
+          <CardContent className="px-16 pb-16 space-y-10">
+            <form onSubmit={handleLogin} className="space-y-10">
+              <div className="space-y-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-6">Identity UID</label>
                   <div className="relative group">
-                    <User className="absolute left-8 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-600 group-focus-within:text-primary transition-colors" />
+                    <User className="absolute left-8 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-500 group-focus-within:text-primary transition-colors" />
                     <Input 
                       placeholder="user@neu.edu.ph" 
                       type="text" 
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-20 pl-20 rounded-[2rem] border-none bg-black/60 font-bold text-xl text-white focus:ring-2 focus:ring-primary/40 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
+                      className="h-20 pl-20 rounded-[2rem] border-none bg-black/60 font-bold text-xl text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
                     />
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-6">Access Token</label>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-6">Access Token</label>
                   <div className="relative group">
-                    <Lock className="absolute left-8 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-600 group-focus-within:text-primary transition-colors" />
+                    <Lock className="absolute left-8 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-500 group-focus-within:text-primary transition-colors" />
                     <Input 
                       placeholder="••••••••" 
                       type={showPassword ? "text" : "password"} 
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-20 pl-20 pr-20 rounded-[2rem] border-none bg-black/60 font-bold text-xl text-white focus:ring-2 focus:ring-primary/40 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
+                      className="h-20 pl-20 pr-20 rounded-[2rem] border-none bg-black/60 font-bold text-xl text-white focus:ring-1 focus:ring-primary/60 focus:bg-black/80 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] transition-all"
                     />
                     <button 
                       type="button"
@@ -162,26 +162,26 @@ export default function AdminLoginPage() {
               </div>
               <Button 
                 disabled={isLoading} 
-                className="w-full h-24 text-[16px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-primary to-secondary hover:brightness-110 rounded-[2rem] transition-all active:scale-[0.98] shadow-[0_0_30px_rgba(53,88,114,0.4)] relative overflow-hidden group"
+                className="w-full h-24 text-[16px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-primary to-secondary hover:brightness-110 rounded-[2.5rem] transition-all active:scale-[0.98] shadow-[0_0_30px_rgba(53,88,114,0.4)] relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                 {isLoading ? <Loader2 className="mr-3 h-6 w-6 animate-spin" /> : "Authorize Entry"}
               </Button>
             </form>
 
-            <div className="relative flex items-center justify-center gap-8 py-4">
-              <div className="h-px bg-white/5 w-1/4" />
-              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Alternative Gateway</span>
-              <div className="h-px bg-white/5 w-1/4" />
+            <div className="relative flex items-center justify-center gap-6 py-2">
+              <div className="h-px bg-white/10 flex-1" />
+              <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Alternative Gateway</span>
+              <div className="h-px bg-white/10 flex-1" />
             </div>
 
             <Button 
               onClick={handleGoogleLogin}
               disabled={isLoading}
               variant="outline" 
-              className="w-full h-20 border-white/5 bg-white/5 rounded-[2rem] text-[14px] font-bold text-white uppercase tracking-widest flex items-center justify-center gap-6 hover:bg-white/10 transition-all shadow-sm group"
+              className="w-full h-20 border-white/5 bg-white/5 rounded-[2rem] text-[14px] font-black text-white uppercase tracking-[0.15em] flex items-center justify-center gap-6 hover:bg-white/10 transition-all shadow-sm group"
             >
-              <svg viewBox="0 0 24 24" className="h-8 w-8 group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg">
+              <svg viewBox="0 0 24 24" className="h-7 w-7 group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -190,7 +190,7 @@ export default function AdminLoginPage() {
               Continue with Google
             </Button>
 
-            <div className="pt-8 border-t border-white/5">
+            <div className="pt-6 border-t border-white/5">
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/')}
@@ -203,7 +203,7 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[9px] font-black text-slate-700 uppercase tracking-[0.5em] mt-8">
+        <p className="text-center text-[9px] font-black text-slate-700 uppercase tracking-[0.5em] mt-4">
           Institutional Access Point Node 01
         </p>
       </div>

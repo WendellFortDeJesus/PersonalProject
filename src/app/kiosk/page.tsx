@@ -11,8 +11,6 @@ import { Mail, ContactRound, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 export default function KioskAuthPage() {
@@ -76,7 +74,6 @@ export default function KioskAuthPage() {
         const snap = await getDocs(q);
         
         if (snap.empty) {
-          // New User: Send to Purpose selection first, then Registration
           router.push(`/kiosk/purpose?isNew=true&authMethod=SSO Login&email=${encodeURIComponent(user.email)}`);
         } else {
           const patronDoc = snap.docs[0];
@@ -142,7 +139,6 @@ export default function KioskAuthPage() {
         params.set('authMethod', authMethod);
         if (activeTab === 'rfid') params.set('schoolId', rfid);
         if (activeTab === 'email') params.set('email', email);
-        // Redirect to Purpose Selection first for new users
         router.push(`/kiosk/purpose?${params.toString()}`);
         return;
       }
@@ -169,14 +165,16 @@ export default function KioskAuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 font-body">
       <div className="w-full max-w-xl space-y-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => router.push('/')}
-          className="text-slate-400 hover:text-primary font-bold text-[10px] uppercase tracking-widest px-0"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Cancel
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            onClick={() => router.push('/')}
+            className="text-slate-400 hover:text-primary font-bold text-[10px] uppercase tracking-widest px-0"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Cancel
+          </Button>
+        </div>
 
         <Card className="border-slate-100 shadow-sm rounded-[2rem] overflow-hidden bg-white">
           <CardHeader className="text-center pt-12 pb-6">
@@ -215,8 +213,8 @@ export default function KioskAuthPage() {
                       className="h-14 w-64 text-center text-xl font-mono font-bold border-slate-200 rounded-xl bg-white shadow-none"
                     />
                   </div>
-                  <Button disabled={isLoading} className="w-full h-14 text-[11px] font-bold uppercase tracking-widest bg-primary hover:bg-primary/90 rounded-xl">
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Identity"}
+                  <Button disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 rounded-xl transition-all">
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (rfid ? "Continue" : "Verify Identity")}
                   </Button>
                 </form>
               </TabsContent>
@@ -237,8 +235,8 @@ export default function KioskAuthPage() {
                       />
                     </div>
                   </div>
-                  <Button disabled={isLoading} className="w-full h-14 text-[11px] font-bold uppercase tracking-widest bg-primary hover:bg-primary/90 rounded-xl">
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue with Email"}
+                  <Button disabled={isLoading} className="w-full h-14 text-[11px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 rounded-xl transition-all">
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (email ? "Continue" : "Continue with Email")}
                   </Button>
                 </form>
               </TabsContent>

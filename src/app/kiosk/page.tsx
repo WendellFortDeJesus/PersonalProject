@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, RefreshCw, Info } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, RefreshCw, Info, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
@@ -19,8 +19,7 @@ export default function KioskAuthPage() {
   const [activeTab, setActiveTab] = useState<'rfid' | 'email' | 'google'>('rfid');
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [currentHostname, setCurrentHostname] = useState('');
-  const [binaryBits, setBinaryBits] = useState<string[]>([]);
+  const [currentOrigin, setCurrentOrigin] = useState('');
   const hasProcessedRedirect = useRef(false);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -38,9 +37,8 @@ export default function KioskAuthPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setCurrentHostname(window.location.hostname);
+      setCurrentOrigin(window.location.origin);
     }
-    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
   const processAuthResult = async () => {
@@ -56,11 +54,11 @@ export default function KioskAuthPage() {
         const user = result.user;
         const userEmail = user.email || "";
 
-        // DOMAIN ENFORCEMENT POST-LOGIN (To avoid 403 on initiation)
+        // POST-LOGIN DOMAIN ENFORCEMENT
         if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
           toast({
             variant: "destructive",
-            title: "ACCESS RESTRICTED",
+            title: "DOMAIN REJECTED",
             description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
           });
           setIsSyncing(false);
@@ -92,17 +90,18 @@ export default function KioskAuthPage() {
       }
     } catch (error: any) {
       setIsSyncing(false);
-      console.error("SSO Redirect Error:", error);
+      console.error("SSO 403 Trace:", error);
       
-      let errorTitle = "SSO SYNC FAILED";
+      let errorTitle = "SSO HANDSHAKE ERROR";
       let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
 
-      if (error.code === 'auth/unauthorized-domain') {
-        errorTitle = "GATEWAY BLOCKED";
-        errorDesc = `Domain '${window.location.hostname}' is not whitelisted. Update your Firebase/Google Cloud settings.`;
-      } else if (error.code === 'auth/internal-error' || error.message?.includes('403')) {
+      // Handle the specific 403 Forbidden / restricted_client error
+      if (error.code === 'auth/internal-error' || error.message?.includes('403')) {
         errorTitle = "GOOGLE 403 FORBIDDEN";
-        errorDesc = "The security handshake was rejected. Ensure JavaScript Origins are correctly set in Google Cloud Console.";
+        errorDesc = "REASON: This domain is not whitelisted in Google Cloud Console 'JavaScript Origins'.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorTitle = "FIREBASE AUTH BLOCKED";
+        errorDesc = "REASON: Domain is missing from Firebase 'Authorized Domains' list.";
       }
 
       toast({
@@ -114,11 +113,7 @@ export default function KioskAuthPage() {
   };
 
   useEffect(() => {
-    // Only attempt to process if we are likely returning from Google
-    if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-       processAuthResult();
-    }
-    // Also run once on mount to catch standard redirects
+    // Run once on mount to catch standard redirects
     processAuthResult();
   }, [auth, db]);
 
@@ -183,7 +178,7 @@ export default function KioskAuthPage() {
       toast({
         variant: "destructive",
         title: "CONNECTION ERROR",
-        description: "FAILED TO REACH THE REGISTRY. PLEASE TRY AGAIN.",
+        description: "FAILED TO REACH THE REGISTRY.",
       });
     } finally {
       setIsLoading(false);
@@ -195,8 +190,7 @@ export default function KioskAuthPage() {
     setIsLoading(true);
     
     const provider = new GoogleAuthProvider();
-    // REMOVED 'hd' parameter to prevent 403 on initial request. 
-    // Domain enforcement now happens after successful login.
+    // Removed 'hd' to avoid initiation errors on misconfigured domains
     provider.setCustomParameters({
       prompt: 'select_account'
     });
@@ -205,11 +199,10 @@ export default function KioskAuthPage() {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
-      let errorDesc = error.message || "FAILED TO INITIATE SSO.";
       toast({
         variant: "destructive",
-        title: "GATEWAY ERROR",
-        description: errorDesc,
+        title: "PROTOCOL ERROR",
+        description: error.message || "FAILED TO START SSO.",
       });
     }
   };
@@ -228,29 +221,34 @@ export default function KioskAuthPage() {
             <div className="h-32 w-32 rounded-full border-t-2 border-primary animate-spin" />
             <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 text-primary animate-pulse" />
           </div>
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-6 max-w-sm px-8">
             <div className="space-y-2">
-              <h2 className="text-3xl font-headline font-black text-white uppercase tracking-tighter">Synchronizing Identity</h2>
-              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Establishing Secure Registry Handshake</p>
+              <h2 className="text-3xl font-headline font-black text-white uppercase tracking-tighter">Syncing Identity</h2>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Establishing Secure Protocol</p>
             </div>
-            
-            <div className="flex items-center justify-center gap-4">
-               <Button 
-                variant="outline" 
-                onClick={resetGateway}
-                className="h-10 text-[9px] font-black text-white border-white/10 hover:bg-white/5 uppercase tracking-widest gap-2"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Reset Gateway
-              </Button>
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+              <div className="flex items-center gap-2">
+                <Globe className="h-3 w-3 text-primary" />
+                <p className="text-[8px] font-mono text-white/40 truncate text-left">ORIGIN: {currentOrigin}</p>
+              </div>
+              <p className="text-[8px] font-bold text-red-400 uppercase tracking-widest leading-relaxed">
+                If stuck, verify that the 'ORIGIN' above is in your Google Cloud JavaScript Origins.
+              </p>
             </div>
+            <Button 
+              variant="outline" 
+              onClick={resetGateway}
+              className="h-12 text-[10px] font-black text-white border-white/10 hover:bg-white/5 uppercase tracking-[0.2em] w-full rounded-2xl"
+            >
+              <RefreshCw className="h-4 w-4 mr-3" />
+              Force Reset Gateway
+            </Button>
           </div>
         </div>
       )}
 
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
       <div className="relative z-10 w-full max-w-lg space-y-6 animate-fade-in px-4">
@@ -390,11 +388,10 @@ export default function KioskAuthPage() {
               <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="h-4 w-4 text-blue-500 shrink-0" />
-                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest leading-none">Identity Node Diagnostics</p>
+                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest leading-none">Diagnostic Node</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[7px] font-mono text-white/40 truncate">HOST: {currentHostname || 'Detecting...'}</p>
-                  <p className="text-[7px] font-mono text-white/40 truncate">AUTH: {auth?.config?.authDomain || 'Initializing...'}</p>
+                  <p className="text-[7px] font-mono text-white/40 truncate">ORIGIN: {currentOrigin || 'Detecting...'}</p>
                 </div>
               </div>
             </div>

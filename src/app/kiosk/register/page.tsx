@@ -73,7 +73,9 @@ function RegistrationContent() {
   });
 
   useEffect(() => {
-    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
+    // Generate decorative binary bits for the atmospheric background
+    const bits = Array.from({ length: 60 }, () => Math.random() > 0.5 ? '1' : '0');
+    setBinaryBits(bits);
   }, []);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -172,7 +174,7 @@ function RegistrationContent() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-2xl space-y-6 animate-fade-in px-4">
+      <div className="relative z-10 w-full max-w-4xl space-y-6 animate-fade-in px-4">
         <Button 
           variant="ghost" 
           onClick={handleBack}
@@ -198,7 +200,7 @@ function RegistrationContent() {
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12 overflow-y-auto max-h-[60vh] no-scrollbar">
+          <CardContent className="px-10 pb-12 overflow-y-auto max-h-[75vh] no-scrollbar">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
                 {/* Section 1: Personal Identity */}

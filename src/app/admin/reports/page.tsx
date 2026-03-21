@@ -113,7 +113,6 @@ export default function ReportsPage() {
     return { total: filteredVisits.length, students, employees, external, topPurpose, topDept };
   }, [filteredVisits]);
 
-  // BI-DIRECTIONAL LINKED DELETION PROTOCOL
   const handleDeleteVisit = async () => {
     if (!db || !visitToDelete || !adminSignature.trim()) return;
     setIsDeleting(true);
@@ -125,11 +124,9 @@ export default function ReportsPage() {
         const patronId = visitSnap.data().patronId;
         const batch = writeBatch(db);
         
-        // Delete the master identity from the registry
         const patronRef = doc(db, 'patrons', patronId);
         batch.delete(patronRef);
         
-        // Cascade delete ALL associated visits for this patron
         const q = query(collection(db, 'visits'), where('patronId', '==', patronId));
         const visitsSnap = await getDocs(q);
         visitsSnap.docs.forEach(d => batch.delete(d.ref));
@@ -188,7 +185,12 @@ export default function ReportsPage() {
         <div className="flex items-center gap-2">
           <Button 
             type="button"
-            onClick={() => window.print()} 
+            aria-label="Print audit report"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.print();
+              }
+            }} 
             variant="outline" 
             className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
           >
@@ -197,6 +199,7 @@ export default function ReportsPage() {
           </Button>
           <Button 
             type="button"
+            aria-label="Export audit report as PDF"
             onClick={handleExportPDF}
             disabled={isExporting}
             className="rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-md shadow-primary/10 hover:bg-primary/90 transition-all active:scale-95"

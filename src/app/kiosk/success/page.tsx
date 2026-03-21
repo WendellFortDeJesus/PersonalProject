@@ -30,14 +30,24 @@ function SuccessContent() {
 
   useEffect(() => {
     setBinaryBits(Array.from({ length: 48 }, () => Math.random() > 0.5 ? '1' : '0'));
+    
     const timer = setTimeout(() => {
-      router.push('/');
-    }, isAdmin ? 8000 : timeout); // Give admins a bit more time to see the welcome
+      if (isAdmin) {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/');
+      }
+    }, isAdmin ? 8000 : timeout);
+    
     return () => clearTimeout(timer);
   }, [router, timeout, isAdmin]);
 
   const handleManualContinue = () => {
-    router.push('/');
+    if (isAdmin) {
+      router.push('/admin/dashboard');
+    } else {
+      router.push('/');
+    }
   };
 
   return (

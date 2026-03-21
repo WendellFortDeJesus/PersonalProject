@@ -463,7 +463,9 @@ export default function SettingsPage() {
                       <div className="p-4 bg-white/20 rounded-full w-fit mx-auto mb-6">
                         <Skull className="h-10 w-10 text-white" />
                       </div>
-                      <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-white">Confirm Registry Purge?</AlertDialogTitle>
+                      <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-white">
+                        Confirm Registry Purge?
+                      </AlertDialogTitle>
                       <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">
                         This protocol will PERMANENTLY ERASE every patron record and visit log in the system. This action is irreversible.
                       </AlertDialogDescription>

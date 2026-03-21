@@ -33,6 +33,7 @@ export default function AdminLoginPage() {
         if (result) {
           setIsLoading(true);
           const user = result.user;
+          // Security enforcement for Admin Node
           if (user.email !== 'jcesperanza@neu.edu.ph') {
             await signOut(auth);
             setIsLoading(false);
@@ -53,6 +54,12 @@ export default function AdminLoginPage() {
             variant: "destructive",
             title: "DOMAIN NOT AUTHORIZED",
             description: "PLEASE ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
+          });
+        } else if (error.code === 'auth/operation-not-allowed') {
+          toast({
+            variant: "destructive",
+            title: "PROTOCOL NOT ENABLED",
+            description: "ENSURE GOOGLE AUTH IS ENABLED IN YOUR FIREBASE CONSOLE.",
           });
         } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
@@ -108,13 +115,13 @@ export default function AdminLoginPage() {
         toast({
           variant: "destructive",
           title: "DOMAIN NOT WHITELISTED",
-          description: "ADD THIS WORKSTATION DOMAIN TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
+          description: "ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE AUTH CONSOLE.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "SSO INITIALIZATION ERROR",
-          description: "VERIFY THAT YOUR CURRENT DOMAIN IS WHITELISTED IN FIREBASE CONSOLE.",
+          title: "SSO INITIATION FAILED",
+          description: "VERIFY YOUR AUTHORIZED DOMAINS IN FIREBASE CONSOLE.",
         });
       }
     }
@@ -123,7 +130,7 @@ export default function AdminLoginPage() {
   return (
     <div className="relative h-screen w-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 

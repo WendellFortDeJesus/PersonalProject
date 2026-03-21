@@ -35,7 +35,7 @@ export default function KioskAuthPage() {
 
   useEffect(() => {
     // Hydration fix: generate binary bits only on client
-    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
+    setBinaryBits(Array.from({ length: 60 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
   useEffect(() => {
@@ -185,98 +185,82 @@ export default function KioskAuthPage() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-3xl space-y-6 animate-fade-in px-4">
-        <div className="flex items-center justify-between px-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => router.push('/')}
-            className="text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-[0.4em] px-0 h-auto transition-colors"
-          >
-            <ArrowLeft className="mr-2 h-3 w-3" />
-            Abort Protocol
-          </Button>
-          <div className="flex items-center gap-3">
-             <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]" />
-             <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Node 01: Active</span>
-          </div>
-        </div>
-
-        <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[3rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
-          <CardHeader className="text-center pt-12 pb-8 px-12 space-y-3">
+      <div className="relative z-10 w-full max-w-5xl space-y-6 animate-fade-in px-8">
+        <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[4rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
+          <CardHeader className="text-center pt-16 pb-10 px-16 space-y-4">
             <div className="flex justify-center mb-2">
-              <div className="relative p-5 bg-primary/20 rounded-[2rem] ring-1 ring-primary/40 shadow-[0_0_30px_rgba(53,88,114,0.3)]">
-                <ShieldCheck className="h-8 w-8 text-primary" />
+              <div className="relative p-6 bg-primary/20 rounded-[2.5rem] ring-1 ring-primary/40 shadow-[0_0_40px_rgba(53,88,114,0.4)]">
+                <ShieldCheck className="h-10 w-10 text-primary" />
               </div>
             </div>
-            <div className="space-y-1">
-              <CardTitle className="text-4xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Hub</CardTitle>
-              <CardDescription className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em]">
+            <div className="space-y-2">
+              <CardTitle className="text-5xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Hub</CardTitle>
+              <CardDescription className="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em]">
                 Institutional Access Protocol
               </CardDescription>
             </div>
           </CardHeader>
 
-          <CardContent className="px-10 pb-12 space-y-8">
+          <CardContent className="px-16 pb-16 space-y-12">
             {/* Segmented Control */}
-            <div className="relative bg-black/40 p-1.5 rounded-full h-14 border border-white/10 flex items-center">
+            <div className="relative bg-black/40 p-2 rounded-full h-18 border border-white/10 flex items-center shadow-inner">
               <div 
                 className={cn(
-                  "absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-primary rounded-full shadow-[0_0_20px_rgba(53,88,114,0.5)] transition-all duration-300 ease-in-out",
+                  "absolute top-2 bottom-2 w-[calc(50%-8px)] bg-primary rounded-full shadow-[0_0_30px_rgba(53,88,114,0.5)] transition-all duration-300 ease-in-out",
                   activeTab === 'email' ? "translate-x-full" : "translate-x-0"
                 )} 
               />
               <button 
                 onClick={() => setActiveTab('rfid')}
                 className={cn(
-                  "relative z-10 flex-1 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest transition-colors duration-300",
+                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-widest transition-colors duration-300",
                   activeTab === 'rfid' ? "text-white" : "text-slate-500 hover:text-slate-400"
                 )}
               >
-                <Fingerprint className="h-4 w-4" />
+                <Fingerprint className="h-5 w-5" />
                 RFID Login
               </button>
               <button 
                 onClick={() => setActiveTab('email')}
                 className={cn(
-                  "relative z-10 flex-1 flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest transition-colors duration-300",
+                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-widest transition-colors duration-300",
                   activeTab === 'email' ? "text-white" : "text-slate-500 hover:text-slate-400"
                 )}
               >
-                <Mail className="h-4 w-4" />
+                <Mail className="h-5 w-5" />
                 Email SSO
               </button>
             </div>
             
-            <div className="min-h-[320px]">
+            <div className="min-h-[400px]">
               {activeTab === 'rfid' ? (
-                <form onSubmit={handleAuth} className="space-y-10 animate-fade-in">
-                  <div className="text-center space-y-10">
-                    <div className="relative flex items-center justify-center py-4">
-                      {/* Lidar Scanner Visualization */}
-                      <div className="absolute h-64 w-64 rounded-full border border-primary/20 animate-[ping_3s_infinite] opacity-10" />
-                      <div className="absolute h-52 w-52 rounded-full border border-primary/10 animate-[pulse_2s_infinite]" />
-                      <div className="absolute h-44 w-44 rounded-full border-t-2 border-primary/40 animate-[spin_10s_linear_infinite]" />
+                <form onSubmit={handleAuth} className="space-y-12 animate-fade-in">
+                  <div className="text-center space-y-12">
+                    <div className="relative flex items-center justify-center py-6">
+                      <div className="absolute h-80 w-80 rounded-full border border-primary/20 animate-[ping_3s_infinite] opacity-10" />
+                      <div className="absolute h-64 w-64 rounded-full border border-primary/10 animate-[pulse_2s_infinite]" />
+                      <div className="absolute h-56 w-56 rounded-full border-t-2 border-primary/40 animate-[spin_10s_linear_infinite]" />
                       
-                      <div className="relative h-40 w-40 rounded-full bg-black/60 flex items-center justify-center shadow-[inset_0_0_40px_rgba(53,88,114,0.4)] border border-white/10 overflow-hidden">
-                        <Scan className="h-16 w-16 text-primary animate-pulse" />
-                        <div className="absolute top-0 left-0 w-full h-[3px] bg-red-500 shadow-[0_0_15px_#ef4444] animate-[scan_2.5s_ease-in-out_infinite] opacity-90 z-20" />
+                      <div className="relative h-48 w-48 rounded-full bg-black/60 flex items-center justify-center shadow-[inset_0_0_60px_rgba(53,88,114,0.4)] border border-white/10 overflow-hidden">
+                        <Scan className="h-20 w-20 text-primary animate-pulse" />
+                        <div className="absolute top-0 left-0 w-full h-[3px] bg-red-500 shadow-[0_0_15px_#ef4444] animate-[scan_3s_ease-in-out_infinite] opacity-90 z-20" />
                         
                         <style jsx global>{`
                           @keyframes scan {
                             0%, 100% { transform: translateY(0); }
-                            50% { transform: translateY(160px); }
+                            50% { transform: translateY(192px); }
                           }
                         `}</style>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="flex flex-col items-center">
-                        <span className="text-xs font-black text-white uppercase tracking-[0.2em] mb-1">Terminal Scanner Active</span>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Awaiting Identity Card Proximity</span>
+                        <span className="text-sm font-black text-white uppercase tracking-[0.3em] mb-2">Terminal Scanner Active</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Awaiting Identity Card Proximity</span>
                       </div>
 
-                      <div className="max-w-xs mx-auto">
+                      <div className="max-w-md mx-auto">
                         <Input 
                           ref={rfidInputRef}
                           placeholder="00-00000-000"
@@ -284,39 +268,39 @@ export default function KioskAuthPage() {
                           autoComplete="off"
                           value={rfid}
                           onChange={(e) => setRfid(e.target.value)}
-                          className="h-16 w-full text-center text-2xl font-mono font-black border-none bg-black/40 rounded-2xl text-white focus-visible:ring-1 focus-visible:ring-primary shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] placeholder:text-slate-700"
+                          className="h-20 w-full text-center text-4xl font-mono font-black border-none bg-black/40 rounded-3xl text-white focus-visible:ring-2 focus-visible:ring-primary/50 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] placeholder:text-slate-800"
                         />
                       </div>
                     </div>
                   </div>
-                  <Button disabled={isLoading} className="w-full h-18 text-[11px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-[0_0_30px_rgba(53,88,114,0.3)] active:scale-[0.98] transition-all">
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify Identity"}
+                  <Button disabled={isLoading} className="w-full h-20 text-[13px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
+                    {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"}
                   </Button>
                 </form>
               ) : (
-                <form onSubmit={handleAuth} className="space-y-10 animate-fade-in pt-10">
-                  <div className="space-y-6">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-4">Identity Verification Protocol</label>
+                <form onSubmit={handleAuth} className="space-y-12 animate-fade-in pt-6">
+                  <div className="space-y-8">
+                    <label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 ml-6">Identity Verification Protocol</label>
                     <div className="relative group">
-                      <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-600 group-focus-within:text-primary transition-colors duration-300" />
+                      <Mail className="absolute left-8 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-600 group-focus-within:text-primary transition-colors duration-300" />
                       <Input 
                         placeholder={`username@${enforcedDomain}`} 
                         type="email" 
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-16 pl-16 rounded-2xl border-none bg-black/40 font-black text-xl text-white focus:bg-black/60 focus:ring-1 focus:ring-primary/50 transition-all shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]"
+                        className="h-20 pl-20 rounded-3xl border-none bg-black/40 font-black text-2xl text-white focus:bg-black/60 focus:ring-2 focus:ring-primary/30 transition-all shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"
                       />
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <Button disabled={isLoading} className="w-full h-18 text-[11px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-[0_0_30px_rgba(53,88,114,0.3)] active:scale-[0.98] transition-all">
-                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify SSO Node"}
+                  <div className="space-y-6">
+                    <Button disabled={isLoading} className="w-full h-20 text-[13px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
+                      {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify SSO Node"}
                     </Button>
                     
-                    <div className="relative flex items-center gap-6 py-4">
+                    <div className="relative flex items-center gap-8 py-4">
                       <div className="h-px bg-white/5 flex-1" />
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-[0.4em]">Alternative Gateway</span>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.5em]">Alternative Gateway</span>
                       <div className="h-px bg-white/5 flex-1" />
                     </div>
 
@@ -324,9 +308,9 @@ export default function KioskAuthPage() {
                       onClick={handleGoogleLogin}
                       disabled={isLoading}
                       variant="outline" 
-                      className="w-full h-18 border-white/10 bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/20 transition-all group shadow-lg"
+                      className="w-full h-20 border-white/10 bg-white/5 rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] text-white flex items-center justify-center gap-6 hover:bg-white/10 hover:border-white/20 transition-all group shadow-2xl"
                     >
-                      <svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -339,9 +323,23 @@ export default function KioskAuthPage() {
               )}
             </div>
 
-            <div className="flex flex-col items-center gap-4 pt-4 border-t border-white/5">
-               <button className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] hover:text-primary transition-colors duration-300">Identity Access Assistance</button>
-               <span className="text-[7px] font-black text-primary/40 uppercase tracking-[0.4em]">Institutional Data Clearance: Node Alpha Only</span>
+            <div className="flex flex-col items-center gap-8 pt-8 border-t border-white/5">
+               <div className="flex items-center gap-4">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => router.push('/')}
+                    className="text-slate-500 hover:text-red-400 font-black text-[10px] uppercase tracking-[0.5em] px-8 h-12 bg-white/5 rounded-2xl border border-white/5 transition-all hover:bg-red-500/10 hover:border-red-500/20"
+                  >
+                    <ArrowLeft className="mr-3 h-4 w-4" />
+                    Abort Protocol
+                  </Button>
+                  <button className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] hover:text-primary transition-colors duration-300 px-8">Identity Access Assistance</button>
+               </div>
+               <div className="flex items-center gap-4 opacity-40">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span className="text-[8px] font-black text-primary uppercase tracking-[0.5em]">Institutional Data Clearance: Node Alpha Only</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+               </div>
             </div>
           </CardContent>
         </Card>

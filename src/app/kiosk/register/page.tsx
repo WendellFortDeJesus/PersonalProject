@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
-import { ArrowLeft, Loader2, ShieldCheck, Lock } from 'lucide-react';
+import { ArrowLeft, Loader2, ShieldCheck, Lock, UserCheck } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -166,7 +166,7 @@ function RegistrationContent() {
         <Button 
           variant="ghost" 
           onClick={handleBack}
-          className="text-white hover:bg-white/10"
+          className="text-white hover:bg-white/10 font-bold uppercase tracking-widest text-[10px]"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
@@ -202,56 +202,63 @@ function RegistrationContent() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="schoolId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">School ID (24-12345-123)</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              placeholder="24-12345-123" 
-                              {...field} 
-                              readOnly={isRfidAuth}
-                              className={cn(
-                                "h-12 rounded-xl font-bold border-slate-200",
-                                isRfidAuth && "bg-slate-50 border-slate-100 pr-10"
-                              )} 
-                            />
-                            {isRfidAuth && <Lock className="absolute right-3 top-3.5 h-4 w-4 text-slate-300" />}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="md:col-span-2 p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                      <UserCheck className="h-3 w-3" /> Verified Institutional Credentials
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="schoolId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-primary/50 font-black uppercase tracking-widest text-[8px]">School ID</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  placeholder="24-12345-123" 
+                                  {...field} 
+                                  readOnly={isRfidAuth}
+                                  className={cn(
+                                    "h-11 rounded-xl font-bold border-slate-200",
+                                    isRfidAuth ? "bg-white border-primary/20 text-primary shadow-sm" : "bg-white"
+                                  )} 
+                                />
+                                {isRfidAuth && <Lock className="absolute right-3 top-3 h-4 w-4 text-primary/40" />}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Institutional Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
-                              type="email" 
-                              {...field} 
-                              readOnly={!isRfidAuth}
-                              className={cn(
-                                "h-12 rounded-xl font-bold border-slate-200",
-                                !isRfidAuth && "bg-slate-50 border-slate-100 pr-10"
-                              )}
-                            />
-                            {!isRfidAuth && <Lock className="absolute right-3 top-3.5 h-4 w-4 text-slate-300" />}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-primary/50 font-black uppercase tracking-widest text-[8px]">Institutional Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  placeholder={`username@${settings?.enforcedDomain || 'neu.edu.ph'}`} 
+                                  type="email" 
+                                  {...field} 
+                                  readOnly={!isRfidAuth}
+                                  className={cn(
+                                    "h-11 rounded-xl font-bold border-slate-200",
+                                    !isRfidAuth ? "bg-white border-primary/20 text-primary shadow-sm" : "bg-white"
+                                  )}
+                                />
+                                {!isRfidAuth && <Lock className="absolute right-3 top-3 h-4 w-4 text-primary/40" />}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -338,8 +345,8 @@ function RegistrationContent() {
                   />
                 </div>
 
-                <Button disabled={isLoading} className="w-full h-16 text-lg font-black uppercase tracking-widest rounded-2xl shadow-xl bg-primary hover:bg-primary/90 mt-4">
-                  {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Verify and Check-in"}
+                <Button disabled={isLoading} className="w-full h-16 text-lg font-black uppercase tracking-widest rounded-2xl shadow-xl bg-primary hover:bg-primary/90 mt-4 active:scale-[0.98] transition-all">
+                  {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : "Continue to Terminal Entry"}
                 </Button>
               </form>
             </Form>

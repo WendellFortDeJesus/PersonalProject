@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, ShieldCheck, Fingerprint, Scan, AlertCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
@@ -21,6 +21,7 @@ export default function KioskAuthPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [currentHostname, setCurrentHostname] = useState('');
   const [binaryBits, setBinaryBits] = useState<string[]>([]);
+  const hasProcessedRedirect = useRef(false);
   const rfidInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -42,68 +43,70 @@ export default function KioskAuthPage() {
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
-  // Handle Google Redirect Result
-  useEffect(() => {
-    if (!auth || !db) return;
+  const processAuthResult = async () => {
+    if (!auth || !db || hasProcessedRedirect.current) return;
+    hasProcessedRedirect.current = true;
+    setIsSyncing(true);
 
-    const handleRedirect = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          setIsSyncing(true);
-          const user = result.user;
-          const userEmail = user.email || "";
+    try {
+      const result = await getRedirectResult(auth);
+      if (result) {
+        const user = result.user;
+        const userEmail = user.email || "";
 
-          if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
-            toast({
-              variant: "destructive",
-              title: "ACCESS RESTRICTED",
-              description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
-            });
-            setIsSyncing(false);
-            return;
-          }
+        if (!userEmail.toLowerCase().endsWith(`@${enforcedDomain}`)) {
+          toast({
+            variant: "destructive",
+            title: "ACCESS RESTRICTED",
+            description: `ONLY @${enforcedDomain} ACCOUNTS ARE PERMITTED.`,
+          });
+          setIsSyncing(false);
+          return;
+        }
 
-          const patronsRef = collection(db, 'patrons');
-          const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
-          const querySnapshot = await getDocs(q);
+        const patronsRef = collection(db, 'patrons');
+        const q = query(patronsRef, where('email', '==', userEmail.toLowerCase()), limit(1));
+        const querySnapshot = await getDocs(q);
 
-          if (querySnapshot.empty) {
-            const params = new URLSearchParams();
-            params.set('isNew', 'true');
-            params.set('authMethod', 'SSO Login');
-            params.set('email', userEmail.toLowerCase());
-            params.set('name', user.displayName || "");
-            router.push(`/kiosk/purpose?${params.toString()}`);
+        if (querySnapshot.empty) {
+          const params = new URLSearchParams();
+          params.set('isNew', 'true');
+          params.set('authMethod', 'SSO Login');
+          params.set('email', userEmail.toLowerCase());
+          params.set('name', user.displayName || "");
+          router.push(`/kiosk/purpose?${params.toString()}`);
+        } else {
+          const patronDoc = querySnapshot.docs[0];
+          const patronData = patronDoc.data();
+          if (patronData.isBlocked) {
+            router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
           } else {
-            const patronDoc = querySnapshot.docs[0];
-            const patronData = patronDoc.data();
-            if (patronData.isBlocked) {
-              router.push(`/kiosk/success?status=blocked&name=${encodeURIComponent(patronData.name)}`);
-            } else {
-              router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
-            }
+            router.push(`/kiosk/purpose?patronId=${patronDoc.id}&authMethod=SSO Login`);
           }
         }
-      } catch (error: any) {
+      } else {
         setIsSyncing(false);
-        console.error("SSO Redirect Error:", error);
-        
-        let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
-        if (error.code === 'auth/unauthorized-domain') {
-          errorDesc = `GATEWAY BLOCKED: Ensure '${window.location.hostname}' is whitelisted in BOTH Firebase Console and Google Cloud Console.`;
-        }
-
-        toast({
-          variant: "destructive",
-          title: "SSO SYNC FAILED",
-          description: errorDesc,
-        });
       }
-    };
+    } catch (error: any) {
+      setIsSyncing(false);
+      console.error("SSO Redirect Error:", error);
+      
+      let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
+      if (error.code === 'auth/unauthorized-domain') {
+        errorDesc = `GATEWAY BLOCKED: Ensure '${window.location.hostname}' is whitelisted in BOTH Firebase Console and Google Cloud Console. Security changes may take 10 minutes to sync.`;
+      }
 
-    handleRedirect();
-  }, [auth, db, enforcedDomain, router, toast]);
+      toast({
+        variant: "destructive",
+        title: "SSO SYNC FAILED",
+        description: errorDesc,
+      });
+    }
+  };
+
+  useEffect(() => {
+    processAuthResult();
+  }, [auth, db]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,9 +211,21 @@ export default function KioskAuthPage() {
             <div className="h-24 w-24 rounded-full border-t-2 border-primary animate-spin" />
             <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary" />
           </div>
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-headline font-black text-white uppercase tracking-tighter">Synchronizing Identity</h2>
-            <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Linking Institutional Registry Node</p>
+          <div className="text-center space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-headline font-black text-white uppercase tracking-tighter">Synchronizing Identity</h2>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Linking Institutional Registry Node</p>
+            </div>
+            {isSyncing && (
+              <Button 
+                variant="ghost" 
+                onClick={() => { hasProcessedRedirect.current = false; processAuthResult(); }}
+                className="text-[9px] font-black text-white/40 uppercase tracking-widest gap-2 hover:text-white"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Manually Retry Sync
+              </Button>
+            )}
           </div>
         </div>
       )}

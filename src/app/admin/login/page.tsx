@@ -26,7 +26,6 @@ export default function AdminLoginPage() {
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
-  // Handle Google Redirect Result
   useEffect(() => {
     const handleRedirect = async () => {
       try {
@@ -34,7 +33,6 @@ export default function AdminLoginPage() {
         if (result) {
           setIsLoading(true);
           const user = result.user;
-          // Check if the user is the specific authorized admin
           if (user.email !== 'jcesperanza@neu.edu.ph') {
             await signOut(auth);
             setIsLoading(false);
@@ -49,18 +47,12 @@ export default function AdminLoginPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        if (error.code === 'auth/account-exists-with-different-credential') {
-          toast({
-            variant: "destructive",
-            title: "Auth Conflict",
-            description: "An account already exists with a different credential.",
-          });
-        } else if (error.code !== 'auth/popup-closed-by-user') {
-          console.error("Auth Error:", error);
+        console.error("Auth Redirect Error:", error);
+        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
             title: "Authentication Failed",
-            description: "Failed to finalize secure session. Ensure your domain is whitelisted.",
+            description: error.message || "Failed to finalize secure session.",
           });
         }
       }
@@ -105,10 +97,11 @@ export default function AdminLoginPage() {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
+      console.error("SSO Initiation Error:", error);
       toast({
         variant: "destructive",
-        title: "Google Auth Failed",
-        description: "Failed to initiate redirect. Please check browser settings.",
+        title: "SSO Initialization Error",
+        description: "Verify that your current domain is whitelisted in Firebase Console.",
       });
     }
   };

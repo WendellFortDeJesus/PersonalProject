@@ -53,7 +53,6 @@ export default function KioskAuthPage() {
     }
   }, [activeTab]);
 
-  // Handle Google Redirect Result
   useEffect(() => {
     const handleRedirect = async () => {
       try {
@@ -93,12 +92,12 @@ export default function KioskAuthPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        if (error.code !== 'auth/popup-closed-by-user') {
-          console.error("Auth Error:", error);
+        console.error("Kiosk SSO Error:", error);
+        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
             title: "Authentication Error",
-            description: "Failed to finalize Google SSO. Ensure your domain is whitelisted.",
+            description: error.message || "Failed to finalize Google SSO session.",
           });
         }
       }
@@ -106,8 +105,8 @@ export default function KioskAuthPage() {
     handleRedirect();
   }, [auth, db, enforcedDomain, router, toast]);
 
-  const handleGoogleLogin = async (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
+  const handleGoogleLogin = async (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -116,10 +115,11 @@ export default function KioskAuthPage() {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
       setIsLoading(false);
+      console.error("SSO Initiation Error:", error);
       toast({
         variant: "destructive",
-        title: "Google Auth Failed",
-        description: "Redirect protocol failed. Check browser security settings.",
+        title: "SSO Initiation Failed",
+        description: "Check your authorized domains in Firebase Console.",
       });
     }
   };

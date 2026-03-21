@@ -162,25 +162,46 @@ export default function KioskAuthPage() {
               </div>
             </div>
             
-            {/* Institutional Information Node */}
+            {/* Interactive Area */}
             <div className="flex flex-col items-center justify-center py-4 space-y-8 flex-1 overflow-hidden">
-              <div className="w-full max-w-lg p-8 bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner space-y-5 text-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-b from-[#355872]/5 to-transparent pointer-events-none" />
-                <div className="flex justify-center">
-                   <div className="p-3 bg-primary/20 rounded-2xl ring-1 ring-primary/40 shadow-[0_0_30px_rgba(53,88,114,0.2)]">
-                      <ShieldCheck className="h-6 w-6 text-primary" />
-                   </div>
+              {activeTab === 'rfid' ? (
+                /* Scanner Node - RFID ONLY */
+                <div className="relative flex flex-col items-center justify-center gap-6 flex-1 py-8">
+                  <div className="relative">
+                    <div className="h-48 w-48 rounded-full border-2 border-[#355872]/20 flex items-center justify-center animate-pulse shadow-[0_0_50px_rgba(53,88,114,0.1)]">
+                      <div className="h-40 w-40 rounded-full border border-[#355872]/40 flex items-center justify-center">
+                        <Scan className="h-16 w-16 text-[#7AAACE] animate-pulse" />
+                      </div>
+                    </div>
+                    {/* Telemetry Dots */}
+                    <div className="absolute -top-2 -left-2 h-4 w-4 border-t-2 border-l-2 border-[#355872]" />
+                    <div className="absolute -bottom-2 -right-2 h-4 w-4 border-b-2 border-r-2 border-[#355872]" />
+                  </div>
+                  <div className="text-center space-y-1.5">
+                    <p className="text-[10px] font-black text-[#7AAACE] uppercase tracking-[0.4em]">SCANNER ACTIVE</p>
+                    <p className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">AWAITING IDENTITY CARD</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xs font-black text-white uppercase tracking-[0.3em]">Institutional email Authorized Identity</h3>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed tracking-wider px-4">
-                    If authentication fails, verify that your browser is not blocking popups and that the origin above is whitelisted.
-                  </p>
+              ) : (
+                /* Institutional Information Node - EMAIL / GOOGLE */
+                <div className="w-full max-w-lg p-8 bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner space-y-5 text-center relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#355872]/5 to-transparent pointer-events-none" />
+                  <div className="flex justify-center">
+                    <div className="p-3 bg-[#355872]/20 rounded-2xl ring-1 ring-[#355872]/40 shadow-[0_0_30px_rgba(53,88,114,0.2)]">
+                      <ShieldCheck className="h-6 w-6 text-[#7AAACE]" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-black text-white uppercase tracking-[0.3em]">Institutional email Authorized Identity</h3>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed tracking-wider px-4">
+                      If authentication fails, verify that your browser is not blocking popups and that the origin above is whitelisted.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-white/5">
+                    <span className="text-[8px] font-black text-[#355872]/60 uppercase tracking-[0.5em]">Handshake for @{enforcedDomain} accounts</span>
+                  </div>
                 </div>
-                <div className="pt-4 border-t border-white/5">
-                   <span className="text-[8px] font-black text-primary/40 uppercase tracking-[0.5em]">Handshake for @{enforcedDomain} accounts</span>
-                </div>
-              </div>
+              )}
 
               {/* Dynamic Input Forms */}
               <div className="w-full space-y-6 flex-1 flex flex-col justify-center max-w-lg mx-auto">

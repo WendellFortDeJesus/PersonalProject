@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, Suspense, useMemo, useEffect } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -18,9 +18,7 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, addDoc, doc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { cn } from '@/lib/utils';
 
-// Institutional ID format: 24-12345-123
 const SCHOOL_ID_REGEX = /^\d{2}-\d{5}-\d{3}$/;
 
 const formSchema = z.object({
@@ -39,6 +37,7 @@ function RegistrationContent() {
   const searchParams = useSearchParams();
   const initialSchoolId = searchParams.get('schoolId') || "";
   const initialEmail = searchParams.get('email') || "";
+  const initialPurposeId = searchParams.get('purposeId') || "";
   const authMethod = searchParams.get('authMethod') || (initialSchoolId ? 'RF-ID Login' : 'SSO Login');
   const [isLoading, setIsLoading] = useState(false);
   const db = useFirestore();
@@ -58,17 +57,23 @@ function RegistrationContent() {
       gender: '',
       department: '',
       age: '',
-      purposeId: '',
+      purposeId: initialPurposeId,
       role: 'Student',
       schoolId: initialSchoolId,
       email: initialEmail,
     },
   });
 
+  // Keep purpose synchronized if it comes from URL
+  useEffect(() => {
+    if (initialPurposeId) {
+      form.setValue('purposeId', initialPurposeId);
+    }
+  }, [initialPurposeId, form]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!db) return;
 
-    // Manual validation for cross-verification fields
     const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
     
     if (isRfidAuth) {
@@ -177,7 +182,7 @@ function RegistrationContent() {
             </div>
             <CardTitle className="text-3xl font-headline font-black text-primary uppercase tracking-tight">Identity Registration</CardTitle>
             <CardDescription className="text-base font-bold text-slate-700 uppercase tracking-tight mt-1">
-              {isRfidAuth ? `RFID: ${initialSchoolId}` : `EMAIL: ${initialEmail}`}
+              Step 2: Complete Your Profile
             </CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-4">
@@ -295,14 +300,14 @@ function RegistrationContent() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-primary font-black uppercase tracking-widest text-[9px]">Visit Purpose</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12 rounded-xl font-bold">
                               <SelectValue placeholder="Select Intent" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {PURPOSES.map((p) => (
+                            {(settings?.purposes || PURPOSES).map((p: any) => (
                               <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
                             ))}
                           </SelectContent>

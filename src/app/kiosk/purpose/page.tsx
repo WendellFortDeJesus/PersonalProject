@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,7 +17,11 @@ function PurposeSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patronId = searchParams.get('patronId');
+  const isNew = searchParams.get('isNew') === 'true';
   const authMethod = searchParams.get('authMethod') || 'RF-ID Login';
+  const initialEmail = searchParams.get('email');
+  const initialSchoolId = searchParams.get('schoolId');
+
   const [selected, setSelected] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const db = useFirestore();
@@ -29,8 +34,22 @@ function PurposeSelectionContent() {
   const { data: settings } = useDoc(settingsRef);
 
   const handleSelect = async (id: string) => {
-    if (!patronId || !db || isSubmitting) return;
+    if (isSubmitting) return;
     setSelected(id);
+
+    // Flow for NEW users: Redirect to Registration with the selected purpose
+    if (isNew) {
+      const params = new URLSearchParams();
+      params.set('purposeId', id);
+      params.set('authMethod', authMethod);
+      if (initialEmail) params.set('email', initialEmail);
+      if (initialSchoolId) params.set('schoolId', initialSchoolId);
+      router.push(`/kiosk/register?${params.toString()}`);
+      return;
+    }
+
+    // Flow for RETURNING users: Submit visit directly
+    if (!patronId || !db) return;
     setIsSubmitting(true);
     
     try {
@@ -82,7 +101,9 @@ function PurposeSelectionContent() {
       <div className="w-full max-w-4xl space-y-12 animate-fade-in">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-headline font-bold text-slate-900 tracking-tight">Visit Intent</h1>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em]">Select your primary activity</p>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em]">
+            {isNew ? "Step 1: Select your primary activity" : "Select your primary activity"}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

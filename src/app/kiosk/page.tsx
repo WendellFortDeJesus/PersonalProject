@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -52,14 +53,12 @@ export default function KioskAuthPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
-    // Ensure the user is prompted to select an account
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // Strict Domain Enforcement
       if (!user.email?.endsWith(`@${enforcedDomain}`)) {
         await signOut(auth);
         setIsLoading(false);
@@ -72,13 +71,13 @@ export default function KioskAuthPage() {
       }
 
       if (user.email) {
-        // Search for user in patrons
         const patronsRef = collection(db, 'patrons');
         const q = query(patronsRef, where('email', '==', user.email), limit(1));
         const snap = await getDocs(q);
         
         if (snap.empty) {
-          router.push(`/kiosk/register?authMethod=SSO Login&email=${encodeURIComponent(user.email)}`);
+          // New User: Send to Purpose selection first, then Registration
+          router.push(`/kiosk/purpose?isNew=true&authMethod=SSO Login&email=${encodeURIComponent(user.email)}`);
         } else {
           const patronDoc = snap.docs[0];
           const patronData = patronDoc.data();
@@ -134,21 +133,17 @@ export default function KioskAuthPage() {
       const value = activeTab === 'rfid' ? rfid : email;
 
       const q = query(patronsRef, where(field, '==', value), limit(1));
-      const querySnapshot = await getDocs(q).catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: 'patrons',
-          operation: 'list',
-        }));
-        throw error;
-      });
+      const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
         setIsLoading(false);
         const params = new URLSearchParams();
+        params.set('isNew', 'true');
         params.set('authMethod', authMethod);
         if (activeTab === 'rfid') params.set('schoolId', rfid);
         if (activeTab === 'email') params.set('email', email);
-        router.push(`/kiosk/register?${params.toString()}`);
+        // Redirect to Purpose Selection first for new users
+        router.push(`/kiosk/purpose?${params.toString()}`);
         return;
       }
 

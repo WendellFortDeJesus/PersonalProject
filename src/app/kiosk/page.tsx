@@ -181,7 +181,7 @@ export default function KioskAuthPage() {
         toast({
           variant: "destructive",
           title: "POPUP BLOCKED",
-          description: "PLEASE ALLOW POPUPS FOR THIS SITE TO SIGN IN.",
+          description: "CLICK THE 'BLOCKED POPUP' ICON IN YOUR ADDRESS BAR TO ALLOW POPUPS FOR THIS SITE.",
         });
       } else {
         toast({
@@ -315,7 +315,7 @@ export default function KioskAuthPage() {
                   
                   <div className="flex items-center gap-4 px-4 opacity-20">
                     <div className="h-px bg-white flex-1" />
-                    <span className="text-[7px] font-black uppercase tracking-widest text-white">OR AUTHORIZE VIA SSO</span>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-white">OR AUTHORIZE VIA GOOGLE</span>
                     <div className="h-px bg-white flex-1" />
                   </div>
 

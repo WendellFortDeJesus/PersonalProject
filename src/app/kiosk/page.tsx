@@ -246,13 +246,6 @@ export default function KioskAuthPage() {
                 <ArrowLeft className="h-3.5 w-3.5" />
                 ABORT PROTOCOL
               </Button>
-
-              <div className="p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 flex gap-4 items-center">
-                <Info className="h-4 w-4 text-yellow-500/40 shrink-0" />
-                <p className="text-[7px] font-bold text-yellow-500/30 uppercase leading-relaxed tracking-wider">
-                  IF AUTHENTICATION FAILS, VERIFY THAT YOUR BROWSER IS NOT BLOCKING POPUPS AND THAT THE ORIGIN ABOVE IS WHITELISTED.
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>

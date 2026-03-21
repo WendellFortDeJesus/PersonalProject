@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -203,31 +202,31 @@ export default function KioskAuthPage() {
 
           <CardContent className="px-16 pb-16 space-y-12 overflow-y-auto max-h-[60vh] no-scrollbar">
             {/* Segmented Control */}
-            <div className="relative bg-black/40 p-2 rounded-full h-18 border border-white/10 flex items-center shadow-inner">
+            <div className="relative bg-black/40 p-3 rounded-full h-24 border border-white/10 flex items-center shadow-inner">
               <div 
                 className={cn(
-                  "absolute top-2 bottom-2 w-[calc(50%-8px)] bg-primary rounded-full shadow-[0_0_30px_rgba(53,88,114,0.5)] transition-all duration-300 ease-in-out",
+                  "absolute top-3 bottom-3 w-[calc(50%-12px)] bg-primary rounded-full shadow-[0_0_30px_rgba(53,88,114,0.5)] transition-all duration-300 ease-in-out",
                   activeTab === 'email' ? "translate-x-full" : "translate-x-0"
                 )} 
               />
               <button 
                 onClick={() => setActiveTab('rfid')}
                 className={cn(
-                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-sm font-bold transition-colors duration-300",
+                  "relative z-10 flex-1 flex items-center justify-center gap-6 text-xl font-bold transition-colors duration-300",
                   activeTab === 'rfid' ? "text-white" : "text-slate-500 hover:text-slate-400"
                 )}
               >
-                <Fingerprint className="h-5 w-5" />
+                <Fingerprint className="h-7 w-7" />
                 RFID Login
               </button>
               <button 
                 onClick={() => setActiveTab('email')}
                 className={cn(
-                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-sm font-bold transition-colors duration-300",
+                  "relative z-10 flex-1 flex items-center justify-center gap-6 text-xl font-bold transition-colors duration-300",
                   activeTab === 'email' ? "text-white" : "text-slate-500 hover:text-slate-400"
                 )}
               >
-                <Mail className="h-5 w-5" />
+                <Mail className="h-7 w-7" />
                 Email SSO
               </button>
             </div>

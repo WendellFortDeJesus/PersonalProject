@@ -97,7 +97,7 @@ export default function KioskAuthPage() {
           toast({
             variant: "destructive",
             title: "DOMAIN NOT AUTHORIZED",
-            description: "PLEASE ADD THIS WORKSTATION DOMAIN TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
+            description: "PLEASE ADD THIS WORKSTATION URL TO 'AUTHORIZED DOMAINS' IN YOUR FIREBASE CONSOLE.",
           });
         } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({

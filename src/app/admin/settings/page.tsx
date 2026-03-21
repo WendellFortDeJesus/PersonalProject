@@ -464,12 +464,11 @@ export default function SettingsPage() {
                         <Skull className="h-10 w-10 text-white" />
                       </div>
                       <AlertDialogTitle className="text-2xl font-black uppercase tracking-tighter text-white">Confirm Registry Purge?</AlertDialogTitle>
-                      <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">Critical System Protocol</AlertDialogDescription>
+                      <AlertDialogDescription className="text-xs font-bold text-red-100 uppercase tracking-widest mt-2">
+                        This protocol will PERMANENTLY ERASE every patron record and visit log in the system. This action is irreversible.
+                      </AlertDialogDescription>
                     </AlertDialogHeader>
                     <div className="p-10 space-y-6 text-center">
-                      <p className="text-sm font-bold text-slate-600 leading-relaxed uppercase tracking-tight">
-                        This action will PERMANENTLY ERASE every patron record and visit log in the system, including identities such as jcesperanza@neu.edu.ph from the registry.
-                      </p>
                       <div className="grid grid-cols-2 gap-4">
                         <AlertDialogCancel className="h-12 rounded-xl font-black text-[9px] uppercase tracking-widest">Abort Action</AlertDialogCancel>
                         <AlertDialogAction onClick={handlePurgeRegistry} className="h-12 rounded-xl bg-red-600 text-white hover:bg-red-700 font-black text-[9px] uppercase tracking-widest">Confirm Purge</AlertDialogAction>

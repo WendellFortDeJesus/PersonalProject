@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, getDoc, writeBatch, where, getDocs } from 'firebase/firestore';
 import { format, isWithinInterval, startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 import { 
   FileDown, 
@@ -48,6 +48,7 @@ export default function ReportsPage() {
   const [role, setRole] = useState('all');
   const [generatedOn, setGeneratedOn] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // State for deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -112,28 +113,46 @@ export default function ReportsPage() {
     return { total: filteredVisits.length, students, employees, external, topPurpose, topDept };
   }, [filteredVisits]);
 
+  // BI-DIRECTIONAL LINKED DELETION PROTOCOL
   const handleDeleteVisit = async () => {
     if (!db || !visitToDelete || !adminSignature.trim()) return;
+    setIsDeleting(true);
     try {
-      await deleteDoc(doc(db, 'visits', visitToDelete));
-      toast({ title: "Log Entry Erased", description: `Record purged from audit trail by ${adminSignature}.` });
+      const visitRef = doc(db, 'visits', visitToDelete);
+      const visitSnap = await getDoc(visitRef);
+      
+      if (visitSnap.exists()) {
+        const patronId = visitSnap.data().patronId;
+        const batch = writeBatch(db);
+        
+        // Delete the master identity from the registry
+        const patronRef = doc(db, 'patrons', patronId);
+        batch.delete(patronRef);
+        
+        // Cascade delete ALL associated visits for this patron
+        const q = query(collection(db, 'visits'), where('patronId', '==', patronId));
+        const visitsSnap = await getDocs(q);
+        visitsSnap.docs.forEach(d => batch.delete(d.ref));
+        
+        await batch.commit();
+        toast({ 
+          title: "Linked Identity Purged", 
+          description: `Patron and all associated logs erased from registry by ${adminSignature}.` 
+        });
+      }
+
       setIsDeleteDialogOpen(false);
       setVisitToDelete(null);
       setAdminSignature('');
     } catch (error) {
-      toast({ variant: "destructive", title: "Action Failed", description: "Failed to delete log entry." });
-    }
-  };
-
-  const handlePrint = () => {
-    if (typeof window !== 'undefined') {
-      window.print();
+      toast({ variant: "destructive", title: "Action Failed", description: "Failed to execute linked deletion." });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleExportPDF = () => {
     setIsExporting(true);
-    // Standard approach for PDF export in web is triggering the Print to PDF dialog
     setTimeout(() => {
       if (typeof window !== 'undefined') {
         window.print();
@@ -169,7 +188,7 @@ export default function ReportsPage() {
         <div className="flex items-center gap-2">
           <Button 
             type="button"
-            onClick={handlePrint} 
+            onClick={() => window.print()} 
             variant="outline" 
             className="rounded-xl border-slate-200 font-black text-[9px] uppercase tracking-widest h-10 px-4 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
           >
@@ -386,10 +405,10 @@ export default function ReportsPage() {
             <div className="mx-auto bg-white/20 p-5 rounded-full w-fit mb-6">
               <AlertTriangle className="h-12 w-12 text-white" />
             </div>
-            <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-white">Erase Log Entry?</DialogTitle>
+            <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-white">Linked Identity Purge?</DialogTitle>
           </DialogHeader>
           <div className="p-10 text-center space-y-6">
-            <p className="text-sm font-bold text-slate-600 leading-relaxed">This will permanently remove this visitor from all institutional reports.</p>
+            <p className="text-sm font-bold text-slate-600 leading-relaxed">Warning: This will permanently remove this identity AND all associated logs from the institutional database.</p>
             
             <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
               <div className="flex items-center gap-3 text-red-500 mb-2">
@@ -409,13 +428,13 @@ export default function ReportsPage() {
             <Button variant="ghost" onClick={() => { setIsDeleteDialogOpen(false); setAdminSignature(''); }} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl bg-white shadow-sm">Abort</Button>
             <Button 
               onClick={handleDeleteVisit} 
-              disabled={!adminSignature.trim()}
+              disabled={!adminSignature.trim() || isDeleting}
               className={cn(
                 "h-14 font-black uppercase text-[10px] tracking-widest text-white rounded-2xl shadow-xl transition-all",
-                adminSignature.trim() ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-slate-300 cursor-not-allowed"
+                adminSignature.trim() && !isDeleting ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-slate-300 cursor-not-allowed"
               )}
             >
-              Confirm Deletion
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Purge"}
             </Button>
           </DialogFooter>
         </DialogContent>

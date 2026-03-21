@@ -120,7 +120,7 @@ function PurposeSelectionContent() {
           <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-500 hover:text-red-400 font-bold text-sm h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
+            className="text-slate-500 hover:text-white font-medium text-sm h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
             onClick={() => router.push('/kiosk')}
           >
             <Icons.ArrowLeft className="mr-3 h-4 w-4" />
@@ -160,11 +160,10 @@ function PurposeSelectionContent() {
                     ? 'bg-primary text-white scale-110 shadow-[0_0_30px_rgba(53,88,114,0.6)]' 
                     : 'bg-black/40 text-slate-500 group-hover:text-primary group-hover:bg-primary/10'
                 )}>
-                  {/* Subtle Background Icon Glow */}
                   {!isActive && (
                     <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
-                  {isPending ? <Icons.Loader2 className="h-16 w-16 animate-spin" /> : <IconComponent className="h-16 w-16 relative z-10" />}
+                  {isPending ? <Icons.Loader2 className="h-16 w-16 animate-spin" /> : <IconComponent className="h-20 w-20 relative z-10" />}
                 </div>
                 <div className="text-center space-y-2">
                   <span className={cn(
@@ -187,14 +186,6 @@ function PurposeSelectionContent() {
         </div>
         
         <div className="flex flex-col items-center gap-6 pt-12 border-t border-white/10">
-           <Button 
-            variant="ghost" 
-            disabled={isSubmitting}
-            className="text-xs font-bold text-slate-600 hover:text-primary transition-all hover:tracking-widest group"
-            onClick={() => router.push('/kiosk')}
-          >
-            Relinquish Identity Focus
-          </Button>
            <div className="flex items-center gap-4">
               <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
               <span className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">Identity Segment Node Alpha Active</span>

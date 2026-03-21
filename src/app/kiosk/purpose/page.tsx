@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -98,11 +97,23 @@ function PurposeSelectionContent() {
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-slate-50 font-body">
       <div className="w-full max-w-4xl space-y-12 animate-fade-in">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-headline font-bold text-slate-900 tracking-tight">Visit Intent</h1>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em]">
-            {isNew ? "Step 1: Select your primary activity" : "Select your primary activity"}
-          </p>
+        <div className="flex flex-col items-center gap-4">
+          <Button 
+            variant="ghost" 
+            disabled={isSubmitting}
+            className="text-slate-400 font-bold uppercase tracking-widest text-[9px] hover:text-primary self-start"
+            onClick={() => router.push('/kiosk')}
+          >
+            <Icons.ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-headline font-bold text-slate-900 tracking-tight">Visit Intent</h1>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em]">
+              {isNew ? "Step 1: Select your primary activity" : "Select your primary activity"}
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,7 +153,7 @@ function PurposeSelectionContent() {
           <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-400 font-bold uppercase tracking-widest text-[9px] hover:text-primary"
+            className="text-slate-300 font-black uppercase tracking-[0.4em] text-[8px] hover:text-primary transition-colors"
             onClick={() => router.push('/kiosk')}
           >
             Switch Profile

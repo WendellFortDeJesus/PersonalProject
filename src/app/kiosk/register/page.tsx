@@ -138,6 +138,15 @@ function RegistrationContent() {
     }
   };
 
+  const handleBack = () => {
+    const params = new URLSearchParams();
+    params.set('isNew', 'true');
+    params.set('authMethod', authMethod);
+    if (initialEmail) params.set('email', initialEmail);
+    if (initialSchoolId) params.set('schoolId', initialSchoolId);
+    router.push(`/kiosk/purpose?${params.toString()}`);
+  };
+
   const backgroundUrl = settings?.themeImageUrl || "https://picsum.photos/seed/library1/1920/1080";
 
   return (
@@ -156,11 +165,11 @@ function RegistrationContent() {
       <div className="relative z-10 w-full max-w-2xl space-y-6 animate-fade-in">
         <Button 
           variant="ghost" 
-          onClick={() => router.push('/kiosk')}
+          onClick={handleBack}
           className="text-white hover:bg-white/10"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Hub
+          Back
         </Button>
 
         <Card className="shadow-2xl border-none rounded-[2.5rem] bg-white/95 backdrop-blur-xl border border-white/20 overflow-hidden">

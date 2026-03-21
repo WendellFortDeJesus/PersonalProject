@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ShieldCheck, User, Lock, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function AdminLoginPage() {
@@ -21,6 +22,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const db = useFirestore();
 
   useEffect(() => {
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
@@ -30,10 +32,27 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // SECURITY ENFORCEMENT: Hardcoded institutional credentials
-    if (username.toLowerCase() === 'jcesperanza@neu.edu.ph' && password === '12345') {
+    const MASTER_EMAIL = 'jcesperanza@neu.edu.ph';
+    const MASTER_TOKEN = '12345';
+
+    if (username.toLowerCase() === MASTER_EMAIL && password === MASTER_TOKEN) {
       try {
         await signInAnonymously(auth);
+        
+        // Ensure the master identity exists in Firestore as Admin for consistent analytics
+        if (db) {
+          const adminRef = doc(db, 'patrons', 'master-admin');
+          setDoc(adminRef, {
+            id: 'master-admin',
+            email: MASTER_EMAIL,
+            name: 'JOSEPH CAESAR ESPERANZA',
+            role: 'Admin',
+            isBlocked: false,
+            schoolId: 'ADMIN-MASTER',
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        }
+
         setIsLoading(false);
         router.push('/admin/dashboard');
       } catch (error: any) {
@@ -67,9 +86,24 @@ export default function AdminLoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const userEmail = user.email || "";
+      const MASTER_EMAIL = 'jcesperanza@neu.edu.ph';
 
-      // SECURE IDENTITY HANDSHAKE: Only allow the specific master node admin
-      if (userEmail.toLowerCase() === 'jcesperanza@neu.edu.ph') {
+      if (userEmail.toLowerCase() === MASTER_EMAIL) {
+        // Synchronize the master identity as Admin in the registry
+        if (db) {
+          const adminRef = doc(db, 'patrons', user.uid);
+          setDoc(adminRef, {
+            id: user.uid,
+            email: MASTER_EMAIL,
+            name: user.displayName?.toUpperCase() || 'JOSEPH CAESAR ESPERANZA',
+            role: 'Admin',
+            isBlocked: false,
+            schoolId: 'ADMIN-SSO',
+            updatedAt: new Date().toISOString(),
+            photoUrl: user.photoURL
+          }, { merge: true });
+        }
+        
         router.push('/admin/dashboard');
       } else {
         toast({

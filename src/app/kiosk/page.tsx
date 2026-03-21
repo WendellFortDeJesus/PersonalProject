@@ -83,7 +83,8 @@ export default function KioskAuthPage() {
         
         let errorDesc = error.message || "COULD NOT VALIDATE IDENTITY.";
         if (error.code === 'auth/unauthorized-domain') {
-          errorDesc = `DOMAIN UNAUTHORIZED: Please add '${window.location.hostname}' to the Authorized Domains list in the Firebase Console.`;
+          // Explicitly state the mismatch between the workstation port (9002) and the whitelisted ports (6000/9000)
+          errorDesc = `GATEWAY BLOCKED: You must add the 9002-port domain to your Authorized Domains in the Firebase Console. Required: 9002-${window.location.hostname.split('-').slice(1).join('-')}`;
         }
 
         toast({
@@ -214,7 +215,7 @@ export default function KioskAuthPage() {
   return (
     <div className="relative h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden">
       {/* Syncing Overlay */}
-      {isSyncing && (
+      {(isSyncing || isLoading) && (
         <div className="absolute inset-0 z-[100] bg-[#0B1218]/90 backdrop-blur-xl flex flex-col items-center justify-center space-y-6">
           <div className="relative">
             <div className="h-24 w-24 rounded-full border-t-2 border-primary animate-spin" />
@@ -366,7 +367,7 @@ export default function KioskAuthPage() {
                           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="currentColor"/>
                           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="currentColor"/>
                         </svg>
-                        SIGN-IN WITH GOOGLE
+                        GOOGLE SSO
                       </>
                     )}
                   </Button>

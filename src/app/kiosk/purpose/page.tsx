@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -34,7 +35,6 @@ function PurposeSelectionContent() {
   const { data: settings } = useDoc(settingsRef);
 
   useEffect(() => {
-    // Generate random binary bits only on the client to avoid hydration mismatch
     setBinaryBits(Array.from({ length: 48 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
@@ -42,7 +42,6 @@ function PurposeSelectionContent() {
     if (isSubmitting) return;
     setSelected(id);
 
-    // Flow for NEW users: Redirect to Registration with the selected purpose
     if (isNew) {
       const params = new URLSearchParams();
       params.set('purposeId', id);
@@ -53,7 +52,6 @@ function PurposeSelectionContent() {
       return;
     }
 
-    // Flow for RETURNING users: Submit visit directly
     if (!patronId || !db) return;
     setIsSubmitting(true);
     
@@ -157,26 +155,30 @@ function PurposeSelectionContent() {
                 )}
               >
                 <div className={cn(
-                  "p-6 rounded-3xl transition-all duration-500 shadow-xl",
+                  "p-8 rounded-[2rem] transition-all duration-500 shadow-xl relative",
                   isActive 
                     ? 'bg-primary text-white scale-110 shadow-[0_0_30px_rgba(53,88,114,0.6)]' 
-                    : 'bg-black/40 text-slate-500 group-hover:text-primary group-hover:bg-primary/5'
+                    : 'bg-black/40 text-slate-500 group-hover:text-primary group-hover:bg-primary/10'
                 )}>
-                  {isPending ? <Icons.Loader2 className="h-10 w-10 animate-spin" /> : <IconComponent className="h-10 w-10" />}
+                  {/* Subtle Background Icon Glow */}
+                  {!isActive && (
+                    <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                  {isPending ? <Icons.Loader2 className="h-12 w-12 animate-spin" /> : <IconComponent className="h-12 w-12 relative z-10" />}
                 </div>
                 <div className="text-center space-y-2">
                   <span className={cn(
-                    "block text-sm font-black uppercase tracking-[0.15em] transition-colors",
+                    "block text-base font-black uppercase tracking-[0.15em] transition-colors",
                     isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
                   )}>
                     {purpose.label}
                   </span>
                   <div className={cn(
                     "h-1 w-8 mx-auto rounded-full transition-all duration-500",
-                    isActive ? "bg-primary w-16" : "bg-transparent group-hover:bg-primary/20 group-hover:w-12"
+                    isActive ? "bg-primary w-20" : "bg-transparent group-hover:bg-primary/40 group-hover:w-16"
                   )} />
-                  <span className="block text-[9px] font-bold text-slate-600 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                    Initialize Segment
+                  <span className="block text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                    Initialize Protocol
                   </span>
                 </div>
               </Button>
@@ -188,14 +190,14 @@ function PurposeSelectionContent() {
            <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-600 hover:text-primary font-black uppercase tracking-[0.5em] text-[10px] transition-all hover:tracking-[0.6em]"
+            className="text-slate-600 hover:text-primary font-black uppercase tracking-[0.5em] text-[10px] transition-all hover:tracking-[0.6em] group"
             onClick={() => router.push('/kiosk')}
           >
             Relinquish Identity Focus
           </Button>
            <div className="flex items-center gap-4">
               <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-              <span className="text-[8px] font-black text-primary/30 uppercase tracking-[0.5em]">Node Segment Isolation Active</span>
+              <span className="text-[8px] font-black text-primary/30 uppercase tracking-[0.5em]">Identity Segment Node Alpha Active</span>
               <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
            </div>
         </div>
@@ -206,7 +208,7 @@ function PurposeSelectionContent() {
 
 export default function PurposeSelectionPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-black text-slate-500 uppercase tracking-[0.4em] animate-pulse">Syncing Segment...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-black text-slate-500 uppercase tracking-[0.4em] animate-pulse">Syncing Segment Node...</div>}>
       <PurposeSelectionContent />
     </Suspense>
   );

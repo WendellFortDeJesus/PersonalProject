@@ -34,6 +34,7 @@ export default function KioskAuthPage() {
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
 
   useEffect(() => {
+    // Hydration fix: generate binary bits only on client
     setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
@@ -184,7 +185,7 @@ export default function KioskAuthPage() {
         ))}
       </div>
 
-      <div className="relative z-10 w-full max-w-xl space-y-6 animate-fade-in px-4">
+      <div className="relative z-10 w-full max-w-3xl space-y-6 animate-fade-in px-4">
         <div className="flex items-center justify-between px-6">
           <Button 
             variant="ghost" 

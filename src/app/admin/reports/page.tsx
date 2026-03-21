@@ -23,7 +23,8 @@ import {
   Briefcase, 
   UserPlus,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  PenTool
 } from 'lucide-react';
 import { DEPARTMENTS, PURPOSES } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,7 @@ export default function ReportsPage() {
   // State for deletion
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [visitToDelete, setVisitToDelete] = useState<string | null>(null);
+  const [adminSignature, setAdminSignature] = useState('');
 
   useEffect(() => {
     setGeneratedOn(format(new Date(), 'MMMM dd, yyyy HH:mm'));
@@ -104,12 +106,13 @@ export default function ReportsPage() {
   }, [filteredVisits]);
 
   const handleDeleteVisit = async () => {
-    if (!db || !visitToDelete) return;
+    if (!db || !visitToDelete || !adminSignature.trim()) return;
     try {
       await deleteDoc(doc(db, 'visits', visitToDelete));
-      toast({ title: "Log Entry Erased", description: "The visit record has been permanently removed." });
+      toast({ title: "Log Entry Erased", description: `Record purged from audit trail by ${adminSignature}.` });
       setIsDeleteDialogOpen(false);
       setVisitToDelete(null);
+      setAdminSignature('');
     } catch (error) {
       toast({ variant: "destructive", title: "Action Failed", description: "Failed to delete log entry." });
     }
@@ -133,7 +136,6 @@ export default function ReportsPage() {
   };
 
   const availableRoles = settings?.roles || ['Student', 'Visitor'];
-  // Include 'Admin' in audit filters as some logs might contain it
   const allPossibleRoles = Array.from(new Set(['Admin', ...availableRoles]));
 
   return (
@@ -347,21 +349,43 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden sm:max-w-md">
+      <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => { setIsDeleteDialogOpen(open); if(!open) setAdminSignature(''); }}>
+        <DialogContent className="p-0 border-none shadow-2xl rounded-[3rem] overflow-hidden sm:max-w-md bg-white">
           <DialogHeader className="p-12 bg-red-600 text-white text-center">
             <div className="mx-auto bg-white/20 p-5 rounded-full w-fit mb-6">
               <AlertTriangle className="h-12 w-12 text-white" />
             </div>
             <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-white">Erase Log Entry?</DialogTitle>
           </DialogHeader>
-          <div className="p-12 text-center space-y-6">
-            <p className="text-base font-bold text-slate-600">This action will permanently remove this visit record from the institutional audit trail.</p>
-            <p className="text-[11px] font-black text-red-400 uppercase tracking-widest leading-relaxed">System history for this event will be invalidated.</p>
+          <div className="p-10 text-center space-y-6">
+            <p className="text-sm font-bold text-slate-600 leading-relaxed">This will permanently remove this visitor from all institutional reports.</p>
+            
+            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+              <div className="flex items-center gap-3 text-red-500 mb-2">
+                <PenTool className="h-4 w-4" />
+                <Label className="text-[10px] font-black uppercase tracking-widest">Administrative Signature Required</Label>
+              </div>
+              <Input 
+                placeholder="Admin Name / Staff ID" 
+                value={adminSignature}
+                onChange={(e) => setAdminSignature(e.target.value)}
+                className="h-12 rounded-xl border-slate-200 font-bold text-center text-sm shadow-inner"
+              />
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Please sign to authorize this permanent removal.</p>
+            </div>
           </div>
           <DialogFooter className="p-10 bg-slate-50 border-t grid grid-cols-2 gap-4">
-            <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl">Abort</Button>
-            <Button onClick={handleDeleteVisit} className="h-14 font-black uppercase text-[10px] tracking-widest bg-red-600 text-white hover:bg-red-700 rounded-2xl shadow-xl shadow-red-100">Confirm Deletion</Button>
+            <Button variant="ghost" onClick={() => { setIsDeleteDialogOpen(false); setAdminSignature(''); }} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl bg-white shadow-sm">Abort</Button>
+            <Button 
+              onClick={handleDeleteVisit} 
+              disabled={!adminSignature.trim()}
+              className={cn(
+                "h-14 font-black uppercase text-[10px] tracking-widest text-white rounded-2xl shadow-xl transition-all",
+                adminSignature.trim() ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-slate-300 cursor-not-allowed"
+              )}
+            >
+              Confirm Deletion
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

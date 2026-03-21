@@ -48,7 +48,8 @@ import {
   UserPlus, 
   Filter,
   CalendarDays,
-  Fingerprint
+  Fingerprint,
+  PenTool
 } from 'lucide-react';
 import { DEPARTMENTS } from '@/lib/data';
 
@@ -58,6 +59,7 @@ export default function UserManagementPage() {
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [patronToDelete, setPatronToDelete] = useState<any>(null);
+  const [adminSignature, setAdminSignature] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
   const [selectedRole, setSelectedRole] = useState('all');
 
@@ -131,12 +133,13 @@ export default function UserManagementPage() {
   };
 
   const handleDeletePatron = async () => {
-    if (!db || !patronToDelete) return;
+    if (!db || !patronToDelete || !adminSignature.trim()) return;
     const patronRef = doc(db, 'patrons', patronToDelete.id);
 
     deleteDoc(patronRef).then(() => {
       setIsDeleteDialogOpen(false);
-      toast({ title: "Registry Purged", description: "User record has been permanently erased." });
+      setAdminSignature('');
+      toast({ title: "Registry Purged", description: `User record erased by ${adminSignature}.` });
     }).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: patronRef.path,
@@ -146,7 +149,6 @@ export default function UserManagementPage() {
   };
 
   const availableRoles = settings?.roles || ['Student', 'Visitor'];
-  // Include 'Admin' in the admin management UI regardless of kiosk roles
   const allPossibleRoles = Array.from(new Set(['Admin', ...availableRoles]));
 
   if (isLoading) return (
@@ -439,18 +441,40 @@ export default function UserManagementPage() {
             </div>
             <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-white relative z-10 leading-none">Registry Purge</DialogTitle>
           </DialogHeader>
-          <div className="p-12 text-center space-y-6">
+          <div className="p-10 text-center space-y-6">
             <div className="space-y-2">
               <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Are you absolutely sure?</p>
               <h3 className="text-xl font-black text-primary uppercase tracking-tight">{patronToDelete?.name}</h3>
             </div>
-            <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest leading-relaxed p-4 bg-red-50 rounded-2xl border border-red-100">
-              This action will permanently erase the identity record and all associated institutional history from the secure registry.
-            </p>
+            
+            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+              <div className="flex items-center gap-3 text-red-500 mb-2">
+                <PenTool className="h-4 w-4" />
+                <Label className="text-[10px] font-black uppercase tracking-widest">Administrative Signature Required</Label>
+              </div>
+              <Input 
+                placeholder="Admin Name / Staff ID" 
+                value={adminSignature}
+                onChange={(e) => setAdminSignature(e.target.value)}
+                className="h-12 rounded-xl border-slate-200 font-bold text-center text-sm shadow-inner"
+              />
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight leading-relaxed">
+                Provide your identity to authorize this permanent removal from the institutional registry.
+              </p>
+            </div>
           </div>
           <DialogFooter className="p-10 bg-slate-50 border-t grid grid-cols-2 gap-4">
-            <Button variant="ghost" onClick={() => setIsDeleteDialogOpen(false)} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl bg-white shadow-sm">Abort</Button>
-            <Button onClick={handleDeletePatron} className="h-14 font-black uppercase text-[10px] tracking-widest bg-red-600 text-white hover:bg-red-700 rounded-2xl shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all">Confirm Erase</Button>
+            <Button variant="ghost" onClick={() => { setIsDeleteDialogOpen(false); setAdminSignature(''); }} className="h-14 font-black uppercase text-[10px] tracking-widest border-slate-200 rounded-2xl bg-white shadow-sm">Abort</Button>
+            <Button 
+              onClick={handleDeletePatron} 
+              disabled={!adminSignature.trim()}
+              className={cn(
+                "h-14 font-black uppercase text-[10px] tracking-widest text-white rounded-2xl shadow-xl transition-all active:scale-[0.98]",
+                adminSignature.trim() ? "bg-red-600 hover:bg-red-700 shadow-red-100" : "bg-slate-300 cursor-not-allowed"
+              )}
+            >
+              Confirm Erase
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

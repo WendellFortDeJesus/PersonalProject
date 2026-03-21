@@ -34,6 +34,7 @@ export default function AdminLoginPage() {
         if (result) {
           setIsLoading(true);
           const user = result.user;
+          // Check if the user is the specific authorized admin
           if (user.email !== 'jcesperanza@neu.edu.ph') {
             await signOut(auth);
             setIsLoading(false);
@@ -48,11 +49,13 @@ export default function AdminLoginPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
+        // auth/account-exists-with-different-credential or similar
         if (error.code !== 'auth/popup-closed-by-user') {
+          console.error("Auth Error:", error);
           toast({
             variant: "destructive",
-            title: "Auth Redirect Error",
-            description: error.message,
+            title: "Authentication Error",
+            description: error.message || "Failed to finalize secure session. Please check your console settings.",
           });
         }
       }
@@ -91,6 +94,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
+    // Use prompt: 'select_account' to allow switching accounts if one is 403'd
     provider.setCustomParameters({ prompt: 'select_account' });
     
     try {

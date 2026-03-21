@@ -93,11 +93,14 @@ export default function KioskAuthPage() {
         }
       } catch (error: any) {
         setIsLoading(false);
-        toast({
-          variant: "destructive",
-          title: "Auth Redirect Error",
-          description: error.message,
-        });
+        if (error.code !== 'auth/popup-closed-by-user') {
+          console.error("Auth Error:", error);
+          toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Failed to finalize Google SSO. Please ensure your domain is whitelisted in Firebase Console.",
+          });
+        }
       }
     };
     checkRedirect();

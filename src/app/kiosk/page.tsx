@@ -93,7 +93,13 @@ export default function KioskAuthPage() {
       } catch (error: any) {
         setIsLoading(false);
         console.error("Kiosk SSO Error:", error);
-        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
+        if (error.code === 'auth/unauthorized-domain') {
+          toast({
+            variant: "destructive",
+            title: "Domain Not Authorized",
+            description: "Please add this domain to 'Authorized Domains' in your Firebase Auth console settings.",
+          });
+        } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
             title: "Authentication Error",
@@ -116,11 +122,19 @@ export default function KioskAuthPage() {
     } catch (error: any) {
       setIsLoading(false);
       console.error("SSO Initiation Error:", error);
-      toast({
-        variant: "destructive",
-        title: "SSO Initiation Failed",
-        description: "Check your authorized domains in Firebase Console.",
-      });
+      if (error.code === 'auth/unauthorized-domain') {
+        toast({
+          variant: "destructive",
+          title: "Domain Not Whitelisted",
+          description: "Add this workstation URL to 'Authorized Domains' in the Firebase Auth console.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "SSO Initiation Failed",
+          description: "Check your authorized domains in Firebase Console.",
+        });
+      }
     }
   };
 

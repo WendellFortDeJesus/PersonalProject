@@ -48,7 +48,13 @@ export default function AdminLoginPage() {
       } catch (error: any) {
         setIsLoading(false);
         console.error("Auth Redirect Error:", error);
-        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
+        if (error.code === 'auth/unauthorized-domain') {
+          toast({
+            variant: "destructive",
+            title: "Domain Authorization Failed",
+            description: "Please add this workstation domain to 'Authorized Domains' in your Firebase console.",
+          });
+        } else if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-closure-redirect') {
           toast({
             variant: "destructive",
             title: "Authentication Failed",
@@ -98,11 +104,19 @@ export default function AdminLoginPage() {
     } catch (error: any) {
       setIsLoading(false);
       console.error("SSO Initiation Error:", error);
-      toast({
-        variant: "destructive",
-        title: "SSO Initialization Error",
-        description: "Verify that your current domain is whitelisted in Firebase Console.",
-      });
+      if (error.code === 'auth/unauthorized-domain') {
+        toast({
+          variant: "destructive",
+          title: "Domain Not Whitelisted",
+          description: "This domain must be authorized in your Firebase project settings.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "SSO Initialization Error",
+          description: "Verify that your current domain is whitelisted in Firebase Console.",
+        });
+      }
     }
   };
 

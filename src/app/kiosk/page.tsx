@@ -34,6 +34,7 @@ export default function KioskAuthPage() {
   const enforcedDomain = settings?.enforcedDomain || "neu.edu.ph";
 
   useEffect(() => {
+    // Generate binary bits only on the client to avoid hydration mismatch
     setBinaryBits(Array.from({ length: 60 }, () => Math.random() > 0.5 ? '1' : '0'));
   }, []);
 
@@ -193,14 +194,14 @@ export default function KioskAuthPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-5xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Hub</CardTitle>
-              <CardDescription className="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em]">
+              <CardTitle className="text-5xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY HUB</CardTitle>
+              <CardDescription className="text-sm font-medium text-slate-500 uppercase tracking-widest">
                 Institutional Access Protocol
               </CardDescription>
             </div>
           </CardHeader>
 
-          <CardContent className="px-16 pb-16 space-y-12 overflow-y-auto max-h-[60vh]">
+          <CardContent className="px-16 pb-16 space-y-12 overflow-y-auto max-h-[60vh] no-scrollbar">
             {/* Segmented Control */}
             <div className="relative bg-black/40 p-2 rounded-full h-18 border border-white/10 flex items-center shadow-inner">
               <div 
@@ -212,7 +213,7 @@ export default function KioskAuthPage() {
               <button 
                 onClick={() => setActiveTab('rfid')}
                 className={cn(
-                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-widest transition-colors duration-300",
+                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-sm font-bold transition-colors duration-300",
                   activeTab === 'rfid' ? "text-white" : "text-slate-500 hover:text-slate-400"
                 )}
               >
@@ -222,7 +223,7 @@ export default function KioskAuthPage() {
               <button 
                 onClick={() => setActiveTab('email')}
                 className={cn(
-                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-xs font-black uppercase tracking-widest transition-colors duration-300",
+                  "relative z-10 flex-1 flex items-center justify-center gap-4 text-sm font-bold transition-colors duration-300",
                   activeTab === 'email' ? "text-white" : "text-slate-500 hover:text-slate-400"
                 )}
               >
@@ -242,7 +243,7 @@ export default function KioskAuthPage() {
                       
                       <div className="relative h-48 w-48 rounded-full bg-black/60 flex items-center justify-center shadow-[inset_0_0_60px_rgba(53,88,114,0.4)] border border-white/10 overflow-hidden">
                         <Scan className="h-20 w-20 text-primary animate-pulse" />
-                        <div className="absolute top-0 left-0 w-full h-[3px] bg-red-500 shadow-[0_0_15px_#ef4444] animate-[scan_3s_ease-in-out_infinite] opacity-90 z-20" />
+                        <div className="absolute top-0 left-0 w-full h-[3px] bg-primary shadow-[0_0_15px_hsl(var(--primary))] animate-[scan_3s_ease-in-out_infinite] opacity-90 z-20" />
                         
                         <style jsx global>{`
                           @keyframes scan {
@@ -253,10 +254,10 @@ export default function KioskAuthPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       <div className="flex flex-col items-center">
-                        <span className="text-sm font-black text-white uppercase tracking-[0.3em] mb-2">Terminal Scanner Active</span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Awaiting Identity Card Proximity</span>
+                        <span className="text-lg font-bold text-white mb-1">Terminal Scanner Active</span>
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">Awaiting identity card proximity</span>
                       </div>
 
                       <div className="max-w-md mx-auto">
@@ -267,19 +268,19 @@ export default function KioskAuthPage() {
                           autoComplete="off"
                           value={rfid}
                           onChange={(e) => setRfid(e.target.value)}
-                          className="h-20 w-full text-center text-4xl font-mono font-black border-none bg-black/40 rounded-3xl text-white focus-visible:ring-2 focus-visible:ring-primary/50 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] placeholder:text-slate-800"
+                          className="h-20 w-full text-center text-4xl font-mono font-bold border-none bg-black/40 rounded-3xl text-white focus-visible:ring-2 focus-visible:ring-primary/50 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] placeholder:text-slate-800"
                         />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-6">
-                    <Button disabled={isLoading} className="w-full h-20 text-[13px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
+                    <Button disabled={isLoading} className="w-full h-20 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
                       {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"}
                     </Button>
                     <Button 
                       variant="ghost" 
                       onClick={() => router.push('/')}
-                      className="w-full h-20 text-slate-500 hover:text-red-400 font-black text-[10px] uppercase tracking-[0.5em] bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-red-500/10"
+                      className="w-full h-20 text-slate-500 hover:text-red-400 font-bold text-sm bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-red-500/10"
                     >
                       <ArrowLeft className="mr-3 h-4 w-4" />
                       Abort Protocol
@@ -289,7 +290,7 @@ export default function KioskAuthPage() {
               ) : (
                 <form onSubmit={handleAuth} className="space-y-12 animate-fade-in pt-6">
                   <div className="space-y-8">
-                    <label className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-500 ml-6">Identity Verification Protocol</label>
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-6">Identity Verification Protocol</label>
                     <div className="relative group">
                       <Mail className="absolute left-8 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-600 group-focus-within:text-primary transition-colors duration-300" />
                       <Input 
@@ -298,18 +299,18 @@ export default function KioskAuthPage() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-20 pl-20 rounded-3xl border-none bg-black/40 font-black text-2xl text-white focus:bg-black/60 focus:ring-2 focus:ring-primary/30 transition-all shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"
+                        className="h-20 pl-20 rounded-3xl border-none bg-black/40 font-bold text-2xl text-white focus:bg-black/60 focus:ring-2 focus:ring-primary/30 transition-all shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"
                       />
                     </div>
                   </div>
                   <div className="space-y-6">
-                    <Button disabled={isLoading} className="w-full h-20 text-[13px] font-black uppercase tracking-[0.4em] bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
+                    <Button disabled={isLoading} className="w-full h-20 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-3xl shadow-[0_0_40px_rgba(53,88,114,0.4)] active:scale-[0.98] transition-all">
                       {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify SSO Node"}
                     </Button>
                     
                     <div className="relative flex items-center gap-8 py-4">
                       <div className="h-px bg-white/5 flex-1" />
-                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.5em]">Alternative Gateway</span>
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Alternative Gateway</span>
                       <div className="h-px bg-white/5 flex-1" />
                     </div>
 
@@ -317,7 +318,7 @@ export default function KioskAuthPage() {
                       onClick={handleGoogleLogin}
                       disabled={isLoading}
                       variant="outline" 
-                      className="w-full h-20 border-white/10 bg-white/5 rounded-3xl text-[11px] font-black uppercase tracking-[0.4em] text-white flex items-center justify-center gap-6 hover:bg-white/10 transition-all group shadow-2xl"
+                      className="w-full h-20 border-white/10 bg-white/5 rounded-3xl text-sm font-bold text-white flex items-center justify-center gap-6 hover:bg-white/10 transition-all group shadow-2xl"
                     >
                       <svg viewBox="0 0 24 24" className="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -330,7 +331,7 @@ export default function KioskAuthPage() {
                     <Button 
                       variant="ghost" 
                       onClick={() => router.push('/')}
-                      className="w-full h-20 text-slate-500 hover:text-red-400 font-black text-[10px] uppercase tracking-[0.5em] bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-red-500/10"
+                      className="w-full h-20 text-slate-500 hover:text-red-400 font-bold text-sm bg-white/5 rounded-3xl border border-white/5 transition-all hover:bg-red-500/10"
                     >
                       <ArrowLeft className="mr-3 h-4 w-4" />
                       Abort Protocol
@@ -341,10 +342,10 @@ export default function KioskAuthPage() {
             </div>
 
             <div className="flex flex-col items-center gap-8 pt-8 border-t border-white/5">
-               <button className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] hover:text-primary transition-colors duration-300">Identity Access Assistance</button>
+               <button className="text-xs font-bold text-slate-500 hover:text-primary transition-colors duration-300">Identity Access Assistance</button>
                <div className="flex items-center gap-4 opacity-40">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <span className="text-[8px] font-black text-primary uppercase tracking-[0.5em]">Institutional Data Clearance: Node Alpha Only</span>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Institutional Data Clearance: Node Alpha Only</span>
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                </div>
             </div>

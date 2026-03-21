@@ -120,7 +120,7 @@ function PurposeSelectionContent() {
           <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-500 hover:text-red-400 font-black uppercase tracking-[0.4em] text-[10px] h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
+            className="text-slate-500 hover:text-red-400 font-bold text-sm h-12 self-start px-6 border border-white/5 bg-white/5 rounded-2xl transition-all hover:bg-red-500/10 hover:border-red-500/20"
             onClick={() => router.push('/kiosk')}
           >
             <Icons.ArrowLeft className="mr-3 h-4 w-4" />
@@ -128,9 +128,9 @@ function PurposeSelectionContent() {
           </Button>
           
           <div className="text-center space-y-4">
-            <h1 className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">Identity Intent</h1>
-            <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em]">
-              {isNew ? "Node Registration: Select Primary Node Activity" : "Verification Step: Select Node Activity"}
+            <h1 className="text-6xl font-headline font-black text-white tracking-tighter uppercase leading-none">IDENTITY INTENT</h1>
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">
+              {isNew ? "Node Registration: Select primary node activity" : "Verification Step: Select node activity"}
             </p>
           </div>
         </div>
@@ -148,7 +148,7 @@ function PurposeSelectionContent() {
                 onClick={() => handleSelect(purpose.id)}
                 variant="outline"
                 className={cn(
-                  "h-64 rounded-[3rem] flex flex-col items-center justify-center gap-8 transition-all duration-500 border-white/10 bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 group overflow-hidden hover:scale-[1.05] hover:brightness-110 shadow-lg",
+                  "h-64 rounded-[3rem] flex flex-col items-center justify-center gap-6 transition-all duration-500 border-white/10 bg-white/5 backdrop-blur-3xl ring-1 ring-white/10 group overflow-hidden hover:scale-[1.05] hover:brightness-110 shadow-lg",
                   isActive 
                     ? 'ring-primary/60 bg-primary/20 shadow-[0_0_50px_rgba(53,88,114,0.4)] scale-[1.05] border-primary/40' 
                     : 'hover:bg-white/10 hover:ring-white/30'
@@ -164,11 +164,11 @@ function PurposeSelectionContent() {
                   {!isActive && (
                     <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
-                  {isPending ? <Icons.Loader2 className="h-12 w-12 animate-spin" /> : <IconComponent className="h-12 w-12 relative z-10" />}
+                  {isPending ? <Icons.Loader2 className="h-16 w-16 animate-spin" /> : <IconComponent className="h-16 w-16 relative z-10" />}
                 </div>
                 <div className="text-center space-y-2">
                   <span className={cn(
-                    "block text-base font-black uppercase tracking-[0.15em] transition-colors",
+                    "block text-xl font-bold transition-colors",
                     isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
                   )}>
                     {purpose.label}
@@ -177,7 +177,7 @@ function PurposeSelectionContent() {
                     "h-1 w-8 mx-auto rounded-full transition-all duration-500",
                     isActive ? "bg-primary w-20" : "bg-transparent group-hover:bg-primary/40 group-hover:w-16"
                   )} />
-                  <span className="block text-[10px] font-black text-primary/40 uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                  <span className="block text-[10px] font-bold text-primary/40 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                     Initialize Protocol
                   </span>
                 </div>
@@ -190,14 +190,14 @@ function PurposeSelectionContent() {
            <Button 
             variant="ghost" 
             disabled={isSubmitting}
-            className="text-slate-600 hover:text-primary font-black uppercase tracking-[0.5em] text-[10px] transition-all hover:tracking-[0.6em] group"
+            className="text-xs font-bold text-slate-600 hover:text-primary transition-all hover:tracking-widest group"
             onClick={() => router.push('/kiosk')}
           >
             Relinquish Identity Focus
           </Button>
            <div className="flex items-center gap-4">
               <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-              <span className="text-[8px] font-black text-primary/30 uppercase tracking-[0.5em]">Identity Segment Node Alpha Active</span>
+              <span className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">Identity Segment Node Alpha Active</span>
               <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
            </div>
         </div>
@@ -208,7 +208,7 @@ function PurposeSelectionContent() {
 
 export default function PurposeSelectionPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-black text-slate-500 uppercase tracking-[0.4em] animate-pulse">Syncing Segment Node...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0B1218] font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Segment Node...</div>}>
       <PurposeSelectionContent />
     </Suspense>
   );

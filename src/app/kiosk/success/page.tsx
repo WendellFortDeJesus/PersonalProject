@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, Suspense, useState } from 'react';
@@ -42,7 +43,7 @@ function SuccessContent() {
     <div className="relative min-h-screen w-screen flex items-center justify-center bg-[#0B1218] font-body overflow-hidden no-scrollbar">
       {/* Dynamic Grid Background */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse:60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
       </div>
 
@@ -69,7 +70,7 @@ function SuccessContent() {
           <h1 className="text-4xl font-headline font-black text-white tracking-tight leading-none uppercase">
             {isBlocked ? "Access Restricted" : "Protocol Validated"}
           </h1>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em]">
+          <p className="text-sm font-medium text-slate-500 uppercase tracking-widest">
             Institutional Registry Node
           </p>
         </div>
@@ -87,7 +88,7 @@ function SuccessContent() {
                 {name || "Identity Logged"}
               </h2>
               <div className="h-1 w-12 mx-auto bg-primary/20 rounded-full" />
-              <p className="text-sm font-bold text-slate-400 max-w-xs mx-auto leading-relaxed uppercase tracking-tight">
+              <p className="text-base font-medium text-slate-400 max-w-xs mx-auto leading-relaxed">
                 {isBlocked 
                   ? "Security restriction detected. Please proceed to the library staff desk for manual clearance."
                   : "Your check-in has been successfully processed. You are cleared for facility entry."
@@ -100,13 +101,13 @@ function SuccessContent() {
         <div className="flex flex-col items-center gap-6">
           <Button 
             onClick={handleManualContinue}
-            className="w-full h-18 rounded-2xl bg-primary text-white font-black text-[11px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            className="w-full h-18 rounded-2xl bg-primary text-white font-bold text-sm uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
           >
             Continue to Gateway
             <ChevronRight className="h-4 w-4" />
           </Button>
 
-          <div className="text-slate-600 text-[8px] font-bold uppercase tracking-[0.4em] flex items-center justify-center gap-3">
+          <div className="text-slate-600 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-3">
             <span className="animate-pulse">Redirecting in {Math.round(timeout / 1000)}s</span>
             <div className="h-1 w-1 bg-white/10 rounded-full" />
             <span>Secure Node Logout</span>

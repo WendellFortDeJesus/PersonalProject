@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,15 +9,22 @@ import { ShieldCheck, User, Lock, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
 import { signInAnonymously, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { cn } from '@/lib/utils';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [binaryBits, setBinaryBits] = useState<string[]>([]);
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+
+  useEffect(() => {
+    // Generate binary decoration bits only on client to prevent hydration mismatch
+    setBinaryBits(Array.from({ length: 40 }, () => Math.random() > 0.5 ? '1' : '0'));
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,25 +86,40 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-body">
-      <div className="w-full max-w-md space-y-6 animate-fade-in">
+    <div className="relative min-h-screen bg-[#0B1218] flex items-center justify-center p-4 font-body overflow-hidden">
+      {/* Dynamic Grid Background */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1a2633_1px,transparent_1px),linear-gradient(to_bottom,#1a2633_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#0B1218]/50 to-[#0B1218]" />
+      </div>
+
+      {/* Floating Binary Bits Decoration */}
+      <div className="absolute inset-0 pointer-events-none opacity-5 flex flex-wrap gap-12 p-10 font-mono text-[10px] text-primary/40 leading-none select-none">
+        {binaryBits.map((bit, i) => (
+          <span key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.1}s` }}>
+            {bit}
+          </span>
+        ))}
+      </div>
+
+      <div className="relative z-10 w-full max-w-md space-y-6 animate-fade-in">
         <Button 
           variant="ghost" 
           onClick={() => router.push('/')}
-          className="text-slate-500 hover:text-primary font-black text-[9px] uppercase tracking-widest px-0 hover:bg-transparent"
+          className="text-slate-500 hover:text-white font-black text-[9px] uppercase tracking-widest px-0 hover:bg-transparent"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Kiosk Home
         </Button>
 
-        <Card className="shadow-2xl shadow-slate-200/80 border-slate-100 rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-none shadow-[0_0_80px_rgba(0,0,0,0.5)] rounded-[2.5rem] overflow-hidden bg-white/5 backdrop-blur-3xl ring-1 ring-white/10">
           <CardHeader className="text-center pt-12 pb-6">
             <div className="flex justify-center mb-6">
-              <div className="p-4 bg-primary/10 rounded-[1.5rem] text-primary shadow-inner">
+              <div className="p-4 bg-primary/20 rounded-[1.5rem] text-primary shadow-[0_0_30px_rgba(53,88,114,0.3)] ring-1 ring-primary/40">
                 <ShieldCheck className="h-10 w-10" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-headline font-bold text-slate-900 tracking-tight">Staff Terminal</CardTitle>
+            <CardTitle className="text-3xl font-headline font-bold text-white tracking-tight">Staff Terminal</CardTitle>
             <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">
               Authorized Personnel Node Entry
             </CardDescription>
@@ -108,33 +130,33 @@ export default function AdminLoginPage() {
                 <div className="space-y-2.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Identity UID</label>
                   <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-primary transition-colors" />
                     <Input 
                       placeholder="user@neu.edu.ph" 
                       type="text" 
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-14 pl-12 rounded-2xl border-slate-200 bg-slate-50/30 font-bold text-sm focus-visible:ring-primary focus-visible:border-primary transition-all"
+                      className="h-14 pl-12 rounded-2xl border-none bg-black/40 font-bold text-sm text-white focus:ring-1 focus:ring-primary/60 shadow-inner transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-2.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Access Token</label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-primary transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-primary transition-colors" />
                     <Input 
                       placeholder="••••••••" 
                       type={showPassword ? "text" : "password"} 
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-14 pl-12 pr-12 rounded-2xl border-slate-200 bg-slate-50/30 font-bold text-sm focus-visible:ring-primary focus-visible:border-primary transition-all"
+                      className="h-14 pl-12 pr-12 rounded-2xl border-none bg-black/40 font-bold text-sm text-white focus:ring-1 focus:ring-primary/60 shadow-inner transition-all"
                     />
                     <button 
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-primary transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -143,23 +165,23 @@ export default function AdminLoginPage() {
               </div>
               <Button 
                 disabled={isLoading} 
-                className="w-full h-16 text-[12px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl transition-all active:scale-[0.98] shadow-xl shadow-primary/20"
+                className="w-full h-16 text-[12px] font-black uppercase tracking-[0.2em] bg-primary hover:bg-primary/90 rounded-2xl transition-all active:scale-[0.98] shadow-[0_0_40px_rgba(53,88,114,0.4)]"
               >
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Authorize Entry"}
               </Button>
             </form>
 
             <div className="relative flex items-center gap-6 py-2">
-              <div className="h-px bg-slate-100 flex-1" />
-              <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">OR</span>
-              <div className="h-px bg-slate-100 flex-1" />
+              <div className="h-px bg-white/5 flex-1" />
+              <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest">OR</span>
+              <div className="h-px bg-white/5 flex-1" />
             </div>
 
             <Button 
               onClick={handleGoogleLogin}
               disabled={isLoading}
               variant="outline" 
-              className="w-full h-16 border-slate-200 bg-white rounded-2xl text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+              className="w-full h-16 border-white/10 bg-white/5 rounded-2xl text-[11px] font-bold text-white uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/10 transition-all shadow-sm"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -172,7 +194,7 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">
+        <p className="text-center text-[8px] font-black text-slate-700 uppercase tracking-[0.4em]">
           Institutional Access Point Node 01
         </p>
       </div>
